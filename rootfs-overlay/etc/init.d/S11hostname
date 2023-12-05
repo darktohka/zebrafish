@@ -1,0 +1,33 @@
+#!/bin/sh
+
+this=S11hostname
+. /lib/zebrafish/functions
+assert_root $this
+
+case $1 in
+	start) ;;
+	stop)  exit 0 ;;
+	*)     fail "Usage: $this {start|stop}" ;;
+esac
+
+set -u
+
+old="$(hostname)"
+new=$(get_kernel_parameter "hostname" | to_valid_hostname)
+
+#if [ -z "$new" ] && ! has_persistence; then
+#	id="$(get_instance_id | cut -c -5 )"
+#	new="$old-$id"
+#fi
+
+[ -z "$new" ] && exit 0
+[ "$old" = "$new" ] && exit 0
+
+echo -n "Configuring hostname \"$new\": "
+
+echo "$new" > /etc/hostname || exit 2
+hostname -F /etc/hostname || exit 3
+sed -e "s/$old/$new/g" -i /etc/hosts || exit 4
+export HOSTNAME="$new"
+
+echo "OK"

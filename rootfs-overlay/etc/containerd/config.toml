@@ -1,0 +1,8 @@
+version = 2
+root = "/oci/containerd"
+
+[plugins."io.containerd.grpc.v1.cri".containerd]
+  snapshotter = "zfs"
+
+[plugins."io.containerd.snapshotter.v1.zfs"]
+  root = "/oci/containerd/io.containerd.snapshotter.v1.zfs"

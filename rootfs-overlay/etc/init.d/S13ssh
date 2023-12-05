@@ -1,0 +1,49 @@
+#!/bin/bash
+
+this=S13ssh
+. /lib/zebrafish/functions
+assert_root $this
+
+case $1 in
+	start) ;;
+	stop)  exit 0 ;;
+	*)     fail "Usage: $this {start|stop}" ;;
+esac
+
+set -u
+
+user=signalizer
+ssh_folder=/home/$user/.ssh
+sshd_config=/etc/ssh/sshd_config
+authorized_keys="$ssh_folder"/authorized_keys
+
+ssh_changes=""
+ssh_port=$(get_kernel_parameter "sshport")
+ssh_key=$(get_kernel_parameter "sshkey")
+password_authentication="yes"
+
+if [[ -z "$ssh_port" ]]; then
+    ssh_port="22"
+fi
+
+if [[ -n "$ssh_key" ]]; then
+    password_authentication="no"
+
+    echo -n "Installing SSH key: "
+    rm -f "$authorized_keys"
+    mkdir -p "$ssh_folder" || exit 2
+    echo -e "$ssh_key" > "$authorized_keys" || exit 3
+    chown -R $user:$user "$ssh_folder" || exit 4
+    echo "OK"
+
+    password_authentication="no"
+fi
+
+ssh_changes+="s/^#?PermitRootLogin\s(.+)$/PermitRootLogin no/;"
+ssh_changes+="s/^#?Port\s(.+)$/Port $ssh_port/;"
+ssh_changes+="s/^#?PasswordAuthentication\s(.+)$/PasswordAuthentication $password_authentication/;"
+
+mkdir -p /logs/system
+echo -n "Updating SSH config: port: $ssh_port, password authentication: $password_authentication; "
+sed -Ei "$ssh_changes" "$sshd_config" || exit 4
+echo "OK"

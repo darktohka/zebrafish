@@ -1,0 +1,21 @@
+#!/bin/sh
+
+this=rescue-shell
+. /lib/zebrafish/functions
+assert_root $this
+
+set -u
+
+if has_kernel_parameter "rescue"; then
+	echo "---"
+	echo
+	echo "Dropping to early rescue shell ..."
+	echo "Exit shell when ready to resume Zebrafish initialization."
+	echo
+	/bin/sh
+	echo "---"
+	echo
+	echo "Resuming Zebrafish initialization ..."
+fi
+
+exit 0

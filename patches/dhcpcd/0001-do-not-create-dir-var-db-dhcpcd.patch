@@ -1,0 +1,11 @@
+diff -Naur dhcpcd-9.4.1.orig/src/Makefile dhcpcd-9.4.1/src/Makefile
+--- dhcpcd-9.4.1.orig/src/Makefile	2021-10-22 11:56:19.000000000 +0000
++++ dhcpcd-9.4.1/src/Makefile	2023-05-26 12:52:47.743896480 +0000
+@@ -82,7 +82,6 @@
+ _proginstall: ${PROG}
+ 	${INSTALL} -d ${DESTDIR}${SBINDIR}
+ 	${INSTALL} -m ${BINMODE} ${PROG} ${DESTDIR}${SBINDIR}
+-	${INSTALL} -m ${DBMODE} -d ${DESTDIR}${DBDIR}
+ 
+ proginstall: _proginstall ${EMBEDDEDINSTALL}
+ 	for x in ${SUBDIRS}; do cd $$x; ${MAKE} $@ || exit $$?; cd ..; done

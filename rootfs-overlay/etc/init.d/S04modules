@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Based on http://www.linuxfromscratch.org/lfs/view/6.5/scripts/apds05.html
+
+# Assure that the kernel has module support.
+[ -e /proc/ksyms -o -e /proc/modules ] || exit 0
+
+
+MODULES=/etc/modules
+
+# Exit if there's no modules file or there are no valid entries.
+[ -r ${MODULES} ] && egrep -qv '^($|#)' ${MODULES} || exit 0
+
+echo "Loading modules:"
+
+# Only try to load modules if the user has actually given us
+# some modules to load.
+while read module args; do
+
+    # Ignore comments and blank lines.
+    case "$module" in
+        ""|"#"*) continue ;;
+    esac
+
+    # Attempt to load the module, making
+    # sure to pass any arguments provided.
+    modprobe ${module} ${args} #2>&1>/dev/null
+
+    # Print the module name if successful,
+    # otherwise take note.
+    if [ $? -eq 0 ]; then
+#        [ -z "${successmods}" ] || [ -z "${failmods}" ] || echo -n ", "
+#        echo -n "${module}"
+        successmods="${successmods} ${module}"
+    else
+        failmods="${failmods} ${module}"
+    fi
+done < ${MODULES}
+
+#echo "."
+
+# Print a failure message with a list of any
+# modules that may have failed to load.
+if [ -n "${failmods}" ]; then
+    echo "Failed to load modules:${failmods}"
+fi
+
+echo "Done loading modules."

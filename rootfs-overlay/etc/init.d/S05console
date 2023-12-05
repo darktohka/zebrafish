@@ -1,0 +1,47 @@
+#!/bin/sh
+
+this=S05console
+. /lib/zebrafish/functions
+assert_root $this
+
+case $1 in
+	start) ;;
+	stop)  exit 0 ;;
+	*)     fail "Usage: $this {start|stop}" ;;
+esac
+
+set -u
+
+
+
+keymap=$(get_kernel_parameter "keymap")
+font=$(get_kernel_parameter "font")
+
+KEYMAP=
+FONT=
+[ -f /etc/default/console ] && . /etc/default/console
+
+
+
+# Kernel options override persisted options.
+# Kernel options and persisted options can be mixed.
+keymap=${keymap:-$KEYMAP}
+font=${font:-$FONT}
+
+
+
+if [ -n "$keymap" ]; then
+    echo -n "Configuring console keymap: $keymap "
+    k=$(find /usr/share/keymaps/i386/ -name "$keymap.map*" | head -n1)
+    [ -n "$k" ] || fail "Keymap not found!"
+    loadkeys --unicode $k || fail "Keymap failed to load!"
+    echo "OK"
+fi
+
+if [ -n "$font" ]; then
+    echo -n "Configuring console font: $font "
+    f=$(find /usr/share/consolefonts/ -name "$font.*" | head -n1)
+    [ -n "$f" ] || fail "Font not found!"
+    setfont $f || fail "Font failed to load!"
+    echo "OK"
+fi

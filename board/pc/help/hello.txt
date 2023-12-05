@@ -1,0 +1,3 @@
+WELCOME TO ZEBRAFISH!
+
+Press ENTER to boot, or F1 for help.

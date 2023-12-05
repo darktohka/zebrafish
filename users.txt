@@ -1,0 +1,13 @@
+# Manually adding system users and groups so their uid and gid to match up in Zebrafish.
+
+# username  uid group     gid  password   home           shell       groups       comment
+
+-           -   input      60  *          -              -           -            -
+-           -   render     61  *          -              -           -            -
+-           -   sudo       62  *          -              -           -            -
+-           -   kvm        63  *          -              -           -            kvm nodes
+named       64  named      64  *          /etc/bind      -           named        bind daemon
+ntp         65  ntp        65  *          -              -           ntp          ntp user
+dhcpcd      66  dhcpcd     66  *          -              -           dhcpcd       dhcpcd user
+sshd        67  sshd       67  *          -              -           sshd         sshd user
+signalizer        1000  signalizer       1000  =signalizer  /home/signalizer       /bin/bash   sudo  Signalizer Operator

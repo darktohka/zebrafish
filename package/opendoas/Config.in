@@ -1,0 +1,6 @@
+config BR2_PACKAGE_OPENDOAS
+	bool "opendoas"
+	help
+	  Sudo replacement
+
+	  https://github.com/darktohka/opendoas

@@ -1,0 +1,309 @@
+#!/bin/sh
+
+set -u
+
+this=setup-persistence
+. /lib/zebrafish/functions
+
+ram_size_kb=$(awk '/^MemTotal/ {print $2}' /proc/meminfo) || fail "FAILED: Unable to read memory info"
+ram_size_mb=$(( ($ram_size_kb + 1023) / 1024 ))
+ram_size_b=$(( $ram_size_kb * 1024 ))
+
+no_data_opt=$(has_kernel_parameter "nodata" && echo "nodata")
+no_data_format_opt=$(has_kernel_parameter "nodataformat" && echo "nodataformat")
+no_data_mount_opt=$(has_kernel_parameter "nodatamount" && echo "nodatamount")
+no_data_overlay_opt=$(has_kernel_parameter "nodataoverlay" && echo "nodataoverlay")
+
+no_data_swap_opt=$(has_kernel_parameter "nodataswap" && echo "nodataswap")
+data_swap_size_mb_opt=$(get_kernel_parameter "dataswapsize")
+
+ZEBRAFISH_ZPOOL="zebrafish"
+ZEBRAFISH_ZPOOL_OCI="$ZEBRAFISH_ZPOOL/oci"
+ZEBRAFISH_ZPOOL_CONTAINERD="$ZEBRAFISH_ZPOOL_OCI/containerd"
+ZEBRAFISH_ZPOOL_CNI="$ZEBRAFISH_ZPOOL_OCI/cni"
+ZEBRAFISH_ZPOOL_NERDCTL="$ZEBRAFISH_ZPOOL_OCI/nerdctl"
+ZEBRAFISH_ZPOOL_BUILDKIT="$ZEBRAFISH_ZPOOL_OCI/buildkit"
+
+ZEBRAFISH_ZPOOL_DATA="$ZEBRAFISH_ZPOOL/data"
+ZEBRAFISH_ZPOOL_OVERLAY="$ZEBRAFISH_ZPOOL/overlay"
+ZEBRAFISH_ZPOOL_LOGS="$ZEBRAFISH_ZPOOL/logs"
+ZEBRAFISH_ZPOOL_SWAP="$ZEBRAFISH_ZPOOL/swap"
+ZEBRAFISH_SWAP_DEV="/dev/zvol/$ZEBRAFISH_ZPOOL_SWAP"
+
+ZEBRAFISH_OCI_DIR="/oci"
+ZEBRAFISH_NERDCTL_DATA_DIR="$ZEBRAFISH_OCI_DIR/nerdctl"
+ZEBRAFISH_BUILDKIT_DATA_DIR="$ZEBRAFISH_OCI_DIR/buildkit"
+ZEBRAFISH_CONTAINERD_DATA_DIR="$ZEBRAFISH_OCI_DIR/containerd"
+ZEBRAFISH_CNI_DATA_DIR="$ZEBRAFISH_OCI_DIR/cni"
+
+ZEBRAFISH_PERSISTENCE_MAGIC_HEADER="zebrafish-please-format-me"
+ZEBRAFISH_PERSISTENCE_MOUNT_DIR="/vol"
+ZEBRAFISH_PERSISTENCE_LOG_DIR="/logs"
+ZEBRAFISH_PERSISTENCE_OVERLAY_MOUNT_DIR="/overlay"
+ZEBRAFISH_BIND_OVERLAY_MOUNT_DIR="/run/zebrafish/overlay"
+
+find_zebrafish_persistence_partition() {
+    info "Searching for persistence partition."
+    zpool import "$ZEBRAFISH_ZPOOL" 2>/dev/null || true
+
+    if zpool list "$ZEBRAFISH_ZPOOL" >/dev/null 2>&1; then
+        echo "$ZEBRAFISH_ZPOOL"
+    fi
+}
+
+find_zebrafish_magic_device() {
+    info "Searching for magic devices ..."
+
+    local magic_device=""
+    # Search devices of type IDE (major number 3), SATA (8), NVME (259), and SD/eMMC (179).
+    local devices=$(lsblk -npl -I 3,8,259,179 --output NAME) || fail "FAIL: lsblk"
+
+    for d in $devices; do
+        info -n "  $d ..."
+        local header=$(dd if=$d bs=${#ZEBRAFISH_PERSISTENCE_MAGIC_HEADER} count=1 status=none | tr -d '\0') || fail "FAIL: dd magic header"
+        if [ -n "$header" ] && [ "$header" == "$ZEBRAFISH_PERSISTENCE_MAGIC_HEADER" ]; then
+            info " IT'S MAGIC!"
+            local magic_device="$d"
+            break
+        else
+            info " nothing"
+        fi
+    done
+    echo $magic_device
+}
+
+calculate_swap_size() {
+    local number="$1"
+    local half_gigabyte_bytes=$((512*1024*1024))
+    local eight_gigabytes_bytes=$((8*1024*1024*1024))
+
+    # Calculate 10% of the number
+    local ten_percent=$((number / 10))
+
+    # Ensure the result does not exceed 8 gigabytes
+    if [ "$ten_percent" -gt "$eight_gigabytes_bytes" ]; then
+        ten_percent="$eight_gigabytes_bytes"
+    fi
+
+    # Round up to the nearest half gigabyte
+    local rounded_up=$(( (ten_percent + half_gigabyte_bytes - 1) / half_gigabyte_bytes * half_gigabyte_bytes ))
+
+    if [[ "$rounded_up" -gt "$number" ]]; then
+        rounded_up="$ten_percent"
+    fi
+
+    swap_size_bytes="$rounded_up"
+}
+
+create_zebrafish_persistence_partition() {
+    local magic_device="$@"
+
+    info "Partitioning magic device $magic_device..."
+    zpool create -f -o ashift=12 -O xattr=sa -O atime=off -O acltype=posixacl -O dedup=off -m none "$ZEBRAFISH_ZPOOL" "$magic_device" || fail "Cannot create zfs pool"
+    zfs create "$ZEBRAFISH_ZPOOL_OCI" || fail "Cannot create oci dataset"
+    zfs create -o mountpoint="$ZEBRAFISH_NERDCTL_DATA_DIR" "$ZEBRAFISH_ZPOOL_NERDCTL" || fail "Cannot create nerdctl dataset"
+    zfs create -o mountpoint="$ZEBRAFISH_BUILDKIT_DATA_DIR" "$ZEBRAFISH_ZPOOL_BUILDKIT" || fail "Cannot create buildkit dataset"
+    zfs create -o mountpoint="$ZEBRAFISH_CONTAINERD_DATA_DIR" "$ZEBRAFISH_ZPOOL_CONTAINERD" || fail "Cannot create containerd dataset"
+    zfs create -o mountpoint="$ZEBRAFISH_CNI_DATA_DIR" "$ZEBRAFISH_ZPOOL_CNI" || fail "Cannot create cni dataset"
+
+    zfs create -o compression=zstd -o mountpoint="$ZEBRAFISH_PERSISTENCE_MOUNT_DIR" "$ZEBRAFISH_ZPOOL_DATA" || fail "Cannot create data dataset"
+    zfs create -o compression=zstd -o mountpoint="$ZEBRAFISH_PERSISTENCE_OVERLAY_MOUNT_DIR" "$ZEBRAFISH_ZPOOL_OVERLAY" || fail "Cannot create overlay dataset"
+    zfs create -o compression=zstd -o mountpoint="$ZEBRAFISH_PERSISTENCE_LOG_DIR" "$ZEBRAFISH_ZPOOL_LOGS" || fail "Cannot create log dataset"
+#    zfs create -o mountpoint="$ZEBRAFISH_CONTAINERD_DATA_DIR/io.containerd.snapshotter.v1.zfs" "$ZEBRAFISH_ZPOOL_CONTAINERD_SNAPSHOTTER" || fail "Cannot create containerd ZFS dataset"
+
+    zfs_size=$(zfs get -H -o value -p available "$ZEBRAFISH_ZPOOL")
+    calculate_swap_size "$zfs_size"
+
+    info "Creating swap size of ${swap_size_bytes}..."
+    zfs create -V "${swap_size_bytes}B" -o compression=zle -o logbias=throughput -o sync=always -o primarycache=metadata -o secondarycache=none -o com.sun:auto-snapshot=false "$ZEBRAFISH_ZPOOL_SWAP" || fail "Cannot create swap dataset"
+    mkswap "$ZEBRAFISH_SWAP_DEV" || fail "Cannot make swap"
+
+    echo "$ZEBRAFISH_ZPOOL"
+}
+
+mount_zebrafish_persistence_partition() {
+    swapon "$ZEBRAFISH_SWAP_DEV" || fail "Cannot enable swap"
+    echo "$ZEBRAFISH_PERSISTENCE_MOUNT_DIR"
+}
+
+write_zebrafish_persistence_version_file () {
+    local dir=$1
+    local file=$dir/zebrafish-persistence-info
+    cat << EOF > "$file"
+# Well, hello there! =)
+#
+# This file was auto-generated by Zebrafish
+# at $(date -u +'%F %T %Z') when
+# the persistence partition was created.
+# The file is located in the root of the
+# Zebrafish persistence file system.
+#
+# This directory including this file is
+# managed by Zebrafish, and is not
+# supposed to be modified by human beings,
+# such as yourself.
+#
+# Have a nice day!
+
+EOF
+cat /etc/zebrafish-release >> "$file"
+}
+
+mount_tmpfs_on_zebrafish_persistence_dir () {
+    info "Mounting tmpfs at persistence mount point: $ZEBRAFISH_PERSISTENCE_MOUNT_DIR"
+    mount -t tmpfs tmpfs $ZEBRAFISH_PERSISTENCE_MOUNT_DIR >&2
+    [ $? ] && echo $ZEBRAFISH_PERSISTENCE_MOUNT_DIR || echo ""
+}
+
+overlay () {
+    local src="$1"
+    [ -d "$src" ] # Fail if src not present.
+
+    if mountpoint "$src" >/dev/null; then
+        info "Already a mountpoint: $src"
+        return 1
+    fi
+
+    #local subject=$(echo $src | sed -e 's,^/,,' -e 's,/$,,' | tr / - ) # Trim any leading/traling '/', replace all remainig '/' with '-' e.g. /var/www/ => var-www
+    local subject=$(basename $src)
+    local subject=${2:-$subject} # Use arg 2 if present; otherwise use subject.
+
+    local mod=$(stat -c %a "$src")
+    local own=$(stat -c %U:%G "$src")
+
+    local lowerdir="$ZEBRAFISH_BIND_OVERLAY_MOUNT_DIR/$subject/lower"
+    local upperdir="$ZEBRAFISH_PERSISTENCE_OVERLAY_MOUNT_DIR/$subject/upper"
+    local workdir="$ZEBRAFISH_PERSISTENCE_OVERLAY_MOUNT_DIR/$subject/work"
+
+    local mergedir="$src"
+    local name="overlay-$subject"
+
+    info "Creating overlay $name for: $src ..."
+
+    info "Displacing original $src to $lowerdir."
+    install -d -D -o root -g root -m 0755 "$lowerdir" "$upperdir" "$workdir" >&2 || fail "FAIL: install -d for $name"
+    mount --bind "$src" "$lowerdir" >&2 || fail "FAIL: mount --bind src"
+
+    info "Merging overlay $name for virtual $mergedir:"
+    info "  = virtual: $mergedir"
+    info "  ^ upper:   $upperdir"
+    info "  ^ work:    $workdir"
+    info "  ^ lower:   $lowerdir (original $src)"
+
+    rm -fr "$workdir"/* >&2 # Workdir must to be empty prior to mounting.
+
+    # Say we want to add persistence to the read-only /etc on the rootfs.
+    # We want the merged overlay fs to be mounted at the original dir, /etc, so everything works seamlessly.
+    # First "move" the original /etc to another mount dir, the lower mount point of the overlay fs: /run/zebrafish/overlays/etc/lower.
+    # Then merge the overlays, include the lower, and mount the finally merged overlay fs back on /etc.
+    # The original read-only /etc will still exist in /run/zebrafish/overlays/etc/lower.
+    mount --bind "$src" "$lowerdir" >&2 || fail "FAIL: mount --bind src"
+    mount -t overlay $name -o lowerdir="$lowerdir",upperdir="$upperdir",workdir="$workdir" "$mergedir" >&2 || fail "FAIL: mount -t overlay for $name"
+
+    # Set original permission and ownership on the persisted mount point.
+    chmod $mod $upperdir >&2 || fail "FAIL: chmod $mod $upperdir for $name"
+    chown $own $upperdir >&2 || fail "FAIL: chown $own $upperdir for $name"
+
+    info "OK, $name ready."
+
+    return 0
+}
+
+overlay_zebrafish_data_dirs () {
+    overlay /etc
+    overlay /home
+    overlay /srv
+}
+
+create_missing_directories() {
+    mkdir -p "$ZEBRAFISH_CONTAINERD_DATA_DIR/io.containerd.snapshotter.v1.zfs" || fail "Failed to make containerd snapshotter directory"
+    mkdir -p /logs/system || fail "Failed to make log directory"
+}
+
+info "Zebrafish Persistence"
+
+# Some preliminary sanity checks to ensure this script can run with at least some degree of safely.
+assert_root $this
+ps aux | grep -v grep | grep -q /usr/bin/containerd && fail "$this: Containerd is running; please stop it before running this script."
+mountpoint $ZEBRAFISH_PERSISTENCE_MOUNT_DIR >/dev/null && fail "$this: Persistence directory is already mounted; cannot continue."
+
+
+
+zebrafish_persistence_partition=""
+if [ -n "$no_data_opt" ]; then
+    info "SKIPPED configuring persistence: $no_data_opt"
+else
+    zebrafish_persistence_partition="$(find_zebrafish_persistence_partition)"
+    if [ -z "$zebrafish_persistence_partition" ]; then
+        info "No persistence partition found."
+    else
+        info "Ok, found persistence partition: $zebrafish_persistence_partition"
+    fi
+fi
+
+zebrafish_magic_device=""
+if [ -z "$zebrafish_persistence_partition" ] && [ -z "$no_data_opt" ]; then
+    zebrafish_magic_device=$(find_zebrafish_magic_device)
+    if [ -z "$zebrafish_magic_device" ]; then
+        info "No magic device found."
+    else
+        info "Ok, found magic device: $zebrafish_magic_device"
+    fi
+fi
+
+is_fresh_zebrafish_persistence_partition=false
+if [ -n "$zebrafish_magic_device" ]; then
+    if [ -n "$no_data_format_opt" ]; then
+        info "SKIPPED formatting persistence partition: $no_data_format_opt"
+    else
+        zebrafish_persistence_partition=$(create_zebrafish_persistence_partition $zebrafish_magic_device)
+        if [ -z "$zebrafish_persistence_partition" ]; then
+            fail "Failed to create persistence partition."
+        else
+            is_fresh_zebrafish_persistence_partition=true
+            info "Ok, created persistence partition: $zebrafish_persistence_partition"
+        fi
+    fi
+fi
+
+mounted_zebrafish_persistence_dir=""
+if [ -n "$zebrafish_persistence_partition" ]; then
+    if [ -n "$no_data_mount_opt" ]; then
+        info "SKIPPED mounting of persistence partition: $no_data_mount_opt"
+    else
+        mounted_zebrafish_persistence_dir=$(mount_zebrafish_persistence_partition)
+
+        if [ $is_fresh_zebrafish_persistence_partition ]; then
+            write_zebrafish_persistence_version_file $mounted_zebrafish_persistence_dir
+        fi
+    fi
+else
+    if [ -n "$no_data_mount_opt" ]; then
+        info "SKIPPED mounting tmpfs: $no_data_mount_opt"
+    else
+        info "WARNING: Mounting tmpfs in-place of persistence partition."
+        info "WARNING: This is to provide a writable overlay for the immutable rootfs."
+        info "WARNING: ALL CHANGES WILL BE LOST IN REBOOT."
+        mounted_zebrafish_persistence_dir=$(mount_tmpfs_on_zebrafish_persistence_dir)
+        if [ -z "$mounted_zebrafish_persistence_dir" ]; then
+            fail "Failed to mount tmpfs at persistence mount point."
+        else
+            info "Ok, mounted tmpfs: $mounted_zebrafish_persistence_dir"
+            touch $mounted_zebrafish_persistence_dir/THIS-DIRECTORY-IS-A-TMPFS-AND-IS-NOT-PERSISTED
+        fi
+    fi
+fi
+
+if [ -n "$mounted_zebrafish_persistence_dir" ]; then
+    if [ -n "$no_data_overlay_opt" ]; then
+        info "SKIPPED overlaying Zebrafish data directories: $no_data_overlay_opt"
+    else
+        overlay_zebrafish_data_dirs
+        if [ ! $? ]; then
+            fail "Failed to overlay Zebrafish data directories!"
+        fi
+    fi
+fi
+
+create_missing_directories
+echo "Have a nice disk!"

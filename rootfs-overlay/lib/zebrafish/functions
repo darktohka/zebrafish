@@ -1,0 +1,136 @@
+fail () {
+	local msg="$@"
+	[ -n "@msg" ] || msg="FAILED"
+	echo "$msg" >&2
+	exit 1
+}
+
+info () {
+	>&2 echo "$@"
+}
+
+has_kernel_parameter () {
+	xargs -n1 -a /proc/cmdline 2>/dev/null | grep -q -e ^$1
+}
+
+wait_for_internet () {
+	echo -n "Waiting for internet: "
+	count=0
+
+	while [[ $count -ne 5 ]]; do
+		if ping -c 1 -W 1 google.com > /dev/null 2>&1; then
+			echo "OK"
+			return 0
+		fi
+		echo -n "attempt #$count; "
+		count=$((count+1))
+	done
+
+	echo "timed out"
+	return 1
+}
+
+wait_for_containerd () {
+	echo -n "Waiting for containerd: "
+	count=0
+
+	while [[ $count -ne 5 ]]; do
+		if nerdctl version > /dev/null 2>&1; then
+			echo "OK"
+			return 0
+		fi
+
+		echo -n "attempt #$count; "
+		sleep 1
+
+		count=$((count+1))
+	done
+
+	echo "timed out"
+	return 1
+}
+
+# Returns "" if not present
+get_kernel_parameter () {
+	xargs -n1 -a /proc/cmdline | grep -e ^$1= | tail -n 1 | cut -d= -f2  # tail: Last occurence on cmdline wins
+}
+
+
+is_headless () {
+	has_kernel_parameter headless
+}
+
+
+assert_root () {
+	[ $(id -u) -eq 0 ] || fail "$1: Permission denied, script requires root."
+}
+
+
+to_valid_hostname () {
+    while IFS= read -r ln; do
+		# Remove invalid characters using sed.
+		cleaned=$(echo "$ln" | sed 's/[^a-zA-Z0-9\-]//g')
+
+		# Remove consecutive hyphens using tr.
+		cleaned=$(echo "$cleaned" | tr -s '-')
+
+		# Remove leading and trailing hyphens using sed.
+		cleaned=$(echo "$cleaned" | sed 's/^-//; s/-$//')
+
+		echo "$cleaned"
+    done
+}
+
+has_persistence () {
+    if zpool list "zebrafish" >/dev/null 2>&1; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+
+# Returns 1 if persistence is enabled; otherwise 0.
+relink_dir () {
+	local symlink=$1
+#	echo "$0: Try relinking symlink: $symlink ..."
+	if [ -L $symlink ]; then
+#		echo "$0: Found symlink: $symlink ..."
+		if rm -f $symlink >/dev/null 2>&1; then
+			# If symlink can be removed, it means that
+			# a writable overlay has been mounted on top of it,
+			# ie. persistence is enabled.
+			# Now that the symlink has been deleted,
+			# we need to create the real directory in its place.
+			mkdir -p $symlink || exit 10
+#			echo "$0: Created persistent directory: $symlink"
+			return 1
+		else
+			# If symlink cannot be removed, it means we're running
+			# off the default read-only rootfs;
+			# create symlink target on writable tmpfs and continue.
+			# (the symlink never really existed in tmpfs because it's tmpfs)
+			mkdir -p "$(readlink $symlink)" || exit 20 # Create symlink target dir in tmpfs.
+#			echo "$0: Created tmp directory: $symlink"
+			return 0
+		fi
+	fi
+	return 1
+}
+
+# Returns 1 if persistence is enabled; otherwise 0.
+relink_file () {
+	local symlink=$1
+	if [ -L $symlink ]; then
+		if rm -f $symlink >/dev/null 2>&1; then
+			mkdir -p "$(dirname $symlink)" || exit 10
+			touch "$symlink" || exit 11
+			return 1
+		else
+			mkdir -p "$(dirname $(readlink $symlink))" || exit 20
+			touch "$(readlink $symlink)" || exit 21
+			return 0
+		fi
+	fi
+	return 1
+}

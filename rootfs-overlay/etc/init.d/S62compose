@@ -1,0 +1,111 @@
+#!/bin/bash
+
+NAME=compose
+COMPOSE_DATA_DIR=/vol/compose
+
+. /lib/zebrafish/functions
+
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME $1
+
+do_start() {
+    wait_for_containerd
+    echo "Starting Docker Compose containers..."
+
+    if ! [[ -d "$COMPOSE_DATA_DIR" ]]; then
+        echo "$COMPOSE_DATA_DIR is missing!"
+        exit 0
+    fi
+
+    COMPOSE_FILES="$(find $COMPOSE_DATA_DIR -maxdepth 2 -type f -name "docker-compose.yml" -o -name "docker-compose.yaml")"
+
+    for COMPOSE_FILE in $COMPOSE_FILES; do
+        COMPOSE_FOLDER="$(dirname "$COMPOSE_FILE")"
+        cd "$COMPOSE_FOLDER"
+        echo "Starting $COMPOSE_FOLDER..."
+
+        if docker compose up -d; then
+            echo "Started."
+        else
+            echo "Failed to start!"
+        fi
+    done
+}
+
+do_stop() {
+    echo "Stopping Docker Compose containers..."
+
+    if ! [[ -d "$COMPOSE_DATA_DIR" ]]; then
+        echo "$COMPOSE_DATA_DIR is missing."
+        exit 0
+    fi
+
+    COMPOSE_FILES="$(find $COMPOSE_DATA_DIR -maxdepth 2 -type f -name "docker-compose.yml" -o -name "docker-compose.yaml")"
+
+    for COMPOSE_FILE in $COMPOSE_FILES; do
+        COMPOSE_FOLDER="$(dirname "$COMPOSE_FILE")"
+        cd "$COMPOSE_FOLDER"
+        echo "Stopping $COMPOSE_FOLDER..."
+
+        if docker compose down; then
+            echo "Stopped."
+        fi
+    done
+}
+
+do_pull() {
+    echo "Pulling Docker Compose containers..."
+
+    if ! [[ -d "$COMPOSE_DATA_DIR" ]]; then
+        echo "$COMPOSE_DATA_DIR is missing."
+        exit 0
+    fi
+
+    COMPOSE_FILES="$(find $COMPOSE_DATA_DIR -maxdepth 2 -type f -name "docker-compose.yml" -o -name "docker-compose.yaml")"
+
+    for COMPOSE_FILE in $COMPOSE_FILES; do
+        COMPOSE_FOLDER="$(dirname "$COMPOSE_FILE")"
+        cd "$COMPOSE_FOLDER"
+        echo "Pulling $COMPOSE_FOLDER..."
+
+        if docker compose pull && docker compose build --pull; then
+            echo "Pull complete."
+        fi
+    done
+
+    for COMPOSE_FILE in $COMPOSE_FILES; do
+        COMPOSE_FOLDER="$(dirname "$COMPOSE_FILE")"
+        cd "$COMPOSE_FOLDER"
+
+        if ! [[ $(docker compose ps --quiet) ]]; then
+            continue
+        fi
+
+        cd "$COMPOSE_FOLDER"
+        echo "Starting $COMPOSE_FOLDER..."
+
+        if docker compose up -d; then
+            echo "Started."
+        else
+            echo "Failed to start!"
+        fi
+    done
+}
+
+case "$1" in
+        start)
+                do_start
+                ;;
+        stop)
+                do_stop
+                ;;
+        restart)
+                do_stop
+                do_start
+                ;;
+        pull)
+                do_pull
+                ;;
+	*)
+                echo "Usage: $0 {start|stop|restart|pull}"
+                exit 1
+esac

@@ -1,0 +1,15 @@
+diff -purN kbd-2.5.1orig/src/Makefile.in kbd-2.5.1/src/Makefile.in
+--- kbd-2.5.1orig/src/Makefile.in	2022-06-16 16:23:59.000000000 +0000
++++ kbd-2.5.1/src/Makefile.in	2023-04-12 22:31:35.411534781 +0000
+@@ -664,10 +664,7 @@ AM_CPPFLAGS = \
+ AM_CFLAGS = $(CODE_COVERAGE_CFLAGS)
+ SUBDIRS = libcommon libkbdfile libkfont libkeymap vlock
+ OLDPROGS = mapscrn loadunimap
+-PROGS = dumpkeys loadkeys showkey setfont showconsolefont setleds \
+-	setmetamode kbd_mode psfxtable fgconsole kbdrate chvt \
+-	deallocvt openvt kbdinfo setvtrgb $(am__append_1) \
+-	$(am__append_2) $(am__append_3)
++PROGS = loadkeys setfont showconsolefont setleds kbd_mode
+ dist_bin_SCRIPTS = unicode_start unicode_stop
+ EXTRA_DIST = \
+ 	wctomb.c \

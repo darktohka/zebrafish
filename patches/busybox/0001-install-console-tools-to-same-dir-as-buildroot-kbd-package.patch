@@ -1,0 +1,24 @@
+diff -purN busybox-1.36.0.orig/console-tools/kbd_mode.c busybox-1.36.0/console-tools/kbd_mode.c
+--- busybox-1.36.0.orig/console-tools/kbd_mode.c	2023-01-03 14:17:01.000000000 +0000
++++ busybox-1.36.0/console-tools/kbd_mode.c	2023-03-26 20:38:36.098488573 +0000
+@@ -14,7 +14,7 @@
+ //config:	help
+ //config:	This program reports and sets keyboard mode.
+ 
+-//applet:IF_KBD_MODE(APPLET_NOEXEC(kbd_mode, kbd_mode, BB_DIR_BIN, BB_SUID_DROP, kbd_mode))
++//applet:IF_KBD_MODE(APPLET_NOEXEC(kbd_mode, kbd_mode, BB_DIR_USR_BIN, BB_SUID_DROP, kbd_mode))
+ 
+ //kbuild:lib-$(CONFIG_KBD_MODE) += kbd_mode.o
+ 
+diff -purN busybox-1.36.0.orig/console-tools/loadfont.c busybox-1.36.0/console-tools/loadfont.c
+--- busybox-1.36.0.orig/console-tools/loadfont.c	2023-01-03 14:17:01.000000000 +0000
++++ busybox-1.36.0/console-tools/loadfont.c	2023-03-26 20:38:09.023201071 +0000
+@@ -50,7 +50,7 @@
+ //config:	depends on LOADFONT || SETFONT
+ 
+ //applet:IF_LOADFONT(APPLET_NOEXEC(loadfont, loadfont, BB_DIR_USR_SBIN, BB_SUID_DROP, loadfont))
+-//applet:IF_SETFONT(APPLET_NOEXEC(setfont, setfont, BB_DIR_USR_SBIN, BB_SUID_DROP, setfont))
++//applet:IF_SETFONT(APPLET_NOEXEC(setfont, setfont, BB_DIR_USR_BIN, BB_SUID_DROP, setfont))
+ 
+ //kbuild:lib-$(CONFIG_LOADFONT) += loadfont.o
+ //kbuild:lib-$(CONFIG_SETFONT) += loadfont.o

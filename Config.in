@@ -1,0 +1,22 @@
+menu "Zebrafish"
+
+source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/mainlinecontainerd/Config.in"
+source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/mainlinenerdctl/Config.in"
+source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/mainlinebuildkit/Config.in"
+source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/mainlinecrun/Config.in"
+source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/containerdnet/Config.in"
+
+menu "doas"
+	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/opendoas/Config.in"
+endmenu
+
+menu "dive"
+	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/dive/Config.in"
+endmenu
+
+menu "zfs"
+	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/userlandzfs/Config.in"
+	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/zrepl/Config.in"
+endmenu
+
+endmenu

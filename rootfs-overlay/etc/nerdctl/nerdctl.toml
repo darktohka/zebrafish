@@ -1,0 +1,3 @@
+snapshotter = "zfs"
+data_root = "/oci/nerdctl"
+experimental = true

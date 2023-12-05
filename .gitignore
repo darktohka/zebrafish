@@ -1,0 +1,17 @@
+#.git  # Because .dockerignore symlinks to .gitignore, and we don't want .git to be part of the docker build context.
+
+/release
+/bin
+
+/*bzImage
+/*.iso
+/*.img
+/*.ext2
+/*.ext4
+/*.vfat
+/*.cpio
+/*.squashfs
+/*.tar
+
+README.pdf
+index.html
