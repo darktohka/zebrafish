@@ -19,6 +19,12 @@ jobs:
           repository: buildroot/buildroot
           ref: master
           path: buildroot
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sed make binutils build-essential diffutils gcc g++ bash patch \
+            gzip bzip2 perl tar cpio unzip rsync file bc findutils wget python3 git libelf-dev
       - name: Patch Buildroot
         shell: bash
         run: |

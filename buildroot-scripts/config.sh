@@ -37,11 +37,8 @@ fi
 # Copy new configuration
 cp "$ZF"/configs/"$defconfig" "$BR"/.config
 cp "$ZF"/configs/"$defconfig" "$BR"/output/.config
-
-if [[ -d "$LX" ]]; then
-  rm -f "$LX"/.config
-  cp "$ZF"/board/pc/"$linuxconfig" "$OUTPUT"/build/linux-custom/.config
-fi
+mkdir -p "$LX"
+cp "$ZF"/board/pc/"$linuxconfig" "$LX"/.config
 
 cd "$BR"
 make BR2_EXTERNAL="$ZF" olddefconfig
