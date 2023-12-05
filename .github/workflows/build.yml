@@ -37,7 +37,7 @@ jobs:
           ./config.sh \
             "${{ github.workspace }}/buildroot" \
             "${{ github.workspace }}/zebrafish" \
-            "${{ matrix.architecture }}""
+            "${{ matrix.architecture }}"
       - name: Build Buildroot
         shell: bash
         run: |
