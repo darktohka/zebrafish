@@ -16,6 +16,15 @@ done
 rm -f "$TARGET_DIR"/usr/sbin/iptables
 ln -s xtables-nft-multi "$TARGET_DIR"/usr/sbin/iptables
 
+# Set doas permissions
+if [ "$EUID" -ne 0 ]; then
+    chmod 4755 "$TARGET_DIR"/usr/bin/doas
+    chown 0:0 "$TARGET_DIR"/usr/bin/doas
+else
+    sudo chmod 4755 "$TARGET_DIR"/usr/bin/doas
+    sudo chown 0:0 "$TARGET_DIR"/usr/bin/doas
+fi
+
 # Cleanup unused files that are installed by Buildroot.
 rm -frv "$TARGET_DIR"/media
 rm -frv "$TARGET_DIR"/boot

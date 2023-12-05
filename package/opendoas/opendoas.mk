@@ -15,10 +15,6 @@ OPENDOAS_MAKE_OPTS = \
 	CFLAGS="$(TARGET_CFLAGS)" \
 	LDFLAGS="$(TARGET_LDFLAGS)" \
 
-define OPENDOAS_PERMISSIONS
-	/usr/bin/doas f 4755 0 0 - - - - -
-endef
-
 define OPENDOAS_USERS
 	- - sudo -1 - - - -
 endef

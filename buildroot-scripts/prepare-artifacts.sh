@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 BR="$1"
 ARTIFACTS="$2"
