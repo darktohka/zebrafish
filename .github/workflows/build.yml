@@ -16,7 +16,7 @@ jobs:
       - name: Checkout Buildroot
         uses: actions/checkout@v4
         with:
-          repository: https://github.com/buildroot/buildroot
+          repository: buildroot/buildroot
           ref: master
           path: buildroot
       - name: Patch Buildroot
