@@ -1,0 +1,69 @@
+name: Autobuild for Docker
+
+on: [push, workflow_dispatch, repository_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [x64, aarch64]
+    steps:
+      - name: Checkout Zebrafish
+        uses: actions/checkout@v4
+        with:
+          path: zebrafish
+      - name: Checkout Buildroot
+        uses: actions/checkout@v4
+        with:
+          repository: https://github.com/buildroot/buildroot
+          ref: master
+          path: buildroot
+      - name: Patch Buildroot
+        shell: bash
+        run: |
+          patch -sf --no-backup-if-mismatch \
+            "${{ github.workspace }}/buildroot/linux/linux.mk" \
+            "${{ github.workspace }}/zebrafish/buildroot-patches/0001-add-zfs-to-linux.patch"
+      - name: Restore Buildroot cache
+        uses: actions/cache/restore@v3
+        with:
+          path: zebrafish-cache-${{ matrix.architecture }}
+          key: ${{ github.workspace }}/buildroot/output
+      - name: Configure Buildroot
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          ./config.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/zebrafish" \
+            "${{ matrix.architecture }}""
+      - name: Build Buildroot
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/buildroot"
+          make BR2_EXTERNAL="${{ github.workspace }}/zebrafish"
+      - name: Prepare artifacts
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          ./prepare-artifacts.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/artifacts" \
+            "${{ matrix.architecture }}"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: zebrafish-${{ matrix.architecture }}
+          path: ${{ github.workspace }}/artifacts/zebrafish-${{ matrix.architecture }}.tar
+      - name: Prepare Buildroot cache
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          ./prepare-cache.sh \
+            "${{ github.workspace }}/buildroot"
+      - name: Save Buildroot cache
+        uses: actions/cache/save@v3
+        with:
+          path: zebrafish-cache-${{ matrix.architecture }}
+          key: ${{ github.workspace }}/buildroot/output
