@@ -12,6 +12,20 @@ for tool in nerdctl containerd cni buildkit; do
     ln -s /oci/"$tool" "$TARGET_DIR"/var/lib/"$tool"
 done
 
+for cattype in cat zcat bzcat xzcat; do
+  rm -f "$TARGET_DIR"/bin/"$cattype"
+  ln -s /usr/bin/bsdcat "$TARGET_DIR"/bin/"$cattype"
+done
+
+rm -f "$TARGET_DIR"/bin/tar
+ln -s /usr/bin/bsdtar "$TARGET_DIR"/bin/tar
+
+rm -f "$TARGET_DIR"/bin/cpio
+ln -s /usr/bin/bsdcpio "$TARGET_DIR"/bin/cpio
+
+rm -f "$TARGET_DIR"/usr/bin/unzip
+ln -s /usr/bin/bsdunzip "$TARGET_DIR"/usr/bin/unzip
+
 # Use nftables backend for iptables
 rm -f "$TARGET_DIR"/usr/sbin/iptables
 ln -s xtables-nft-multi "$TARGET_DIR"/usr/sbin/iptables
