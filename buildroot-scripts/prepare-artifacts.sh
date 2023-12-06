@@ -42,7 +42,7 @@ else
   exit 1
 fi
 
-cp "$IMAGE" "$TEMPDIR"/zebrafish-kernel
+cp "$IMAGE" "$ARTIFACTS"/zebrafish-kernel
 cp "$ROOTFS" "$ARTIFACTS"/zebrafish-initrd
 
 tar -cf "$ARTIFACTS"/zebrafish-"$ARCH".tar -C "$ARTIFACTS" zebrafish-kernel zebrafish-initrd
