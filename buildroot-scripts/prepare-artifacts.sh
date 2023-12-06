@@ -26,7 +26,7 @@ fi
 
 if [[ -f "$IMAGES"/Image ]]; then
   IMAGE="$IMAGES"/Image
-elif [[ -f "$image_dir"/bzImage ]]; then
+elif [[ -f "$IMAGES"/bzImage ]]; then
   IMAGE="$IMAGES"/bzImage
 else
   echo "No image found."
