@@ -10,11 +10,9 @@ if ! [[ -d "$BR" ]]; then
   exit 1
 fi
 
-if [[ -d "$ARTIFACTS" ]]; then
-  rm -rf "$ARTIFACTS"
+if ! [[ -d "$ARTIFACTS" ]]; then
+  mkdir -p "$ARTIFACTS"
 fi
-
-mkdir -p "$ARTIFACTS"
 
 OUTPUT="$BR"/output
 IMAGES="$OUTPUT"/images

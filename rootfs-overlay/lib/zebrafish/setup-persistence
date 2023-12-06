@@ -55,8 +55,8 @@ find_zebrafish_magic_device() {
     info "Searching for magic devices ..."
 
     local magic_device=""
-    # Search devices of type IDE (major number 3), SATA (8), NVME (259), and SD/eMMC (179).
-    local devices=$(lsblk -npl -I 3,8,259,179 --output NAME) || fail "FAIL: lsblk"
+    # Search devices of type IDE (major number 3), SATA (8), VIRTIO (254), NVME (259), and SD/eMMC (179).
+    local devices=$(lsblk -npl -I 3,8,254,259,179 --output NAME) || fail "FAIL: lsblk"
 
     for d in $devices; do
         info -n "  $d ..."
