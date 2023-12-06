@@ -34,8 +34,8 @@ jobs:
       - name: Restore Buildroot cache
         uses: actions/cache/restore@v3
         with:
-          path: zebrafish-cache-${{ matrix.architecture }}
-          key: ${{ github.workspace }}/buildroot/output
+          key: zebrafish-cache-${{ matrix.architecture }}
+          path: ${{ github.workspace }}/buildroot/output
       - name: Configure Buildroot
         shell: bash
         run: |
@@ -47,8 +47,10 @@ jobs:
       - name: Build Buildroot
         shell: bash
         run: |
-          cd "${{ github.workspace }}/buildroot"
-          make BR2_EXTERNAL="${{ github.workspace }}/zebrafish"
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          ./build.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/zebrafish"
       - name: Prepare artifacts
         shell: bash
         run: |
@@ -71,5 +73,5 @@ jobs:
       - name: Save Buildroot cache
         uses: actions/cache/save@v3
         with:
-          path: zebrafish-cache-${{ matrix.architecture }}
-          key: ${{ github.workspace }}/buildroot/output
+          key: zebrafish-cache-${{ matrix.architecture }}
+          path: ${{ github.workspace }}/buildroot/output
