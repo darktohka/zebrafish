@@ -3,6 +3,7 @@ set -e
 
 BR="$1"
 ARTIFACTS="$2"
+UPLOAD="$ARTIFACTS/upload"
 ARCH="$3"
 
 if ! [[ -d "$BR" ]]; then
@@ -10,8 +11,8 @@ if ! [[ -d "$BR" ]]; then
   exit 1
 fi
 
-if ! [[ -d "$ARTIFACTS" ]]; then
-  mkdir -p "$ARTIFACTS"
+if ! [[ -d "$UPLOAD" ]]; then
+  mkdir -p "$UPLOAD"
 fi
 
 OUTPUT="$BR"/output
@@ -43,4 +44,8 @@ fi
 cp "$IMAGE" "$ARTIFACTS"/zebrafish-kernel
 cp "$ROOTFS" "$ARTIFACTS"/zebrafish-initrd
 
-tar -cf "$ARTIFACTS"/zebrafish-"$ARCH".tar -C "$ARTIFACTS" zebrafish-kernel zebrafish-initrd
+KERNEL_SHA3=$(sha3sum "$ARTIFACTS"/zebrafish-kernel | cut -d ' ' -f1)
+INITRD_SHA3=$(sha3sum "$ARTIFACTS"/zebrafish-initrd | cut -d ' ' -f1)
+
+jq --arg kernel "$KERNEL_SHA3" --arg initrd "$INITRD_SHA3" -n '{"hashes": {"sha3": {"zebrafish-kernel": $kernel, "zebrafish-initrd": $initrd}}}' > "$UPLOAD"/zebrafish-"$ARCH".json
+tar -cf "$UPLOAD"/zebrafish-"$ARCH".tar -C "$ARTIFACTS" zebrafish-kernel zebrafish-initrd

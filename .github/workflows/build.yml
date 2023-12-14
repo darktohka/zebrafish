@@ -24,7 +24,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y sed make binutils build-essential diffutils gcc g++ bash patch \
-            gzip bzip2 perl tar cpio unzip rsync file bc findutils wget python3 git libelf-dev
+            gzip bzip2 perl tar cpio unzip rsync file bc findutils wget python3 git libelf-dev jq \
+            curl libdigest-sha3-perl
       - name: Patch Buildroot
         shell: bash
         run: |
@@ -63,7 +64,17 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: zebrafish-${{ matrix.architecture }}
-          path: ${{ github.workspace }}/artifacts/zebrafish-${{ matrix.architecture }}.tar
+          path: ${{ github.workspace }}/artifacts/upload/zebrafish-${{ matrix.architecture }}.tar
+      - name: Deploy to CDN
+        if: github.ref == 'refs/heads/master'
+        env:
+          AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+        run: |
+          aws s3 cp --recursive "${{ github.workspace }}/artifacts/upload/" "s3://$AWS_BUCKET/" --endpoint-url "$AWS_ENDPOINT_URL"
       - name: Prepare Buildroot cache
         shell: bash
         run: |
