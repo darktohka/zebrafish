@@ -1,0 +1,127 @@
+#!/bin/bash
+set -e
+set -u
+
+CDN_HOSTNAME="https://cdn.zebrafish.tohka.us"
+
+# Check permissions
+ZF_UID="$(id -u)"
+ZF_GID="$(id -g)"
+
+if [[ "$ZF_UID" -ne 0 ]]; then
+    echo "Please run this script as root!"
+    exit 1
+fi
+
+# Find architecture
+ARCH="$(uname -m)"
+
+if [[ "$ARCH" == "x86_64" ]]; then
+    ARCH="x64"
+fi
+
+ZF_ARCH="zebrafish-$ARCH"
+
+# Find the EFI system partition
+echo "Finding EFI system partition..."
+
+EFI_PARTITIONS=$(lsblk -nr -o NAME,FSTYPE,PARTFLAGS | awk '$2=="vfat" && $3=="0x4"' | cut -d ' ' -f 1)
+EFI_PARTITION_COUNT=$(echo -e "$EFI_PARTITIONS" | wc -l)
+
+if [[ "$EFI_PARTITION_COUNT" -ne 1 ]]; then
+    echo "Found $EFI_PARTITION_COUNT EFI system partitions."
+    echo -e "$EFI_PARTITIONS"
+    exit 1
+fi
+
+EFI_PARTITION=/dev/"$EFI_PARTITIONS"
+
+echo "Mounting partition..."
+
+# Unmount the partition if needed
+umount -q "$EFI_PARTITION" || true
+
+# Mount the partition into a folder
+EFI_DIR=$(mktemp -d)
+mount -t vfat "$EFI_PARTITION" "$EFI_DIR"
+
+unmount_efi() {
+    umount -q "$EFI_PARTITION" || true
+    rmdir "$EFI_DIR"
+}
+
+trap unmount_efi EXIT
+
+# Read the manifest
+EFI_RELEASE="$EFI_DIR/$ZF_ARCH"
+EFI_MANIFEST="$EFI_RELEASE.json"
+
+CDN_RELEASE="$CDN_HOSTNAME/$ZF_ARCH"
+CDN_MANIFEST="$CDN_RELEASE.json"
+CDN_ARCHIVE="$CDN_RELEASE.tar"
+
+echo "Downloading remote manifest..."
+
+# Download manifest
+REMOTE_CDN_MANIFEST=$(curl -SsL "$CDN_MANIFEST")
+
+UPGRADE_NECESSARY=true
+
+if [[ -f "$EFI_MANIFEST" ]] && [[ "$(cat "$EFI_MANIFEST")" = "$REMOTE_CDN_MANIFEST" ]]; then
+    UPGRADE_NECESSARY=false
+fi
+
+if [[ "$UPGRADE_NECESSARY" = false ]]; then
+    echo "No update required."
+    exit 0
+fi
+
+echo "Update is necessary!"
+DOWNLOAD_FOLDER="$(mktemp -d)"
+
+cleanup_download_folder() {
+    rm -rf "$DOWNLOAD_FOLDER"
+    unmount_efi
+}
+
+trap cleanup_download_folder EXIT
+
+# Download the update
+echo "Downloading update..."
+curl -SsL "$CDN_ARCHIVE" | tar -x --uid "$ZF_UID" --gid "$ZF_GID" -C "$DOWNLOAD_FOLDER"
+
+# Check hashes
+HASHES=$(echo -e "$REMOTE_CDN_MANIFEST" | jq -r '.hashes.sha3 | to_entries[] | [.key, .value] | @tsv')
+
+while read -r filename expected_hash; do
+    DOWNLOAD_FILENAME="$DOWNLOAD_FOLDER/$filename"
+
+    if ! [[ -f "$DOWNLOAD_FILENAME" ]]; then
+        echo "$filename does not exist!"
+        exit 1
+    fi
+
+    echo "Verifying $filename..."
+
+    if [[ "$(sha3sum "$DOWNLOAD_FILENAME" | cut -d ' ' -f 1)" != "$expected_hash" ]]; then
+        echo "Hash mismatch for $filename!"
+        exit 1
+    fi
+done <<< "$(echo "$HASHES")"
+
+# Install the update
+while read -r filename expected_hash; do
+    DOWNLOAD_FILENAME="$DOWNLOAD_FOLDER/$filename"
+    echo "Installing $filename..."
+
+    cp --no-preserve=mode "$DOWNLOAD_FOLDER/$filename" "$EFI_DIR/$filename"
+done <<< "$(echo "$HASHES")"
+
+# Write the manifest
+echo "Writing manifest..."
+echo -e "$REMOTE_CDN_MANIFEST" > "$EFI_MANIFEST"
+
+# Write all changes to disk
+sync
+
+echo "Update complete!"
