@@ -12,6 +12,9 @@ for tool in nerdctl containerd cni buildkit; do
     ln -s /oci/"$tool" "$TARGET_DIR"/var/lib/"$tool"
 done
 
+ln -s /oci/cni "$TARGET_DIR"/etc/cni
+
+# Create symlinks for libarchive
 for cattype in cat zcat bzcat xzcat; do
   rm -f "$TARGET_DIR"/bin/"$cattype"
   ln -s /usr/bin/bsdcat "$TARGET_DIR"/bin/"$cattype"
@@ -38,6 +41,9 @@ else
     sudo chmod 4755 "$TARGET_DIR"/usr/bin/doas
     sudo chown 0:0 "$TARGET_DIR"/usr/bin/doas
 fi
+
+# Create symlink for Docker config
+ln -s /etc/docker "$TARGET_DIR"/root/.docker
 
 # Cleanup unused files that are installed by Buildroot.
 rm -frv "$TARGET_DIR"/media
