@@ -5,17 +5,10 @@ set -u
 this=setup-persistence
 . /lib/zebrafish/functions
 
-ram_size_kb=$(awk '/^MemTotal/ {print $2}' /proc/meminfo) || fail "FAILED: Unable to read memory info"
-ram_size_mb=$(( ($ram_size_kb + 1023) / 1024 ))
-ram_size_b=$(( $ram_size_kb * 1024 ))
-
 no_data_opt=$(has_kernel_parameter "nodata" && echo "nodata")
 no_data_format_opt=$(has_kernel_parameter "nodataformat" && echo "nodataformat")
 no_data_mount_opt=$(has_kernel_parameter "nodatamount" && echo "nodatamount")
 no_data_overlay_opt=$(has_kernel_parameter "nodataoverlay" && echo "nodataoverlay")
-
-no_data_swap_opt=$(has_kernel_parameter "nodataswap" && echo "nodataswap")
-data_swap_size_mb_opt=$(get_kernel_parameter "dataswapsize")
 
 ZEBRAFISH_ZPOOL="zebrafish"
 ZEBRAFISH_ZPOOL_OCI="$ZEBRAFISH_ZPOOL/oci"
@@ -24,12 +17,17 @@ ZEBRAFISH_ZPOOL_CNI="$ZEBRAFISH_ZPOOL_OCI/cni"
 ZEBRAFISH_ZPOOL_NERDCTL="$ZEBRAFISH_ZPOOL_OCI/nerdctl"
 ZEBRAFISH_ZPOOL_BUILDKIT="$ZEBRAFISH_ZPOOL_OCI/buildkit"
 
+ZEBRAFISH_ZPOOL_COMPOSE="$ZEBRAFISH_ZPOOL/compose"
 ZEBRAFISH_ZPOOL_DATA="$ZEBRAFISH_ZPOOL/data"
 ZEBRAFISH_ZPOOL_OVERLAY="$ZEBRAFISH_ZPOOL/overlay"
 ZEBRAFISH_ZPOOL_LOGS="$ZEBRAFISH_ZPOOL/logs"
 ZEBRAFISH_ZPOOL_SWAP="$ZEBRAFISH_ZPOOL/swap"
 ZEBRAFISH_SWAP_DEV="/dev/zvol/$ZEBRAFISH_ZPOOL_SWAP"
 
+ZEBRAFISH_COMPOSE_DIR="/compose"
+ZEBRAFISH_VOL_DIR="/vol"
+ZEBRAFISH_LOG_DIR="/logs"
+ZEBRAFISH_OVERLAY_DIR="/overlay"
 ZEBRAFISH_OCI_DIR="/oci"
 ZEBRAFISH_NERDCTL_DATA_DIR="$ZEBRAFISH_OCI_DIR/nerdctl"
 ZEBRAFISH_BUILDKIT_DATA_DIR="$ZEBRAFISH_OCI_DIR/buildkit"
@@ -37,9 +35,6 @@ ZEBRAFISH_CONTAINERD_DATA_DIR="$ZEBRAFISH_OCI_DIR/containerd"
 ZEBRAFISH_CNI_DATA_DIR="$ZEBRAFISH_OCI_DIR/cni"
 
 ZEBRAFISH_PERSISTENCE_MAGIC_HEADER="zebrafish-please-format-me"
-ZEBRAFISH_PERSISTENCE_MOUNT_DIR="/vol"
-ZEBRAFISH_PERSISTENCE_LOG_DIR="/logs"
-ZEBRAFISH_PERSISTENCE_OVERLAY_MOUNT_DIR="/overlay"
 ZEBRAFISH_BIND_OVERLAY_MOUNT_DIR="/run/zebrafish/overlay"
 
 find_zebrafish_persistence_partition() {
@@ -106,10 +101,10 @@ create_zebrafish_persistence_partition() {
     zfs create -o mountpoint="$ZEBRAFISH_CONTAINERD_DATA_DIR" "$ZEBRAFISH_ZPOOL_CONTAINERD" || fail "Cannot create containerd dataset"
     zfs create -o mountpoint="$ZEBRAFISH_CNI_DATA_DIR" "$ZEBRAFISH_ZPOOL_CNI" || fail "Cannot create cni dataset"
 
-    zfs create -o compression=zstd -o mountpoint="$ZEBRAFISH_PERSISTENCE_MOUNT_DIR" "$ZEBRAFISH_ZPOOL_DATA" || fail "Cannot create data dataset"
-    zfs create -o compression=zstd -o mountpoint="$ZEBRAFISH_PERSISTENCE_OVERLAY_MOUNT_DIR" "$ZEBRAFISH_ZPOOL_OVERLAY" || fail "Cannot create overlay dataset"
-    zfs create -o compression=zstd -o mountpoint="$ZEBRAFISH_PERSISTENCE_LOG_DIR" "$ZEBRAFISH_ZPOOL_LOGS" || fail "Cannot create log dataset"
-#    zfs create -o mountpoint="$ZEBRAFISH_CONTAINERD_DATA_DIR/io.containerd.snapshotter.v1.zfs" "$ZEBRAFISH_ZPOOL_CONTAINERD_SNAPSHOTTER" || fail "Cannot create containerd ZFS dataset"
+    zfs create -o zebrafi.sh:persistent=true -o compression=zstd -o mountpoint="$ZEBRAFISH_COMPOSE_DIR" "$ZEBRAFISH_ZPOOL_COMPOSE" || fail "Cannot create compose dataset"
+    zfs create -o zebrafi.sh:persistent=true -o compression=zstd -o mountpoint="$ZEBRAFISH_VOL_DIR" "$ZEBRAFISH_ZPOOL_DATA" || fail "Cannot create volume dataset"
+    zfs create -o zebrafi.sh:persistent=true -o compression=zstd -o mountpoint="$ZEBRAFISH_OVERLAY_DIR" "$ZEBRAFISH_ZPOOL_OVERLAY" || fail "Cannot create overlay dataset"
+    zfs create -o zebrafi.sh:persistent=true -o compression=zstd -o mountpoint="$ZEBRAFISH_LOG_DIR" "$ZEBRAFISH_ZPOOL_LOGS" || fail "Cannot create log dataset"
 
     zfs_size=$(zfs get -H -o value -p available "$ZEBRAFISH_ZPOOL")
     calculate_swap_size "$zfs_size"
@@ -123,7 +118,6 @@ create_zebrafish_persistence_partition() {
 
 mount_zebrafish_persistence_partition() {
     swapon "$ZEBRAFISH_SWAP_DEV" || fail "Cannot enable swap"
-    echo "$ZEBRAFISH_PERSISTENCE_MOUNT_DIR"
 }
 
 write_zebrafish_persistence_version_file () {
@@ -150,9 +144,9 @@ cat /etc/zebrafish-release >> "$file"
 }
 
 mount_tmpfs_on_zebrafish_persistence_dir () {
-    info "Mounting tmpfs at persistence mount point: $ZEBRAFISH_PERSISTENCE_MOUNT_DIR"
-    mount -t tmpfs tmpfs $ZEBRAFISH_PERSISTENCE_MOUNT_DIR >&2
-    [ $? ] && echo $ZEBRAFISH_PERSISTENCE_MOUNT_DIR || echo ""
+    info "Mounting tmpfs at persistence mount point: $ZEBRAFISH_VOL_DIR"
+    mount -t tmpfs tmpfs $ZEBRAFISH_VOL_DIR >&2
+    [ $? ] && echo $ZEBRAFISH_VOL_DIR || echo ""
 }
 
 overlay () {
@@ -172,8 +166,8 @@ overlay () {
     local own=$(stat -c %U:%G "$src")
 
     local lowerdir="$ZEBRAFISH_BIND_OVERLAY_MOUNT_DIR/$subject/lower"
-    local upperdir="$ZEBRAFISH_PERSISTENCE_OVERLAY_MOUNT_DIR/$subject/upper"
-    local workdir="$ZEBRAFISH_PERSISTENCE_OVERLAY_MOUNT_DIR/$subject/work"
+    local upperdir="$ZEBRAFISH_OVERLAY_DIR/$subject/upper"
+    local workdir="$ZEBRAFISH_OVERLAY_DIR/$subject/work"
 
     local mergedir="$src"
     local name="overlay-$subject"
@@ -225,7 +219,7 @@ info "Zebrafish Persistence"
 # Some preliminary sanity checks to ensure this script can run with at least some degree of safely.
 assert_root $this
 ps aux | grep -v grep | grep -q /usr/bin/containerd && fail "$this: Containerd is running; please stop it before running this script."
-mountpoint $ZEBRAFISH_PERSISTENCE_MOUNT_DIR >/dev/null && fail "$this: Persistence directory is already mounted; cannot continue."
+mountpoint $ZEBRAFISH_VOL_DIR >/dev/null && fail "$this: Persistence directory is already mounted; cannot continue."
 
 
 

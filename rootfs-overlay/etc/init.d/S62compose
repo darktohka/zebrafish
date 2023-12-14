@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAME=compose
-COMPOSE_DATA_DIR=/vol/compose
+COMPOSE_DATA_DIR=/compose
 
 . /lib/zebrafish/functions
 
