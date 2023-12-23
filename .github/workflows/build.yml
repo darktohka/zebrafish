@@ -29,9 +29,10 @@ jobs:
       - name: Patch Buildroot
         shell: bash
         run: |
-          patch -sf --no-backup-if-mismatch \
-            "${{ github.workspace }}/buildroot/linux/linux.mk" \
-            "${{ github.workspace }}/zebrafish/buildroot-patches/0001-add-zfs-to-linux.patch"
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          ./patch.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/zebrafish"
       - name: Restore Buildroot cache
         uses: actions/cache/restore@v3
         with:

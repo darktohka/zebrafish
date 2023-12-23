@@ -1,5 +1,5 @@
-config BR2_PACKAGE_MAINLINECONTAINERD
-	bool "mainlinecontainerd"
+config BR2_PACKAGE_CONTAINERD
+	bool "containerd"
 	depends on BR2_PACKAGE_HOST_GO_TARGET_ARCH_SUPPORTS
 	depends on BR2_PACKAGE_HOST_GO_TARGET_CGO_LINKING_SUPPORTS
 	depends on BR2_TOOLCHAIN_HAS_THREADS
@@ -15,9 +15,9 @@ config BR2_PACKAGE_MAINLINECONTAINERD
 
 	  https://containerd.io/
 
-if BR2_PACKAGE_MAINLINECONTAINERD
+if BR2_PACKAGE_CONTAINERD
 
-config BR2_PACKAGE_MAINLINECONTAINERD_DRIVER_BTRFS
+config BR2_PACKAGE_CONTAINERD_DRIVER_BTRFS
 	bool "btrfs snapshot driver"
 	depends on BR2_USE_MMU # btrfs-progs
 	depends on BR2_TOOLCHAIN_HAS_THREADS # btrfs-progs
@@ -25,7 +25,7 @@ config BR2_PACKAGE_MAINLINECONTAINERD_DRIVER_BTRFS
 	help
 	  Build the btrfs snapshot driver for containerd.
 
-config BR2_PACKAGE_MAINLINECONTAINERD_DRIVER_DEVMAPPER
+config BR2_PACKAGE_CONTAINERD_DRIVER_DEVMAPPER
 	bool "devmapper snapshot driver"
 	depends on BR2_TOOLCHAIN_HAS_THREADS # lvm2
 	depends on BR2_USE_MMU # lvm2
@@ -38,7 +38,7 @@ comment "devmapper snapshot driver needs a toolchain w/ threads, dynamic library
 	depends on BR2_USE_MMU
 	depends on BR2_STATIC_LIBS || !BR2_TOOLCHAIN_HAS_THREADS
 
-config BR2_PACKAGE_MAINLINECONTAINERD_DRIVER_ZFS
+config BR2_PACKAGE_CONTAINERD_DRIVER_ZFS
 	bool "zfs snapshot driver"
 	depends on BR2_LINUX_KERNEL # zfs
 	depends on BR2_PACKAGE_HAS_UDEV # zfs
@@ -52,7 +52,7 @@ comment "zfs snapshot driver needs a Linux kernel, udev, toolchain w/ threads"
 	depends on !BR2_LINUX_KERNEL || !BR2_PACKAGE_HAS_UDEV || \
 		!BR2_TOOLCHAIN_HAS_THREADS
 
-config BR2_PACKAGE_MAINLINECONTAINERD_CRI
+config BR2_PACKAGE_CONTAINERD_CRI
 	bool "Kubernetes CRI support"
 	help
 	  Build containerd with Kubernetes CRI support.

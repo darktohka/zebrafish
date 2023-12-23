@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -u
 
@@ -70,20 +70,21 @@ find_zebrafish_magic_device() {
 calculate_swap_size() {
     local number="$1"
     local half_gigabyte_bytes=$((512*1024*1024))
-    local eight_gigabytes_bytes=$((8*1024*1024*1024))
+    local eight_gb=$((8*1024*1024*1024))
 
     # Calculate 10% of the number
     local ten_percent=$((number / 10))
 
-    # Ensure the result does not exceed 8 gigabytes
-    if [ "$ten_percent" -gt "$eight_gigabytes_bytes" ]; then
-        ten_percent="$eight_gigabytes_bytes"
-    fi
-
     # Round up to the nearest half gigabyte
     local rounded_up=$(( (ten_percent + half_gigabyte_bytes - 1) / half_gigabyte_bytes * half_gigabyte_bytes ))
 
-    if [[ "$rounded_up" -gt "$number" ]]; then
+    # Ensure the result does not exceed 8 gigabytes
+    if [[ $rounded_up -gt $eight_gb ]]; then
+        rounded_up="$eight_gb"
+    fi
+
+    # Ensure the result fits within the number
+    if [[ $rounded_up -gt $number ]]; then
         rounded_up="$ten_percent"
     fi
 
@@ -118,6 +119,7 @@ create_zebrafish_persistence_partition() {
 
 mount_zebrafish_persistence_partition() {
     swapon "$ZEBRAFISH_SWAP_DEV" || fail "Cannot enable swap"
+    echo $ZEBRAFISH_VOL_DIR
 }
 
 write_zebrafish_persistence_version_file () {

@@ -41,9 +41,6 @@ Port $ssh_port
 PasswordAuthentication $password_authentication
 AuthorizedKeysFile .ssh/authorized_keys
 
-UsePAM no
-KerberosAuthentication no
-GSSAPIAuthentication no
 KbdInteractiveAuthentication no
 
 Subsystem sftp /usr/libexec/sftp-server"

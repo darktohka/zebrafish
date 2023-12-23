@@ -69,6 +69,8 @@ rm -f "$TARGET_DIR"/usr/bin/sftp
 
 rm -frv "$TARGET_DIR"/sbin/ldconfig
 
+rm -frv "$TARGET_DIR"/usr/sbin/unbound-*
+
 for git in git-cvsserver git-receive-pack git-shell git-upload-archive git-upload-pack scalar; do
     rm -frv "$TARGET_DIR"/usr/bin/$git
 done

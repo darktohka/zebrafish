@@ -1,23 +1,22 @@
 ################################################################################
 #
-# containerdnet
+# cni-plugins
 #
 ################################################################################
 
-CONTAINERDNET_VERSION = origin/main
-CONTAINERDNET_SITE = https://github.com/containernetworking/plugins
-CONTAINERDNET_SITE_METHOD = git
-CONTAINERDNET_LICENSE = Apache-2.0
-CONTAINERDNET_LICENSE_FILES = LICENSE
+CNI_PLUGINS_VERSION = main
+CNI_PLUGINS_SITE = $(call github,containernetworking,plugins,main)
+CNI_PLUGINS_LICENSE = Apache-2.0
+CNI_PLUGINS_LICENSE_FILES = LICENSE
 
-CONTAINERDNET_BUILD_TARGETS = \
+CNI_PLUGINS_BUILD_TARGETS = \
 	plugins/main/bridge \
 	plugins/meta/firewall \
 	plugins/ipam/host-local \
 	plugins/meta/portmap \
 	plugins/meta/tuning
 
-# CONTAINERDNET_BUILD_TARGETS = \
+# CNI_PLUGINS_BUILD_TARGETS = \
 # 	plugins/ipam/dhcp \
 # 	plugins/ipam/host-local \
 # 	plugins/ipam/static \
@@ -35,26 +34,26 @@ CONTAINERDNET_BUILD_TARGETS = \
 # 	plugins/meta/portmap \
 # 	plugins/meta/tuning \
 # 	plugins/meta/vrf
-CONTAINERDNET_INSTALL_BINS = $(CONTAINERDNET_BUILD_TARGETS)
+CNI_PLUGINS_INSTALL_BINS = $(CNI_PLUGINS_BUILD_TARGETS)
 
 ifeq ($(BR2_PACKAGE_LIBAPPARMOR),y)
-CONTAINERDNET_DEPENDENCIES += libapparmor
-CONTAINERDNET_TAGS += apparmor
+CNI_PLUGINS_DEPENDENCIES += libapparmor
+CNI_PLUGINS_TAGS += apparmor
 endif
 
 ifeq ($(BR2_PACKAGE_LIBSECCOMP),y)
-CONTAINERDNET_TAGS += seccomp
-CONTAINERDNET_DEPENDENCIES += libseccomp host-pkgconf
+CNI_PLUGINS_TAGS += seccomp
+CNI_PLUGINS_DEPENDENCIES += libseccomp host-pkgconf
 endif
 
 ifeq ($(BR2_PACKAGE_LIBSELINUX),y)
-CONTAINERDNET_TAGS += selinux
-CONTAINERDNET_DEPENDENCIES += libselinux
+CNI_PLUGINS_TAGS += selinux
+CNI_PLUGINS_DEPENDENCIES += libselinux
 endif
 
-define CONTAINERDNET_INSTALL_TARGET_CMDS
+define CNI_PLUGINS_INSTALL_TARGET_CMDS
 	$(INSTALL) -d -m 0755 $(TARGET_DIR)/usr/lib/cni
-	$(foreach d,$(CONTAINERDNET_INSTALL_BINS),\
+	$(foreach d,$(CNI_PLUGINS_INSTALL_BINS),\
 		$(INSTALL) -D -m 0755 $(@D)/bin/$$(basename $(d)) \
 			$(TARGET_DIR)/usr/lib/cni
 	)

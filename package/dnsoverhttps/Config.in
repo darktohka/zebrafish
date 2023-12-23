@@ -1,0 +1,7 @@
+config BR2_PACKAGE_DNSOVERHTTPS
+	bool "dnsoverhttps"
+	select BR2_PACKAGE_LIBCURL
+	select BR2_PACKAGE_C_ARES
+	select BR2_PACKAGE_LIBEV
+	help
+		https://github.com/aarond10/https_dns_proxy

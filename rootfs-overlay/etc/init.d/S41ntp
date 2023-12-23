@@ -1,0 +1,42 @@
+#!/bin/bash
+
+this=S13ntp
+. /lib/zebrafish/functions
+assert_root $this
+
+NAME=ntpd
+NTP_ARGS="-p 162.159.200.1"
+SYNC_ARGS="$NTP_ARGS -q -N -n"
+
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME $1
+
+do_start() {
+        # https://stackoverflow.com/a/21029952/2412477
+        echo -n "Synchronizing time: "
+        ntpd $SYNC_ARGS >/dev/null && echo "OK" || echo "FAIL"
+
+        echo -n "Starting $NAME: "
+        ntpd $NTP_ARGS && echo "OK" || echo "FAIL"
+}
+
+do_stop() {
+        echo -n "Stopping $NAME: "
+        killall ntpd && echo "OK" || echo "FAIL"
+}
+
+case "$1" in
+        start)
+                do_start
+                ;;
+        stop)
+                do_stop
+                ;;
+        restart)
+                do_stop
+                sleep 1
+                do_start
+                ;;
+	*)
+                echo "Usage: $0 {start|stop|restart}"
+                exit 1
+esac

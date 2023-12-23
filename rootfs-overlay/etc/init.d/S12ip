@@ -1,0 +1,95 @@
+#!/bin/bash
+
+this=S12ipv6
+. /lib/zebrafish/functions
+assert_root $this
+
+case $1 in
+	start) ;;
+	stop)  exit 0 ;;
+	*)     fail "Usage: $this {start|stop}" ;;
+esac
+
+set -u
+echo -n "Configuring network interfaces: "
+
+mkdir -p /etc/network || exit 1
+
+network_file="auto lo
+iface lo inet loopback
+"
+
+ipv4=$(get_kernel_parameter "ipv4")
+ipv6=$(get_kernel_parameter "ipv6")
+
+if [[ -n "$ipv4" ]] || [[ -n "$ipv6" ]]; then
+    network_file+="
+auto eth0"
+fi
+
+if [[ -n "$ipv4" ]]; then
+    ipv4_dns=$(get_kernel_parameter "ipv4dns")
+    ipv4_subnet=$(get_kernel_parameter "ipv4subnet")
+    ipv4_gateway=$(get_kernel_parameter "ipv4gateway")
+
+    if [[ -z "$ipv4_subnet" ]]; then
+        ipv4_subnet="255.255.255.0"
+    fi
+
+    if [[ -z "$ipv4_gateway" ]]; then
+        ipv4_gateway="192.168.1.1"
+    fi
+
+    echo -n "IPv4 address $ipv4; subnet $ipv4_subnet; gateway $ipv4_gateway; "
+
+    if [[ -z "$ipv4_dns" ]]; then
+        echo -n "nameservers Cloudflare; "
+        ipv4_dns="127.0.0.1"
+    else
+        echo -n "nameservers $ipv4_dns; "
+    fi
+
+    network_file+="
+iface eth0 inet static
+    address $ipv4
+    netmask $ipv4_subnet
+    dns-nameservers $ipv4_dns
+    gateway $ipv4_gateway"
+else
+    echo -n "No IPv4; "
+fi
+
+if [[ -n "$ipv6" ]]; then
+    ipv6_dns=$(get_kernel_parameter "ipv6dns")
+    ipv6_netmask=$(get_kernel_parameter "ipv6netmask")
+    ipv6_gateway=$(get_kernel_parameter "ipv6gateway")
+
+    if [[ -z "$ipv6_netmask" ]]; then
+        ipv6_netmask="64"
+    fi
+
+    if [[ -z "$ipv6_gateway" ]]; then
+        ipv6_gateway="fe80::1"
+    fi
+
+    echo -n "IPv6 address $ipv6/$ipv6_netmask; gateway $ipv6_gateway; "
+
+    if [[ -z "$ipv6_dns" ]]; then
+        echo -n "nameservers Cloudflare; "
+        ipv6_dns="::1"
+    else
+        echo -n "nameservers $ipv6_dns; "
+    fi
+
+    network_file+="
+iface eth0 inet6 static
+    address $ipv6
+    netmask $ipv6_netmask
+    dns-nameservers $ipv6_dns
+    gateway $ipv6_gateway"
+else
+    echo -n "No IPv6; "
+fi
+
+echo -e "$network_file" > /etc/network/interfaces || exit 2
+echo "OK"

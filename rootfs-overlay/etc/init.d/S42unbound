@@ -1,0 +1,36 @@
+#!/bin/sh
+
+NAME="unbound"
+PIDFILE=/var/run/$NAME.pid
+LOGFILE=/logs/system/$NAME.log
+
+DAEMON_ARGS=""
+
+[ -r "/etc/default/$NAME" ] && . "/etc/default/$NAME"
+
+start() {
+	printf 'Starting %s: ' "$NAME"
+	$NAME && echo "OK" || echo "FAIL"
+}
+
+stop() {
+	printf 'Stopping %s: ' "$DAEMON"
+	killall $NAME
+}
+
+restart() {
+	stop
+	sleep 1
+	start
+}
+
+case "$1" in
+	start|stop|restart)
+		"$1";;
+	reload)
+		# Restart, since there is no true "reload" feature.
+		restart;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+esac
