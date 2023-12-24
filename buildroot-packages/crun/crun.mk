@@ -8,12 +8,12 @@ CRUN_VERSION = origin/main
 CRUN_SITE = https://github.com/containers/crun
 CRUN_SITE_METHOD = git
 CRUN_GIT_SUBMODULES = YES
+CRUN_DEPENDENCIES += yajl
 
 CRUN_LICENSE = GPL-2.0+ (crun binary), LGPL-2.1+ (libcrun)
 CRUN_LICENSE_FILES = COPYING COPYING.libcrun
 
 CRUN_AUTORECONF = YES
-CRUN_CONF_OPTS = --disable-embedded-yajl
 
 ifeq ($(BR2_PACKAGE_ARGP_STANDALONE),y)
 CRUN_DEPENDENCIES += argp-standalone
