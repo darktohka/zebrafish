@@ -17,8 +17,9 @@ fi
 BR_PACKAGES="$ZF/buildroot-packages"
 
 # Reset Buildroot
-git --work-tree="$BR" reset --hard
-git --work-tree="$BR" checkout
+cd "$BR"
+git reset --hard
+git checkout
 
 # Patch Linux
 #patch -sf --no-backup-if-mismatch "$BR/linux/linux.mk" "$ZF/buildroot-patches/0001-add-zfs-to-linux.patch"
