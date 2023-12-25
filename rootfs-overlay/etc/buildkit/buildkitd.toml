@@ -1,11 +1,8 @@
-root = "/oci/buildkit"
-
 [log]
   format = "text"
 
 [dns]
-  nameservers = ["1.1.1.1", "8.8.8.8"]
-  options = ["edns0"]
+  nameservers = ["127.0.0.1"]
 
 [worker.oci]
   enabled = false

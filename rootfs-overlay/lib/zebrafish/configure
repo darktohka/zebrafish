@@ -39,13 +39,13 @@ echo "$command_line" > "$temp_file"
 nano "$temp_file"
 new_arguments="$(cat "$temp_file")"
 
+# Remove temporary file
+rm "$temp_file"
+
 if [[ -z "$new_arguments" ]]; then
     echo "No arguments given, exiting"
     exit 1
 fi
-
-# Remove temporary file
-rm "$temp_file"
 
 # Remove old entry
 sudo efibootmgr -b "$boot_number" --delete-bootnum

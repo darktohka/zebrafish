@@ -7,12 +7,10 @@ mkdir -p "$TARGET_DIR"/srv
 mkdir -p "$TARGET_DIR"/vol
 
 # Create symlinks for oci tools
-for tool in nerdctl containerd cni buildkit; do
+for tool in containerd; do
     rm -f "$TARGET_DIR"/var/lib/"$tool"
     ln -s /oci/"$tool" "$TARGET_DIR"/var/lib/"$tool"
 done
-
-ln -s /oci/cni "$TARGET_DIR"/etc/cni
 
 # Create symlinks for libarchive
 for cattype in cat zcat bzcat xzcat; do

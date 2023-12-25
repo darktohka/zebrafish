@@ -13,9 +13,6 @@ no_data_overlay_opt=$(has_kernel_parameter "nodataoverlay" && echo "nodataoverla
 ZEBRAFISH_ZPOOL="zebrafish"
 ZEBRAFISH_ZPOOL_OCI="$ZEBRAFISH_ZPOOL/oci"
 ZEBRAFISH_ZPOOL_CONTAINERD="$ZEBRAFISH_ZPOOL_OCI/containerd"
-ZEBRAFISH_ZPOOL_CNI="$ZEBRAFISH_ZPOOL_OCI/cni"
-ZEBRAFISH_ZPOOL_NERDCTL="$ZEBRAFISH_ZPOOL_OCI/nerdctl"
-ZEBRAFISH_ZPOOL_BUILDKIT="$ZEBRAFISH_ZPOOL_OCI/buildkit"
 
 ZEBRAFISH_ZPOOL_COMPOSE="$ZEBRAFISH_ZPOOL/compose"
 ZEBRAFISH_ZPOOL_DATA="$ZEBRAFISH_ZPOOL/data"
@@ -29,10 +26,7 @@ ZEBRAFISH_VOL_DIR="/vol"
 ZEBRAFISH_LOG_DIR="/logs"
 ZEBRAFISH_OVERLAY_DIR="/overlay"
 ZEBRAFISH_OCI_DIR="/oci"
-ZEBRAFISH_NERDCTL_DATA_DIR="$ZEBRAFISH_OCI_DIR/nerdctl"
-ZEBRAFISH_BUILDKIT_DATA_DIR="$ZEBRAFISH_OCI_DIR/buildkit"
 ZEBRAFISH_CONTAINERD_DATA_DIR="$ZEBRAFISH_OCI_DIR/containerd"
-ZEBRAFISH_CNI_DATA_DIR="$ZEBRAFISH_OCI_DIR/cni"
 
 ZEBRAFISH_PERSISTENCE_MAGIC_HEADER="zebrafish-please-format-me"
 ZEBRAFISH_BIND_OVERLAY_MOUNT_DIR="/run/zebrafish/overlay"
@@ -97,10 +91,7 @@ create_zebrafish_persistence_partition() {
     info "Partitioning magic device $magic_device..."
     zpool create -f -o ashift=12 -O xattr=sa -O atime=off -O acltype=posixacl -O dedup=off -m none "$ZEBRAFISH_ZPOOL" "$magic_device" || fail "Cannot create zfs pool"
     zfs create "$ZEBRAFISH_ZPOOL_OCI" || fail "Cannot create oci dataset"
-    zfs create -o mountpoint="$ZEBRAFISH_NERDCTL_DATA_DIR" "$ZEBRAFISH_ZPOOL_NERDCTL" || fail "Cannot create nerdctl dataset"
-    zfs create -o mountpoint="$ZEBRAFISH_BUILDKIT_DATA_DIR" "$ZEBRAFISH_ZPOOL_BUILDKIT" || fail "Cannot create buildkit dataset"
     zfs create -o mountpoint="$ZEBRAFISH_CONTAINERD_DATA_DIR" "$ZEBRAFISH_ZPOOL_CONTAINERD" || fail "Cannot create containerd dataset"
-    zfs create -o mountpoint="$ZEBRAFISH_CNI_DATA_DIR" "$ZEBRAFISH_ZPOOL_CNI" || fail "Cannot create cni dataset"
 
     zfs create -o zebrafi.sh:persistent=true -o compression=zstd -o mountpoint="$ZEBRAFISH_COMPOSE_DIR" "$ZEBRAFISH_ZPOOL_COMPOSE" || fail "Cannot create compose dataset"
     zfs create -o zebrafi.sh:persistent=true -o compression=zstd -o mountpoint="$ZEBRAFISH_VOL_DIR" "$ZEBRAFISH_ZPOOL_DATA" || fail "Cannot create volume dataset"
@@ -149,6 +140,15 @@ mount_tmpfs_on_zebrafish_persistence_dir () {
     info "Mounting tmpfs at persistence mount point: $ZEBRAFISH_VOL_DIR"
     mount -t tmpfs tmpfs $ZEBRAFISH_VOL_DIR >&2
     [ $? ] && echo $ZEBRAFISH_VOL_DIR || echo ""
+}
+
+create_temporary_directories () {
+    echo "Creating temporary directories..."
+
+    for folder in /etc/cni /var/lib/cni /var/lib/nerdctl /var/lib/buildkit; do
+        mkdir -p "$folder"
+        mount -t tmpfs tmpfs "$folder"
+    done
 }
 
 overlay () {
@@ -294,6 +294,7 @@ if [ -n "$mounted_zebrafish_persistence_dir" ]; then
     if [ -n "$no_data_overlay_opt" ]; then
         info "SKIPPED overlaying Zebrafish data directories: $no_data_overlay_opt"
     else
+        create_temporary_directories
         overlay_zebrafish_data_dirs
         if [ ! $? ]; then
             fail "Failed to overlay Zebrafish data directories!"
