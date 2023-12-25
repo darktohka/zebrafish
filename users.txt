@@ -10,4 +10,5 @@ named       64  named      64  *          /etc/bind      -           named      
 ntp         65  ntp        65  *          -              -           ntp          ntp user
 dhcpcd      66  dhcpcd     66  *          -              -           dhcpcd       dhcpcd user
 sshd        67  sshd       67  *          -              -           sshd         sshd user
+unbound     68  unbound    68  *          -              -           unbound      unbound user
 signalizer        1000  signalizer       1000  =signalizer  /home/signalizer       /bin/bash   sudo  Signalizer Operator

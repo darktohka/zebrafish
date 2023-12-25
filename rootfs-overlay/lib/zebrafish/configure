@@ -1,0 +1,54 @@
+#!/bin/bash
+set -e
+set -u
+
+# Mount EFI variables
+sudo mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+
+# Extract Zebrafish boot entry
+zebrafish_string=$(efibootmgr | grep Zebrafish | head -n 1 | xargs)
+boot_order=$(echo "$zebrafish_string" | cut -d ' ' -f 1)
+boot_number="${boot_order//[^0-9]/}"
+
+# Get kernel command line
+hex_string=$(echo "$zebrafish_string" | awk -F"kernel)" '{print $2}')
+
+# Remove null bytes
+hex_string="${hex_string//00/}"
+
+# Convert from hexadecimal
+command_line=$(echo "$hex_string" | xxd -r -p)
+
+# Extract EFI partition
+EFI_PARTITIONS=$(lsblk -nr -o NAME,FSTYPE,PARTFLAGS | awk '$2=="vfat" && $3=="0x4"' | cut -d ' ' -f 1)
+EFI_PARTITION_COUNT=$(echo -e "$EFI_PARTITIONS" | wc -l)
+
+if [[ "$EFI_PARTITION_COUNT" -ne 1 ]]; then
+    echo "Found $EFI_PARTITION_COUNT EFI system partitions."
+    echo -e "$EFI_PARTITIONS"
+    exit 1
+fi
+
+# Calculate partition disk and number
+EFI_PARTITION_NUMBER="${EFI_PARTITIONS//[!0-9]/}"
+EFI_DISK="/dev/"${EFI_PARTITIONS//[0-9]/}
+
+# Create temporary file and edit
+temp_file="$(mktemp)"
+echo "$command_line" > "$temp_file"
+nano "$temp_file"
+new_arguments="$(cat "$temp_file")"
+
+if [[ -z "$new_arguments" ]]; then
+    echo "No arguments given, exiting"
+    exit 1
+fi
+
+# Remove temporary file
+rm "$temp_file"
+
+# Remove old entry
+sudo efibootmgr -b "$boot_number" --delete-bootnum
+
+# Create new entry
+sudo efibootmgr --create --label Zebrafish --disk "$EFI_DISK" --part "$EFI_PARTITION_NUMBER" --loader /zebrafish-kernel --unicode "$new_arguments"
