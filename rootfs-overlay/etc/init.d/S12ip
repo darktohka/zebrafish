@@ -29,18 +29,18 @@ fi
 
 if [[ -n "$ipv4" ]]; then
     ipv4_dns=$(get_kernel_parameter "ipv4dns")
-    ipv4_subnet=$(get_kernel_parameter "ipv4subnet")
+    ipv4_netmask=$(get_kernel_parameter "ipv4netmask")
     ipv4_gateway=$(get_kernel_parameter "ipv4gateway")
 
-    if [[ -z "$ipv4_subnet" ]]; then
-        ipv4_subnet="255.255.255.0"
+    if [[ -z "$ipv4_netmask" ]]; then
+        ipv4_netmask="32"
     fi
 
     if [[ -z "$ipv4_gateway" ]]; then
-        ipv4_gateway="192.168.1.1"
+        ipv4_gateway="172.31.1.1"
     fi
 
-    echo -n "IPv4 address $ipv4; subnet $ipv4_subnet; gateway $ipv4_gateway; "
+    echo -n "IPv4 address $ipv4/$ipv4_netmask; gateway $ipv4_gateway; "
 
     if [[ -z "$ipv4_dns" ]]; then
         echo -n "nameservers Cloudflare; "
@@ -51,10 +51,9 @@ if [[ -n "$ipv4" ]]; then
 
     network_file+="
 iface eth0 inet static
-    address $ipv4
-    netmask $ipv4_subnet
-    dns-nameservers $ipv4_dns
-    gateway $ipv4_gateway"
+    address $ipv4/$ipv4_netmask
+    gateway $ipv4_gateway
+    dns-nameservers $ipv4_dns"
 else
     echo -n "No IPv4; "
 fi
