@@ -6,8 +6,10 @@
 
 # When updating the version, check whether the list of supported targets
 # needs to be updated.
-BINFMT_VERSION = master
-BINFMT_SITE = $(call github,qemu,qemu,master)
+BINFMT_VERSION = origin/master
+BINFMT_SITE = https://github.com/qemu/qemu
+BINFMT_SITE_METHOD = git
+BINFMT_GIT_SUBMODULES = YES
 BINFMT_SELINUX_MODULES = qemu virt
 
 #-------------------------------------------------------------
