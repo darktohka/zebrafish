@@ -33,7 +33,6 @@ BINFMT_OPTS = --static --disable-system
 BINFMT_VARS = LIBTOOL=$(HOST_DIR)/bin/libtool
 
 define BINFMT_REMOVE_TESTS
-	sed -Ei 's/^subdir\([^)]+tests[^)]+\)$//' $(@D)/meson.build
 	find $(@D)/tests -type f \( -name "meson.build" -or -name "Makefile.include" \) -exec truncate -s0 {} \;
 endef
 
@@ -276,7 +275,6 @@ define BINFMT_CONFIGURE_CMDS
 			--disable-sanitizers \
 			--disable-selinux \
 			--disable-sparse \
-			--disable-strip \
 			--disable-vde \
 			--disable-vhost-crypto \
 			--disable-vhost-user-blk-server \
