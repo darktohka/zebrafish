@@ -45,6 +45,7 @@ if [[ -d "$BR_PACKAGES" ]]; then
   done
 fi
 
-sed -Ei 's/^WOLFSSL_VERSION.+$/WOLFSSL_VERSION = master/' "$BR/package/wolfssl/wolfssl.mk"
-sed -Ei 's/^WOLFSSL_SITE.+$/WOLFSSL_SITE = $(call github,wolfSSL,wolfssl,master)/' "$BR/package/wolfssl/wolfssl.mk"
+WOLFSSL="$BR/package/wolfssl/wolfssl.mk"
+sed -Ei 's/^WOLFSSL_VERSION.+$/WOLFSSL_VERSION = master/' "$WOLFSSL"
+sed -Ei 's/^WOLFSSL_SITE.+$/WOLFSSL_SITE = $(call github,wolfSSL,wolfssl,master)\nWOLFSSL_AUTORECONF = YES/' "$WOLFSSL"
 rm -f "$BR/package/wolfssl/wolfssl.hash"
