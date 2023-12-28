@@ -6,10 +6,8 @@
 
 # When updating the version, check whether the list of supported targets
 # needs to be updated.
-BINFMT_VERSION = origin/master
-BINFMT_SITE = https://github.com/qemu/qemu
-BINFMT_SITE_METHOD = git
-BINFMT_GIT_SUBMODULES = YES
+BINFMT_VERSION = master
+BINFMT_SITE = $(call github,qemu,qemu,master)
 BINFMT_SELINUX_MODULES = qemu virt
 
 #-------------------------------------------------------------
@@ -33,6 +31,13 @@ BINFMT_LIBS = -lrt -lm
 BINFMT_OPTS = --static --disable-system
 
 BINFMT_VARS = LIBTOOL=$(HOST_DIR)/bin/libtool
+
+define BINFMT_REMOVE_TESTS
+	sed -Ei 's/^subdir\([^)]+tests[^)]+\)$//' $(@D)/meson.build
+	find $(@D)/tests -type f \( -name "meson.build" -or -name "Makefile.include" \) -exec truncate -s0 {} \;
+endef
+
+BINFMT_PRE_CONFIGURE_HOOKS += BINFMT_REMOVE_TESTS
 
 # If we want to build all emulation targets, we just need to either enable -user
 # and/or -system emulation appropriately.
@@ -281,7 +286,6 @@ define BINFMT_CONFIGURE_CMDS
 			--enable-attr \
 			--enable-kvm \
 			--enable-vhost-net \
-			--disable-download \
 			--disable-hexagon-idef-parser \
 			$(BINFMT_OPTS)
 endef
