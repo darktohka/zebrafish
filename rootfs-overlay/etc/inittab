@@ -23,6 +23,7 @@
 ::sysinit:/bin/mkdir -p /dev/pts /dev/shm
 ::sysinit:/lib/zebrafish/rescue-shell
 ::sysinit:/bin/sh /etc/init.d/S10udev start
+::sysinit:/lib/zebrafish/setup-binfmt
 ::sysinit:/lib/zebrafish/setup-persistence
 ::sysinit:/bin/mount -a
 ::sysinit:/bin/mkdir -p /run/lock/subsys

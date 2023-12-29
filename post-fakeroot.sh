@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 #  Post-fakeroot scripts are shell scripts that are called
@@ -60,6 +60,39 @@ EOF
 cp -v "$BINARIES_DIR"/zebrafish-release "$TARGET_DIR"/etc/zebrafish-release
 
 cp "$BASE_DIR"/host/*-buildroot-*/lib64/* "$TARGET_DIR"/lib64/
+
+if ! [[ -f "$TARGET_DIR"/qemu-arm ]]; then
+    echo "Downloading QEMU binaries..."
+
+    if [[ "$STAGING_DIR" = *aarch64* ]]; then
+        platform="arm64"
+        binaries="qemu-x86_64 qemu-arm"
+    else
+        platform="amd64"
+        binaries="qemu-arm64 qemu-arm"
+    fi
+
+    image="tonistiigi/binfmt:master"
+    directory="$(mktemp -d)"
+
+    sudo skopeo copy --override-arch "$platform" docker://tonistiigi/binfmt:master dir:"$directory" --dest-decompress
+
+    tar_archives=$(file -F ' ' "$directory"/* | grep "tar archive" | cut -d ' ' -f 1)
+
+    for tar_archive in $tar_archives; do
+        tar -C "$directory" -xf "$tar_archive"
+    done
+
+    for binary in $binaries; do
+        SOURCE_FILE="$directory"/usr/bin/"$binary"
+        TARGET_FILE="$TARGET_DIR"/usr/bin/"$binary"
+        cp "$SOURCE_FILE" "$TARGET_FILE"
+        llvm-strip "$TARGET_FILE" || strip "$TARGET_FILE"
+        chmod +x "$TARGET_FILE"
+    done
+
+    rm -rf "$directory"
+fi
 
 $(dirname $0)/post-fakeroot-cleanup.sh
 $(dirname $0)/post-fakeroot-headless.sh
