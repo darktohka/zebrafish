@@ -9,8 +9,8 @@ ZF_UID="$(id -u)"
 ZF_GID="$(id -g)"
 
 if [[ "$ZF_UID" -ne 0 ]]; then
-    echo "Please run this script as root!"
-    exit 1
+  # Re-run as root
+  exec sudo "$0" "$@"
 fi
 
 # Find architecture
@@ -29,9 +29,9 @@ EFI_PARTITIONS=$(lsblk -nr -o NAME,FSTYPE,PARTFLAGS | awk '$2=="vfat" && $3=="0x
 EFI_PARTITION_COUNT=$(echo -e "$EFI_PARTITIONS" | wc -l)
 
 if [[ "$EFI_PARTITION_COUNT" -ne 1 ]]; then
-    echo "Found $EFI_PARTITION_COUNT EFI system partitions."
-    echo -e "$EFI_PARTITIONS"
-    exit 1
+  echo "Found $EFI_PARTITION_COUNT EFI system partitions."
+  echo -e "$EFI_PARTITIONS"
+  exit 1
 fi
 
 EFI_PARTITION=/dev/"$EFI_PARTITIONS"

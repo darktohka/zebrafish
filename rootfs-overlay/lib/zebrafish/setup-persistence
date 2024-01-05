@@ -145,7 +145,7 @@ mount_tmpfs_on_zebrafish_persistence_dir () {
 create_temporary_directories () {
     echo "Creating temporary directories..."
 
-    for folder in /etc/cni /var/lib/cni /var/lib/nerdctl /var/lib/buildkit; do
+    for folder in /etc/cni /etc/wireguard /var/lib/cni /var/lib/nerdctl /var/lib/buildkit; do
         mkdir -p "$folder"
         mount -t tmpfs tmpfs "$folder"
     done

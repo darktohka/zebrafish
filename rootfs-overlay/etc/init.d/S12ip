@@ -29,8 +29,13 @@ fi
 
 if [[ -n "$ipv4" ]]; then
     ipv4_dns=$(get_kernel_parameter "ipv4dns")
+    ipv4_broadcast=$(get_kernel_parameter "ipv4broadcast")
     ipv4_subnet=$(get_kernel_parameter "ipv4subnet")
     ipv4_gateway=$(get_kernel_parameter "ipv4gateway")
+
+    if [[ -z "$ipv4_broadcast" ]]; then
+        ipv4_broadcast="$ipv4"
+    fi
 
     if [[ -z "$ipv4_subnet" ]]; then
         ipv4_subnet="255.255.255.255"
@@ -52,7 +57,7 @@ if [[ -n "$ipv4" ]]; then
     network_file+="
 iface eth0 inet static
     address $ipv4
-    broadcast $ipv4
+    broadcast $ipv4_broadcast
     netmask $ipv4_subnet
     gateway $ipv4_gateway
     pointopoint $ipv4_gateway
