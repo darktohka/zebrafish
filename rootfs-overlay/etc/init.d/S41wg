@@ -65,7 +65,7 @@ create_wg_configs() {
 do_start () {
   create_wg_configs
 
-  for interface in /etc/wireguard/*.conf; do
+  for interface in $(find /etc/wireguard -type f -iname 'wg*.conf'); do
     interface="$(basename "$interface" .conf)"
     echo "Starting WireGuard interface $interface: "
     wg-quick up "$interface" && echo "OK" || echo "FAIL"
@@ -73,7 +73,7 @@ do_start () {
 }
 
 do_stop () {
-  for interface in /etc/wireguard/*.conf; do
+  for interface in $(find /etc/wireguard -type f -iname 'wg*.conf'); do
     interface="$(basename "$interface" .conf)"
     echo "Stopping WireGuard interface $interface: "
     wg-quick down "$interface" && echo "OK" || echo "FAIL"
