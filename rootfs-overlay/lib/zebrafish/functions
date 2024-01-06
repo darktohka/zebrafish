@@ -52,7 +52,7 @@ wait_for_containerd () {
 
 # Returns "" if not present
 get_kernel_parameter () {
-	xargs -n1 -a /proc/cmdline | grep -e ^$1= | tail -n 1 | cut -d= -f2  # tail: Last occurence on cmdline wins
+	xargs -n1 -a /proc/cmdline | grep -e ^$1= | tail -n 1 | cut -d= -f2-  # tail: Last occurence on cmdline wins
 }
 
 

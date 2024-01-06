@@ -1,6 +1,6 @@
 #!/bin/bash
 
-this=S12ipv6
+this=S12ip
 . /lib/zebrafish/functions
 assert_root $this
 

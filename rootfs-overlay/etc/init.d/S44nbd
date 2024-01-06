@@ -1,0 +1,82 @@
+#!/bin/sh
+
+this=S44nbd
+. /lib/zebrafish/functions
+assert_root $this
+
+NAME_CLIENT=nbd-client
+NAME_SERVER=nbd-server
+PIDFILE_SERVER=/var/run/$NAME_SERVER.pid
+LOGFILE_CLIENT=/logs/system/$NAME_CLIENT.log
+LOGFILE_SERVER=/logs/system/$NAME_SERVER.log
+
+# Persistent
+ARGS_CLIENT="-p"
+
+# No fork
+ARGS_SERVER="-n"
+
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME $1
+
+do_start() {
+  nbdclient=$(get_kernel_parameter "nbdclient")
+  nbdserver=$(get_kernel_parameter "nbdserver")
+
+  if [[ -n "$nbdclient" ]]; then
+    IFS=, read -ra params <<< "$nbdclient"
+    local address="${params[0]}"
+    local port="${params[1]}"
+    local disk="${params[2]}"
+
+    echo -n "Starting $NAME_CLIENT: "
+    stdbuf -oL -eL $NAME_CLIENT $ARGS_CLIENT "$address" "$port" "$disk" >> $LOGFILE_CLIENT 2>&1
+  fi
+
+  if [[ -n "$nbdserver" ]]; then
+    IFS=, read -ra params <<< "$nbdserver"
+    local address="${params[0]}"
+    local disk="${params[1]}"
+
+    echo -n "Starting $NAME_SERVER: "
+    start-stop-daemon --start --quiet --background \
+      --make-pidfile --pidfile $PIDFILE_SERVER \
+      --startas /bin/sh -- -c "exec stdbuf -oL -eL $NAME_SERVER $ARGS_SERVER "$address" "$disk" >> $LOGFILE_SERVER 2>&1" \
+      && echo "OK" || echo "FAIL"
+  fi
+}
+
+do_stop() {
+  nbdclient=$(get_kernel_parameter "nbdclient")
+  nbdserver=$(get_kernel_parameter "nbdserver")
+
+  if [[ -n "$nbdclient" ]]; then
+    IFS=, read -ra params <<< "$nbdclient"
+    local disk="${params[2]}"
+
+    echo -n "Detaching $disk: "
+    nbd-client -d "$disk" && echo "OK" || echo "FAIL"
+  fi
+
+  if [[ -n "$nbdserver" ]]; then
+    echo -n "Stopping $NAME_SERVER: "
+    start-stop-daemon --stop --quiet --pidfile $PIDFILE_SERVER \
+      && echo "OK" || echo "FAIL"
+  fi
+}
+
+case "$1" in
+  start)
+    do_start
+    ;;
+  stop)
+    do_stop
+    ;;
+  restart)
+    do_stop
+    sleep 1
+    do_start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac

@@ -1,0 +1,50 @@
+#!/bin/sh
+
+this=S45mounts
+. /lib/zebrafish/functions
+assert_root $this
+
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME $1
+
+do_start() {
+  zfsmount=$(get_kernel_parameter "zfsmount")
+
+  if [[ -n "$zfsmount" ]]; then
+    IFS=, read -ra pools <<< "$zfsmount"
+
+    for pool in "${pools[@]}"; do
+      echo -n "Importing ZFS pool $pool: "
+      zpool import "$pool" && echo "OK" || echo "FAIL"
+    done
+  fi
+}
+
+do_stop() {
+  zfsmount=$(get_kernel_parameter "zfsmount")
+
+  if [[ -n "$zfsmount" ]]; then
+    IFS=, read -ra pools <<< "$zfsmount"
+
+    for pool in "${pools[@]}"; do
+      echo -n "Detaching ZFS pool $pool: "
+      zpool export "$pool" && echo "OK" || echo "FAIL"
+    done
+  fi
+}
+
+case "$1" in
+  start)
+    do_start
+    ;;
+  stop)
+    do_stop
+    ;;
+  restart)
+    do_stop
+    sleep 1
+    do_start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac

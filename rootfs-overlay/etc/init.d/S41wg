@@ -1,0 +1,98 @@
+#!/bin/bash
+set -e
+
+this=S41wg
+. /lib/zebrafish/functions
+assert_root $this
+
+create_wg_config() {
+  local interface="$1"
+  local private_key="$2"
+  local int_address="$3"
+  local int_port="$4"
+  local peer_info="$5"
+
+  echo -e "[Interface]\nPrivateKey = ${private_key}\nAddress = ${int_address}\nListenPort = ${int_port}\n\n$peer_info" > "/etc/wireguard/${interface}.conf"
+}
+
+create_wg_configs() {
+  local num=0
+
+  while true; do
+    # Get the wg parameters
+    local param="$(get_kernel_parameter "wg${num}")"
+    local param_peer="$(get_kernel_parameter "wg${num}peer")"
+
+    if [[ -z "$param" ]] || [[ -z "$param_peer" ]]; then
+      break
+    fi
+
+    IFS=, read -ra params <<< "$param"
+    local interface="wg${num}"
+    local private_key="${params[0]}"
+    local int_address="${params[1]}"
+    local int_port="${params[2]}"
+
+    echo -n "Configuring WireGuard: interface $interface; internal address $int_address:$int_port; "
+
+    # Process corresponding peer information
+    local peer_info=""
+    IFS=';' read -ra peers <<< "$param_peer"
+
+    for peer in "${peers[@]}"; do
+      IFS=, read -ra peer_info_params <<< "$peer"
+      local public_key="${peer_info_params[0]}"
+      local endpoint="${peer_info_params[1]}"
+      local allowed_ips="${peer_info_params[2]}"
+
+      if [[ -n "$peer_info" ]]; then
+        peer_info+="\n\n"
+      fi
+
+      peer_info+="[Peer]\nPublicKey = ${public_key}\nEndpoint = ${endpoint}\nAllowedIPs = ${allowed_ips}\nPersistentKeepalive = 25"
+      echo -n "peer at $endpoint (allowed IPs: $allowed_ips); "
+    done
+
+    # Create WireGuard configuration file
+    create_wg_config "$interface" "$private_key" "$int_address" "$int_port" "$peer_info"
+    echo "OK"
+
+    # Increment the counter
+    ((num++)) || true
+  done
+}
+
+do_start () {
+  create_wg_configs
+
+  for interface in /etc/wireguard/*.conf; do
+    interface="$(basename "$interface" .conf)"
+    echo "Starting WireGuard interface $interface: "
+    wg-quick up "$interface" && echo "OK" || echo "FAIL"
+  done
+}
+
+do_stop () {
+  for interface in /etc/wireguard/*.conf; do
+    interface="$(basename "$interface" .conf)"
+    echo "Stopping WireGuard interface $interface: "
+    wg-quick down "$interface" && echo "OK" || echo "FAIL"
+  done
+}
+
+case $1 in
+  start)
+    do_start
+    ;;
+  stop)
+    do_stop
+    ;;
+  restart)
+    do_stop
+    sleep 1
+    do_start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac
