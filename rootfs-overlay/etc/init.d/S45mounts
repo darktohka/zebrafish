@@ -4,8 +4,6 @@ this=S45mounts
 . /lib/zebrafish/functions
 assert_root $this
 
-[ -r /etc/default/$NAME ] && . /etc/default/$NAME $1
-
 do_start() {
   zfsmount=$(get_kernel_parameter "zfsmount")
 

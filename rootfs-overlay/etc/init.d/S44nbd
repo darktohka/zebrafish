@@ -16,8 +16,6 @@ ARGS_CLIENT="-p"
 # No fork
 ARGS_SERVER="-n"
 
-[ -r /etc/default/$NAME ] && . /etc/default/$NAME $1
-
 do_start() {
   nbdclient=$(get_kernel_parameter "nbdclient")
   nbdserver=$(get_kernel_parameter "nbdserver")
