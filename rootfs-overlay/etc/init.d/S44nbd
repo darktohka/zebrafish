@@ -21,13 +21,37 @@ do_start() {
   nbdserver=$(get_kernel_parameter "nbdserver")
 
   if [[ -n "$nbdclient" ]]; then
-    IFS=, read -ra params <<< "$nbdclient"
-    local address="${params[0]}"
-    local port="${params[1]}"
-    local disk="${params[2]}"
+    IFS=';' read -ra clients <<< "$nbdclient"
 
-    echo -n "Starting $NAME_CLIENT: "
-    stdbuf -oL -eL $NAME_CLIENT $ARGS_CLIENT "$address" "$port" "$disk" >> $LOGFILE_CLIENT 2>&1
+    for client in "${clients[@]}"; do
+      IFS=, read -ra params <<< "$client"
+      local address="${params[0]}"
+      local port="${params[1]}"
+      local disk="${params[2]}"
+
+      echo -n "Starting $NAME_CLIENT for $disk: "
+      stdbuf -oL -eL $NAME_CLIENT $ARGS_CLIENT "$address" "$port" "$disk" >> $LOGFILE_CLIENT 2>&1
+    done
+
+    # Wait for all disks to appear
+    for client in "${clients[@]}"; do
+      IFS=, read -ra params <<< "$client"
+      local disk="${params[2]}"
+
+      local counter=0
+      local max_attempts=10
+
+      while [[ $counter -lt $max_attempts ]]; do
+        if fdisk -l "$disk" >/dev/null 2>&1; then
+          echo "$disk is available."
+          break
+        fi
+
+        echo "Waiting for $disk..."
+        sleep 0.5
+        ((counter++))
+      done
+    done
   fi
 
   if [[ -n "$nbdserver" ]]; then
