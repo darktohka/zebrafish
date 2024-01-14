@@ -8,7 +8,8 @@ LIBCURL_VERSION = master
 LIBCURL_SITE = $(call github,curl,curl,master)
 LIBCURL_DEPENDENCIES = host-pkgconf \
 	$(if $(BR2_PACKAGE_ZLIB),zlib) \
-	$(if $(BR2_PACKAGE_RTMPDUMP),rtmpdump)
+	$(if $(BR2_PACKAGE_RTMPDUMP),rtmpdump) \
+	$(if $(BR2_PACKAGE_LIBPSL),libpsl)
 LIBCURL_INSTALL_STAGING = YES
 LIBCURL_AUTORECONF = YES
 
@@ -108,6 +109,12 @@ LIBCURL_DEPENDENCIES += libidn2
 LIBCURL_CONF_OPTS += --with-libidn2
 else
 LIBCURL_CONF_OPTS += --without-libidn2
+endif
+
+ifeq ($(BR2_PACKAGE_LIBPSL),y)
+LIBCURL_CONF_OPTS += --with-libpsl
+else
+LIBCURL_CONF_OPTS += --without-libpsl
 endif
 
 # Configure curl to support libssh2
