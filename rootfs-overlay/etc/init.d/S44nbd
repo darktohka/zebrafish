@@ -72,11 +72,15 @@ do_stop() {
   nbdserver=$(get_kernel_parameter "nbdserver")
 
   if [[ -n "$nbdclient" ]]; then
-    IFS=, read -ra params <<< "$nbdclient"
-    local disk="${params[2]}"
+    IFS=';' read -ra clients <<< "$nbdclient"
 
-    echo -n "Detaching $disk: "
-    nbd-client -d "$disk" && echo "OK" || echo "FAIL"
+    for client in "${clients[@]}"; do
+      IFS=, read -ra params <<< "$client"
+      local disk="${params[2]}"
+
+      echo -n "Detaching $disk: "
+      nbd-client -d "$disk" && echo "OK" || echo "FAIL"
+    done
   fi
 
   if [[ -n "$nbdserver" ]]; then
