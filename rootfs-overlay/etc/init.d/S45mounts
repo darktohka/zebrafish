@@ -5,10 +5,24 @@ this=S45mounts
 assert_root $this
 
 do_start() {
+  zfskeys=$(get_kernel_parameter "zfskeys")
   zfsmount=$(get_kernel_parameter "zfsmount")
 
+  if [[ -n "$zfskeys" ]]; then
+    IFS=';' read -ra keypairs <<< "$zfskeys"
+
+    for keypair in "${keypairs[@]}"; do
+      IFS=, read -ra params <<< "$keypair"
+      local pool="${params[0]}"
+      local key="${params[1]}"
+
+      echo -n "Importing ZFS key for $pool: "
+      echo "$key" | zfs load-key -L prompt "$pool" && echo "OK" || echo "FAIL"
+    done
+  fi
+
   if [[ -n "$zfsmount" ]]; then
-    IFS=, read -ra pools <<< "$zfsmount"
+    IFS=',' read -ra pools <<< "$zfsmount"
 
     for pool in "${pools[@]}"; do
       echo -n "Importing ZFS pool $pool: "
@@ -21,13 +35,15 @@ do_stop() {
   zfsmount=$(get_kernel_parameter "zfsmount")
 
   if [[ -n "$zfsmount" ]]; then
-    IFS=, read -ra pools <<< "$zfsmount"
+    IFS=',' read -ra pools <<< "$zfsmount"
 
     for pool in "${pools[@]}"; do
       echo -n "Detaching ZFS pool $pool: "
       zpool export "$pool" && echo "OK" || echo "FAIL"
     done
   fi
+
+  zfs unload-key -a
 }
 
 case "$1" in

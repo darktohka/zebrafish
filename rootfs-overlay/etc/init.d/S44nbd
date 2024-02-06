@@ -75,7 +75,7 @@ do_stop() {
     IFS=';' read -ra clients <<< "$nbdclient"
 
     for client in "${clients[@]}"; do
-      IFS=, read -ra params <<< "$client"
+      IFS=',' read -ra params <<< "$client"
       local disk="${params[2]}"
 
       echo -n "Detaching $disk: "
