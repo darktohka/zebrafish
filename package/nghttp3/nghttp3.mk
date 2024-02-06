@@ -4,8 +4,9 @@
 #
 ################################################################################
 
-NGHTTP3_VERSION = main
-NGHTTP3_SITE = $(call github,ngtcp2,nghttp3,main)
+NGHTTP3_VERSION = origin/main
+NGHTTP3_SITE = https://github.com/ngtcp2/nghttp3
+NGHTTP3_SITE_METHOD = git
 NGHTTP3_INSTALL_STAGING = YES
 NGHTTP3_CONF_OPTS = -DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=OFF -DENABLE_SHARED_LIB=ON -DCMAKE_CXX_EXTENSIONS=OFF
 
