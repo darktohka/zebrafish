@@ -8,6 +8,15 @@ do_start() {
   zfskeys=$(get_kernel_parameter "zfskeys")
   zfsmount=$(get_kernel_parameter "zfsmount")
 
+  if [[ -n "$zfsmount" ]]; then
+    IFS=',' read -ra pools <<< "$zfsmount"
+
+    for pool in "${pools[@]}"; do
+      echo -n "Importing ZFS pool $pool: "
+      zpool import "$pool" && echo "OK" || echo "FAIL"
+    done
+  fi
+
   if [[ -n "$zfskeys" ]]; then
     IFS=';' read -ra keypairs <<< "$zfskeys"
 
@@ -21,17 +30,18 @@ do_start() {
     done
   fi
 
-  if [[ -n "$zfsmount" ]]; then
-    IFS=',' read -ra pools <<< "$zfsmount"
-
-    for pool in "${pools[@]}"; do
-      echo -n "Importing ZFS pool $pool: "
-      zpool import "$pool" && echo "OK" || echo "FAIL"
-    done
-  fi
+  for zfsmount in $(zfs list -H -o name,mountpoint | grep -v '^zebrafish' | grep -v 'none$' | cut -f 1); do
+    echo -n "Mounting ZFS filesystem $zfsmount: "
+    zfs mount "$zfsmount" && echo "OK" || echo "FAIL"
+  done
 }
 
 do_stop() {
+  for zfsmount in $(zfs list -H -o name,mountpoint | grep -v '^zebrafish' | grep -v 'none$' | cut -f 1); do
+    echo -n "Unmounting ZFS filesystem $zfsmount: "
+    zfs unmount "$zfsmount" && echo "OK" || echo "FAIL"
+  done
+
   zfsmount=$(get_kernel_parameter "zfsmount")
 
   if [[ -n "$zfsmount" ]]; then
