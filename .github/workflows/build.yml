@@ -1,6 +1,11 @@
-name: Autobuild for Docker
+name: Autobuild
 
-on: [push, workflow_dispatch, repository_dispatch]
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  push:
+  workflow_dispatch:
+  repository_dispatch:
 
 jobs:
   build:
