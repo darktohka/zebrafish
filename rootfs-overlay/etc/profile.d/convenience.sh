@@ -29,7 +29,7 @@ alias du='du -sch'
 
 # More convenience, since Zebrafish is Docker-centric.
 alias d='docker'
-alias d-c='docker compose'
+alias dc='docker compose'
 alias docker-compose='docker compose'
 
 export PAGER="/usr/bin/less"  # Less is more, only better.

@@ -13,7 +13,7 @@ for tool in containerd; do
 done
 
 # Create symlinks for libarchive
-for cattype in cat zcat bzcat xzcat; do
+for cattype in bzcat xzcat; do
   rm -f "$TARGET_DIR"/bin/"$cattype"
   ln -s /usr/bin/bsdcat "$TARGET_DIR"/bin/"$cattype"
 done
