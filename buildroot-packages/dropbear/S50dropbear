@@ -1,0 +1,55 @@
+#!/bin/sh
+
+. /lib/zebrafish/functions
+
+NAME=dropbear
+PIDFILE=/var/run/$NAME.pid
+LOGFILE=/logs/system/$NAME.log
+
+ssh_port=$(get_kernel_parameter "sshport")
+
+if [[ -z "$ssh_port" ]]; then
+    ssh_port="22"
+fi
+
+start() {
+	DROPBEAR_ARGS="$DROPBEAR_ARGS -R -F -w -p $ssh_port"
+
+	echo -n "Starting $NAME: "
+	umask 077
+
+	start-stop-daemon \
+		--start --quiet --background \
+		--make-pidfile --pidfile $PIDFILE \
+		--startas /bin/sh -- -c "exec stdbuf -oL -eL $NAME $DROPBEAR_ARGS >> $LOGFILE 2>&1" \
+		&& echo "OK" || echo "FAIL"
+}
+
+stop() {
+	echo -n "Stopping $NAME: "
+	start-stop-daemon \
+		--stop --quiet --pidfile $PIDFILE \
+		&& echo "OK" || echo "FAIL"
+}
+
+restart() {
+	stop
+	start
+}
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  restart|reload)
+  	restart
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?
