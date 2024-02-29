@@ -4,29 +4,14 @@ this=S45ssh
 . /lib/zebrafish/functions
 assert_root $this
 
-case $1 in
-	start) ;;
-	stop)  exit 0 ;;
-	*)     fail "Usage: $this {start|stop}" ;;
-esac
-
 set -u
 
-user=signalizer
-ssh_folder=/home/$user/.ssh
-sshd_config=/etc/ssh/sshd_config
-authorized_keys="$ssh_folder"/authorized_keys
-
-ssh_port=$(get_kernel_parameter "sshport")
 ssh_key=$(get_kernel_parameter "sshkey")
-password_authentication="yes"
-
-if [[ -z "$ssh_port" ]]; then
-    ssh_port="22"
-fi
 
 if [[ -n "$ssh_key" ]]; then
-    password_authentication="no"
+    user=signalizer
+    ssh_folder=/home/$user/.ssh
+    authorized_keys="$ssh_folder"/authorized_keys
 
     echo -n "Installing SSH key: "
     rm -f "$authorized_keys"
@@ -36,16 +21,5 @@ if [[ -n "$ssh_key" ]]; then
     echo "OK"
 fi
 
-ssh_config="PermitRootLogin no
-Port $ssh_port
-PasswordAuthentication $password_authentication
-AuthorizedKeysFile .ssh/authorized_keys
-
-KbdInteractiveAuthentication no
-
-Subsystem sftp /usr/libexec/sftp-server"
-
 mkdir -p /logs/system
-echo -n "Updating SSH config: port: $ssh_port, password authentication: $password_authentication; "
-echo -e "$ssh_config" > "$sshd_config" || exit 4
 echo "OK"
