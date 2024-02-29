@@ -59,7 +59,7 @@ define DROPBEAR_CONFIG
 	echo '#define DEFAULT_RECV_WINDOW 262144'       >> $(@D)/localoptions.h
 	echo '#define RECV_MAX_PAYLOAD_LEN 262144'      >> $(@D)/localoptions.h
 	echo '#define TRANS_MAX_PAYLOAD_LEN 262144'     >> $(@D)/localoptions.h
-	sed -Ei 's/^.+LOCAL_IDENT.+$/#define LOCAL_IDENT "SSH-2.0-zebrafish"/' $(@D)/src/sysoptions.h
+	sed -Ei 's/^.+LOCAL_IDENT.+$/#define LOCAL_IDENT "SSH-2.0-Zebrafish"/' $(@D)/src/sysoptions.h
 endef
 DROPBEAR_POST_EXTRACT_HOOKS += DROPBEAR_CONFIG
 
