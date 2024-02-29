@@ -15,7 +15,7 @@ DROPBEAR_PROGRAMS = dropbear $(DROPBEAR_TARGET_BINS)
 # Disable hardening flags added by dropbear configure.ac, and let
 # Buildroot add them when the relevant options are enabled. This
 # prevents dropbear from using SSP support when not available.
-DROPBEAR_CONF_OPTS = --disable-harden --disable-bundled-libtom --disable-syslog
+DROPBEAR_CONF_OPTS = --disable-harden --disable-bundled-libtom --disable-syslog --disable-wtmp --disable-lastlog
 
 DROPBEAR_MAKE = \
 	$(MAKE) MULTI=1 \
@@ -67,14 +67,6 @@ define DROPBEAR_INSTALL_INIT_SYSV
 	$(INSTALL) -D -m 755 package/dropbear/S50dropbear \
 		$(TARGET_DIR)/etc/init.d/S50dropbear
 endef
-
-ifneq ($(BR2_PACKAGE_DROPBEAR_WTMP),y)
-DROPBEAR_CONF_OPTS += --disable-wtmp
-endif
-
-ifneq ($(BR2_PACKAGE_DROPBEAR_LASTLOG),y)
-DROPBEAR_CONF_OPTS += --disable-lastlog
-endif
 
 DROPBEAR_LOCALOPTIONS_FILE = $(call qstrip,$(BR2_PACKAGE_DROPBEAR_LOCALOPTIONS_FILE))
 ifneq ($(DROPBEAR_LOCALOPTIONS_FILE),)
