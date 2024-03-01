@@ -9,7 +9,7 @@ DROPBEAR_SITE = $(call github,darktohka,dropbear,master)
 DROPBEAR_LICENSE = MIT, BSD-2-Clause, Public domain
 DROPBEAR_LICENSE_FILES = LICENSE
 DROPBEAR_DEPENDENCIES = zlib libtomcrypt
-DROPBEAR_TARGET_BINS = dropbearkey dbclient ssh
+DROPBEAR_TARGET_BINS = dropbearkey dropbearconvert dbclient ssh
 DROPBEAR_PROGRAMS = dropbear $(DROPBEAR_TARGET_BINS)
 
 # Disable hardening flags added by dropbear configure.ac, and let
@@ -40,7 +40,7 @@ define DROPBEAR_CONFIG
 	echo '#define DROPBEAR_ENABLE_CBC_MODE 0'       >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_SHA1_HMAC 0'             >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_SHA2_256_HMAC 0'         >> $(@D)/localoptions.h
-	echo '#define DROPBEAR_SHA2_512_HMAC 1'         >> $(@D)/localoptions.h
+	echo '#define DROPBEAR_SHA2_512_HMAC 0'         >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_SHA1_96_HMAC 0'          >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_RSA 0'                   >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_RSA_SHA1 0'              >> $(@D)/localoptions.h
@@ -56,9 +56,9 @@ define DROPBEAR_CONFIG
 	echo '#define DROPBEAR_SFTPSERVER 0'	        >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_SMALL_CODE 0'            >> $(@D)/localoptions.h
 	echo '#define DO_HOST_LOOKUP 0'	                >> $(@D)/localoptions.h
-	echo '#define DEFAULT_RECV_WINDOW 262144'       >> $(@D)/localoptions.h
-	echo '#define RECV_MAX_PAYLOAD_LEN 262144'      >> $(@D)/localoptions.h
-	echo '#define TRANS_MAX_PAYLOAD_LEN 262144'     >> $(@D)/localoptions.h
+	echo '#define DEFAULT_RECV_WINDOW 10485760'     >> $(@D)/localoptions.h
+	echo '#define RECV_MAX_PAYLOAD_LEN 262144'    >> $(@D)/localoptions.h
+	echo '#define TRANS_MAX_PAYLOAD_LEN 262144'   >> $(@D)/localoptions.h
 	sed -Ei 's/^.+LOCAL_IDENT.+/#define LOCAL_IDENT "SSH-2.0-Zebrafish"/' $(@D)/src/sysoptions.h
 endef
 DROPBEAR_POST_EXTRACT_HOOKS += DROPBEAR_CONFIG
