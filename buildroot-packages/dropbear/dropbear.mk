@@ -5,7 +5,7 @@
 ################################################################################
 
 DROPBEAR_VERSION = master
-DROPBEAR_SITE = $(call github,mkj,dropbear,master)
+DROPBEAR_SITE = $(call github,darktohka,dropbear,master)
 DROPBEAR_LICENSE = MIT, BSD-2-Clause, Public domain
 DROPBEAR_LICENSE_FILES = LICENSE
 DROPBEAR_DEPENDENCIES = zlib libtomcrypt
