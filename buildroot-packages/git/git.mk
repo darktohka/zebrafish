@@ -80,13 +80,13 @@ GIT_CONF_ENV += \
 	ac_cv_snprintf_returns_bogus=yes LIBS='$(GIT_CONF_ENV_LIBS)'
 
 define GIT_INSTALL_SYMLINKS
-	for folder in usr/bin usr/libexec/git-core; do
-		for file in $$(find $(TARGET_DIR)/$${folder} -type f -name 'git-*'); do
-			if file $${file} | grep -q 'executable'; then
-				ln -sf /usr/bin/git $${file}
-			fi
-		done
-	done
+	for folder in usr/bin usr/libexec/git-core; do \
+		for file in $$(find $(TARGET_DIR)/$${folder} -type f -name 'git-*'); do \
+			if file $${file} | grep -q 'executable'; then \
+				ln -sf /usr/bin/git $${file} \
+			fi \
+		done \
+	done; \
 	$(RM) -f $(TARGET_DIR)/usr/bin/scalar
 endef
 GIT_POST_INSTALL_TARGET_HOOKS += GIT_INSTALL_SYMLINKS
