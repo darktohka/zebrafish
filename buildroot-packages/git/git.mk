@@ -82,10 +82,10 @@ GIT_CONF_ENV += \
 define GIT_INSTALL_SYMLINKS
 	for folder in usr/bin usr/libexec/git-core; do \
 		for file in $$(find $(TARGET_DIR)/$${folder} -type f -name 'git-*'); do \
-			if file $${file} | grep -q 'executable'; then \
-				ln -sf /usr/bin/git $${file} \
-			fi \
-		done \
+			if file "$${file}" | grep -q 'executable'; then \
+				ln -sf /usr/bin/git "$${file}"; \
+			fi; \
+		done; \
 	done; \
 	$(RM) -f $(TARGET_DIR)/usr/bin/scalar
 endef
