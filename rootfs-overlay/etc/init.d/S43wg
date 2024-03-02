@@ -65,6 +65,8 @@ create_wg_configs() {
 do_start () {
   create_wg_configs
 
+  iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS  --clamp-mss-to-pmtu
+
   for interface in $(find /etc/wireguard -type f -iname 'wg*.conf'); do
     interface="$(basename "$interface" .conf)"
     echo "Starting WireGuard interface $interface: "
