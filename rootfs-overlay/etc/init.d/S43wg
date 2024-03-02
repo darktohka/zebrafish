@@ -12,7 +12,7 @@ create_wg_config() {
   local int_port="$4"
   local peer_info="$5"
 
-  echo -e "[Interface]\nMTU = 1420\nPrivateKey = ${private_key}\nAddress = ${int_address}\nListenPort = ${int_port}\n\n$peer_info" > "/etc/wireguard/${interface}.conf"
+  echo -e "[Interface]\nMTU = 1300\nPrivateKey = ${private_key}\nAddress = ${int_address}\nListenPort = ${int_port}\n\n$peer_info" > "/etc/wireguard/${interface}.conf"
 }
 
 create_wg_configs() {
