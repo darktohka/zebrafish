@@ -2,6 +2,9 @@
 
 set -u
 
+this=setup-persistence
+. /lib/zebrafish/functions
+
 machine=$(get_kernel_parameter "machine")
 
 if [[ -z "$machine" ]]; then
@@ -10,9 +13,6 @@ if [[ -z "$machine" ]]; then
 fi
 
 vault_hash=$(echo -n "$machine" | openssl shake256 | cut -d ' ' -f 2)
-
-this=setup-persistence
-. /lib/zebrafish/functions
 
 ZEBRAFISH_ZPOOL="zebrafish"
 ZEBRAFISH_ZPOOL_VAULT="$ZEBRAFISH_ZPOOL/vault"
