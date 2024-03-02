@@ -11,6 +11,9 @@ LOGFILE=/logs/system/$NAME.log
 DAEMON_ARGS="daemon --config $CONFIGFILE"
 
 do_start() {
+    mkdir -p /etc/zrepl /var/run/zrepl
+    chmod 700 /var/run/zrepl
+
     echo -n "Starting $NAME: "
     start-stop-daemon --start --quiet --background \
         --make-pidfile --pidfile $PIDFILE \
