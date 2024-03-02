@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-this=S41wg
+this=S43wg
 . /lib/zebrafish/functions
 assert_root $this
 
