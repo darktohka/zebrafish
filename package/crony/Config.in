@@ -3,6 +3,6 @@ config BR2_PACKAGE_CRONY
 	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
 	select BR2_PACKAGE_HOST_RUSTC
 	help
-      Crony is a replacement tool for the famous cron as well as crontab.
+	  Crony is a replacement tool for the famous cron as well as crontab.
 
 	  https://github.com/ClementNerma/Crony
