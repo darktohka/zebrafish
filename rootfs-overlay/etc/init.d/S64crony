@@ -1,0 +1,36 @@
+#!/bin/sh
+
+. /lib/zebrafish/functions
+
+NAME=crony
+DATA_DIR=/etc/crony
+
+do_start() {
+    mkdir -p "$DATA_DIR"
+    chmod 755 "$DATA_DIR"
+
+    echo -n "Starting $NAME: "
+    crony --data-dir="$DATA_DIR" start
+}
+
+do_stop() {
+    echo -n "Stopping $NAME: "
+    crony --data-dir="$DATA_DIR" stop
+}
+
+case "$1" in
+    start)
+        do_start
+        ;;
+    stop)
+        do_stop
+        ;;
+    restart)
+        do_stop
+        sleep 1
+        do_start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
