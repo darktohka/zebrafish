@@ -11,7 +11,7 @@ boot_order=$(echo "$zebrafish_string" | cut -d ' ' -f 1)
 boot_number="${boot_order//[^0-9]/}"
 
 # Get kernel command line
-hex_string=$(echo "$zebrafish_string" | awk -F"kernel)" '{print $2}')
+hex_string=$(echo "$zebrafish_string" | awk -F"kernel" '{print $2}')
 
 # Remove null bytes
 hex_string="${hex_string//00/}"
