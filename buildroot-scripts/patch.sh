@@ -49,3 +49,6 @@ WOLFSSL="$BR/package/wolfssl/wolfssl.mk"
 sed -Ei 's/^WOLFSSL_VERSION.+$/WOLFSSL_VERSION = master/' "$WOLFSSL"
 sed -Ei 's/^WOLFSSL_SITE.+$/WOLFSSL_SITE = $(call github,wolfSSL,wolfssl,master)\nWOLFSSL_AUTORECONF = YES/' "$WOLFSSL"
 rm -f "$BR/package/wolfssl/wolfssl.hash"
+
+# Allow Cargo.lock to be updated
+sed -Ei 's/--offline//;s/--locked//' "$BR/package/pkg-cargo.mk"
