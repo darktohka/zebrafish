@@ -51,4 +51,6 @@ sed -Ei 's/^WOLFSSL_SITE.+$/WOLFSSL_SITE = $(call github,wolfSSL,wolfssl,master)
 rm -f "$BR/package/wolfssl/wolfssl.hash"
 
 # Allow Cargo.lock to be updated
-sed -Ei 's/--offline//;s/--locked//' "$BR/package/pkg-cargo.mk"
+for file in package/pkg-cargo.mk support/download/cargo-post-process; do
+  sed -Ei 's/--offline//;s/--locked//' "$BR"/"$file"
+done
