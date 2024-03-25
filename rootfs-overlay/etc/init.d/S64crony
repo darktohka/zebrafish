@@ -4,18 +4,20 @@
 
 NAME=crony
 DATA_DIR=/etc/crony
+LOGS_DIR=/logs/system/crony
+RUN_DIR=/run/crony
 
 do_start() {
-    mkdir -p "$DATA_DIR"
-    chmod 755 "$DATA_DIR"
+    mkdir -p "$DATA_DIR" "$LOGS_DIR" "$RUN_DIR"
+    chmod 755 "$DATA_DIR" "$LOGS_DIR" "$RUN_DIR"
 
     echo -n "Starting $NAME: "
-    crony --data-dir="$DATA_DIR" start
+    crony start
 }
 
 do_stop() {
     echo -n "Stopping $NAME: "
-    crony --data-dir="$DATA_DIR" stop
+    crony stop
 }
 
 case "$1" in
