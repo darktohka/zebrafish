@@ -4,6 +4,8 @@ source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/dnsoverhttps/Config.in"
 source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/nghttp3/Config.in"
 source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/ngtcp2/Config.in"
 source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/crony/Config.in"
+source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/nodeexporter/Config.in"
+source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/zfsexporter/Config.in"
 
 menu "doas"
 	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/opendoas/Config.in"

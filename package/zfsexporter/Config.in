@@ -1,0 +1,7 @@
+config BR2_PACKAGE_ZFSEXPORTER
+	bool "zfsexporter"
+	help
+	  Prometheus exporter for ZFS (pools, filesystems,
+	  snapshots and volumes).
+
+	  https://github.com/pdf/zfs_exporter/
