@@ -1,0 +1,10 @@
+config BR2_PACKAGE_UGREP
+	bool "ugrep"
+	depends on BR2_PACKAGE_PCRE2
+	depends on BR2_PACKAGE_ZSTD
+	depends on BR2_PACKAGE_ZLIB_NG
+	depends on BR2_PACKAGE_XZ
+	help
+	  Grep replacement
+
+	  https://github.com/Genivia/ugrep
