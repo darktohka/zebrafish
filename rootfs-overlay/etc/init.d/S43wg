@@ -42,15 +42,28 @@ create_wg_configs() {
     for peer in "${peers[@]}"; do
       IFS=, read -ra peer_info_params <<< "$peer"
       local public_key="${peer_info_params[0]}"
-      local endpoint="${peer_info_params[1]}"
-      local allowed_ips="${peer_info_params[2]}"
+
+      if [[ "${#peer_info_params[@]}" -ne 3 ]]; then
+        local endpoint=""
+        local allowed_ips="${peer_info_params[1]}"
+      else
+        local endpoint="${peer_info_params[1]}"
+        local allowed_ips="${peer_info_params[2]}"
+      fi
 
       if [[ -n "$peer_info" ]]; then
         peer_info+="\n\n"
       fi
 
-      peer_info+="[Peer]\nPublicKey = ${public_key}\nEndpoint = ${endpoint}\nAllowedIPs = ${allowed_ips}\nPersistentKeepalive = 25"
-      echo -n "peer at $endpoint (allowed IPs: $allowed_ips); "
+      peer_info+="[Peer]\nPublicKey = ${public_key}\nAllowedIPs = ${allowed_ips}\nPersistentKeepalive = 25"
+      echo -n "peer"
+
+      if [[ -n "$endpoint" ]]; then
+        peer_info+="\nEndpoint = ${endpoint}"
+        echo -n " at $endpoint"
+      else
+
+      echo -n " (allowed IPs: $allowed_ips); "
     done
 
     # Create WireGuard configuration file
