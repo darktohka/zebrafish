@@ -10,11 +10,6 @@ UGREP_SITE_METHOD = git
 UGREP_LICENSE = BSD-3-Clause
 UGREP_LICENSE_FILES = LICENSE.txt
 
-UGREP_MAKE_OPTS = \
-	CC=$(TARGET_CC) \
-	CFLAGS="$(TARGET_CFLAGS)" \
-	LDFLAGS="$(TARGET_LDFLAGS)"
-
 # Create symlinks for fgrep, grep and egrep
 define UGREP_ADD_SYMLINKS
 	ln -s /usr/bin/ugrep $(TARGET_DIR)/usr/bin/grep \
