@@ -49,7 +49,7 @@ jobs:
             "${{ github.workspace }}/buildroot" \
             "${{ github.workspace }}/zebrafish"
       - name: Restore Buildroot cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         if: ${{ github.event_name != 'schedule' }}
         with:
           key: zebrafish-cache-${{ matrix.architecture }}
@@ -78,7 +78,7 @@ jobs:
             "${{ github.workspace }}/artifacts" \
             "${{ matrix.architecture }}"
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: zebrafish-${{ matrix.architecture }}
           path: ${{ github.workspace }}/artifacts/upload/zebrafish-${{ matrix.architecture }}.tar
@@ -99,7 +99,7 @@ jobs:
           ./prepare-cache.sh \
             "${{ github.workspace }}/buildroot"
       - name: Save Buildroot cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           key: zebrafish-cache-${{ matrix.architecture }}
           path: ${{ github.workspace }}/buildroot/output
