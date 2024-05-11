@@ -61,7 +61,7 @@ create_wg_configs() {
       if [[ -n "$endpoint" ]]; then
         peer_info+="\nEndpoint = ${endpoint}"
         echo -n " at $endpoint"
-      else
+      fi
 
       echo -n " (allowed IPs: $allowed_ips); "
     done
