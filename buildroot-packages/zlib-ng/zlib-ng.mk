@@ -6,11 +6,16 @@
 
 ZLIB_NG_VERSION = develop
 ZLIB_NG_SITE = $(call github,zlib-ng,zlib-ng,develop)
+ZLIB_NG_LICENSE = Zlib
+ZLIB_NG_LICENSE_FILES = LICENSE.md
 ZLIB_NG_INSTALL_STAGING = YES
 ZLIB_NG_PROVIDES = zlib
+ZLIG_NG_CFLAGS += -fPIC
 
 # Build with zlib compatible API, gzFile support and optimizations on
 ZLIB_NG_CONF_OPTS += \
+	-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+	-DCMAKE_C_COMPILER_TARGET=$(BR2_ARCH) \
 	-DWITH_GZFILEOP=1 \
 	-DWITH_OPTIM=1 \
 	-DZLIB_COMPAT=1 \
