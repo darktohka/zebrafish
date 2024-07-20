@@ -9,6 +9,10 @@ UGREP_SITE = https://github.com/Genivia/ugrep
 UGREP_SITE_METHOD = git
 UGREP_LICENSE = BSD-3-Clause
 UGREP_LICENSE_FILES = LICENSE.txt
+UGREP_MAKE_ENV += \
+	PREFIX=$(TARGET_DIR)/
+UGREP_CONFIGURE_ARGS += \
+	PREFIX=$(TARGET_DIR)/
 
 # Create symlinks for fgrep, grep and egrep
 define UGREP_ADD_SYMLINKS

@@ -14,13 +14,7 @@ GIT_SELINUX_MODULES = apache git xdg
 GIT_DEPENDENCIES = zlib $(TARGET_NLS_DEPENDENCIES)
 GIT_AUTORECONF = YES
 
-ifeq ($(BR2_PACKAGE_OPENSSL),y)
-GIT_DEPENDENCIES += host-pkgconf openssl
-GIT_CONF_OPTS += --with-openssl
-GIT_MAKE_OPTS += LIB_4_CRYPTO="`$(PKG_CONFIG_HOST_BINARY) --libs libssl libcrypto`"
-else
 GIT_CONF_OPTS += --without-openssl
-endif
 
 ifeq ($(BR2_PACKAGE_PCRE2),y)
 GIT_DEPENDENCIES += pcre2
@@ -33,7 +27,13 @@ ifeq ($(BR2_PACKAGE_LIBCURL),y)
 GIT_DEPENDENCIES += libcurl
 GIT_CONF_OPTS += --with-curl
 GIT_CONF_ENV += \
-	ac_cv_prog_CURL_CONFIG=$(STAGING_DIR)/usr/bin/$(LIBCURL_CONFIG_SCRIPTS)
+	ac_cv_prog_CURLDIR=$(TARGET_DIR)/usr \
+	ac_cv_prog_CURL_LDFLAGS=-lcurl \
+	ac_cv_prog_CURL_CONFIG=$(TARGET_DIR)/usr/bin/curl-config
+GIT_MAKE_OPTS += \
+	CURLDIR=$(TARGET_DIR)/usr \
+	CURL_LDFLAGS=-lcurl \
+	CURL_CONFIG=$(TARGET_DIR)/usr/bin/curl-config
 else
 GIT_CONF_OPTS += --without-curl
 endif
