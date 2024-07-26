@@ -57,6 +57,8 @@ LIBCURL_CONF_OPTS = \
 	-DUSE_LIBIDN2=ON \
 	-DCURL_USE_LIBPSL=ON \
 	-DCURL_USE_LIBSSH2=OFF \
-	-DCURL_USE_LIBSSH=OFF
+	-DCURL_USE_LIBSSH=OFF \
+	-DCURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+	-DCURL_CA_PATH=/etc/ssl/certs
 
 $(eval $(cmake-package))
