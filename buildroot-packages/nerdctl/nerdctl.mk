@@ -5,7 +5,7 @@
 ################################################################################
 
 NERDCTL_VERSION = main
-NERDCTL_SITE = $(call github,darktohka,nerdctl,main)
+NERDCTL_SITE = $(call github,containerd,nerdctl,main)
 
 NERDCTL_LICENSE = Apache-2.0
 NERDCTL_LICENSE_FILES = LICENSE
