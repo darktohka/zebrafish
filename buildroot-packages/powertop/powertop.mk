@@ -14,6 +14,7 @@ POWERTOP_DEPENDENCIES = \
 	host-autoconf-archive \
 	host-pkgconf \
 	libnl \
+	libtracefs \
 	ncurses \
 	$(if $(BR2_PACKAGE_PCIUTILS),pciutils) \
 	$(TARGET_NLS_DEPENDENCIES)

@@ -5,6 +5,7 @@ config BR2_PACKAGE_POWERTOP
 	depends on BR2_USE_WCHAR
 	select BR2_PACKAGE_NCURSES
 	select BR2_PACKAGE_LIBNL
+	select BR2_PACKAGE_LIBTRACEFS
 	help
 	  A tool to diagnose issues with power consumption and power
 	  management
