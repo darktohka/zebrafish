@@ -79,6 +79,3 @@ config BR2_PACKAGE_PROVIDES_HOST_GO
 endif
 
 source "package/go/go-bin/Config.in.host"
-source "package/go/go-bootstrap-stage1/Config.in.host"
-source "package/go/go-bootstrap-stage2/Config.in.host"
-source "package/go/go-bootstrap-stage3/Config.in.host"
