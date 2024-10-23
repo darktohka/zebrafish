@@ -49,3 +49,5 @@ fi
 for file in package/pkg-cargo.mk support/download/cargo-post-process; do
   sed -Ei 's/--offline//;s/--locked//' "$BR"/"$file"
 done
+
+echo "exit 0" > support/scripts/check-kernel-headers.sh

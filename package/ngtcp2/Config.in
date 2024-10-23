@@ -2,5 +2,3 @@ config BR2_PACKAGE_NGTCP2
 	bool "ngtcp2"
 	help
 	  ngtcp2 is an implementation of QUIC.
-
-	  https://github.com/ngtcp2/ngtcp2/
