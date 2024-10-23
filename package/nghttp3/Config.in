@@ -2,5 +2,3 @@ config BR2_PACKAGE_NGHTTP3
 	bool "nghttp3"
 	help
 	  nghttp3 is an implementation of HTTP/3.
-
-	  https://github.com/ngtcp2/nghttp3/
