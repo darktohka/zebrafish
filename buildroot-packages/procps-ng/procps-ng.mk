@@ -5,7 +5,7 @@
 ################################################################################
 
 PROCPS_NG_VERSION = origin/master
-PROCPS_NG_SITE = https://gitlab.com/darktohka/procps
+PROCPS_NG_SITE = https://gitlab.com/procps-ng/procps
 PROCPS_NG_SITE_METHOD = git
 PROCPS_NG_INSTALL_STAGING = YES
 PROCPS_NG_DEPENDENCIES = ncurses host-pkgconf $(TARGET_NLS_DEPENDENCIES)
