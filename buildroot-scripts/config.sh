@@ -43,6 +43,11 @@ cp "$ZF"/board/pc/"$linuxconfig" "$LX"/.config
 cd "$BR"
 make BR2_EXTERNAL="$ZF" olddefconfig
 
+if grep -q "^BR2_PACKAGE_HOST_LINUX_HEADERS_CUSTOM_REALLY_OLD=y" "$BR/.config"; then
+  echo "Linux headers have not been detected properly."
+  exit 1
+fi
+
 if ! grep -q "^BR2_PACKAGE_GLIBC=y" "$BR/.config"; then
   echo "glibc package is not enabled in Buildroot configuration."
   exit 1
