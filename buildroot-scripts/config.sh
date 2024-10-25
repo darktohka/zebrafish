@@ -42,3 +42,13 @@ cp "$ZF"/board/pc/"$linuxconfig" "$LX"/.config
 
 cd "$BR"
 make BR2_EXTERNAL="$ZF" olddefconfig
+
+if ! grep -q "^BR2_PACKAGE_GLIBC=y" "$BR/.config"; then
+  echo "glibc package is not enabled in Buildroot configuration."
+  exit 1
+fi
+
+if ! grep -q "^BR2_TOOLCHAIN_USES_GLIBC=y" "$BR/.config"; then
+  echo "Toolchain is not using glibc in Buildroot configuration."
+  exit 1
+fi
