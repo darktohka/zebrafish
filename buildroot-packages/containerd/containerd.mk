@@ -4,12 +4,12 @@
 #
 ################################################################################
 
-CONTAINERD_VERSION = 1.7
-CONTAINERD_SITE = $(call github,containerd,containerd,release/1.7)
+CONTAINERD_VERSION = main
+CONTAINERD_SITE = $(call github,containerd,containerd,main)
 CONTAINERD_LICENSE = Apache-2.0
 CONTAINERD_LICENSE_FILES = LICENSE
 
-CONTAINERD_GOMOD = github.com/containerd/containerd
+CONTAINERD_GOMOD = github.com/containerd/containerd/v2
 
 CONTAINERD_BUILD_TARGETS = \
 	cmd/containerd \
