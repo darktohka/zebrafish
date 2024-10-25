@@ -50,4 +50,11 @@ for file in package/pkg-cargo.mk support/download/cargo-post-process; do
   sed -Ei 's/--offline//;s/--locked//' "$BR"/"$file"
 done
 
+# Build the latest version of Go
+LATEST_GO_VERSION=$(curl -SsL https://raw.githubusercontent.com/actions/go-versions/refs/heads/main/versions-manifest.json | jq -r .[0].version)
+echo "Building with Go version $LATEST_GO_VERSION"
+sed -Ei "s/^GO_VERSION\s+=.*/GO_VERSION = $LATEST_GO_VERSION/" package/go/go.mk
+rm -f package/go/go-bin/go-bin.hash
+
+# Prevent kernel headers from being checked
 echo "exit 0" > support/scripts/check-kernel-headers.sh
