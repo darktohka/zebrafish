@@ -55,6 +55,7 @@ LATEST_GO_VERSION=$(curl -SsL https://raw.githubusercontent.com/actions/go-versi
 echo "Building with Go version $LATEST_GO_VERSION"
 sed -Ei "s/^GO_VERSION\s+=.*/GO_VERSION = $LATEST_GO_VERSION/" package/go/go.mk
 rm -f package/go/go-bin/go-bin.hash
+rm -f package/go/go-src/go-src.hash
 
 # Prevent kernel headers from being checked
 echo "exit 0" > support/scripts/check-kernel-headers.sh
