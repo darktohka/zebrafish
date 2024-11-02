@@ -38,6 +38,46 @@ index 0c37a1d..4524db8 100644
 	}
 	if ctxt.Arch.Family == sys.ARM64 && buildcfg.GOOS == "freebsd" {
 		// Switch to ld.bfd on freebsd/arm64.
+diff --git a/src/cmd/go/internal/modfetch/fetch.go b/src/cmd/go/internal/modfetch/fetch.go
+--- a/src/cmd/go/internal/modfetch/fetch.go
++++ b/src/cmd/go/internal/modfetch/fetch.go
+@@ -716,32 +716,21 @@ func checkModSum(mod module.Version, h s
+ // If it finds a conflicting pair instead, it calls base.Fatalf.
+ // goSum.mu must be locked.
+ func haveModSumLocked(mod module.Version, h string) bool {
+-	sumFileName := "go.sum"
+-	if strings.HasSuffix(GoSumFile, "go.work.sum") {
+-		sumFileName = "go.work.sum"
+-	}
+ 	for _, vh := range goSum.m[mod] {
+ 		if h == vh {
+ 			return true
+ 		}
+-		if strings.HasPrefix(vh, "h1:") {
+-			base.Fatalf("verifying %s@%s: checksum mismatch\n\tdownloaded: %v\n\t%s:     %v"+goSumMismatch, mod.Path, mod.Version, h, sumFileName, vh)
+-		}
+ 	}
+-	// Also check workspace sums.
+-	foundMatch := false
+ 	// Check sums from all files in case there are conflicts between
+ 	// the files.
+-	for goSumFile, goSums := range goSum.w {
++	for _, goSums := range goSum.w {
+ 		for _, vh := range goSums[mod] {
+ 			if h == vh {
+-				foundMatch = true
+-			} else if strings.HasPrefix(vh, "h1:") {
+-				base.Fatalf("verifying %s@%s: checksum mismatch\n\tdownloaded: %v\n\t%s:     %v"+goSumMismatch, mod.Path, mod.Version, h, goSumFile, vh)
++				return true
+ 			}
+ 		}
+ 	}
+-	return foundMatch
++	return false
+ }
+ 
+ // addModSumLocked adds the pair mod,h to go.sum.
+
 --
 2.47.0
 
