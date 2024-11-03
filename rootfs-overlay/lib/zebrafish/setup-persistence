@@ -12,7 +12,7 @@ if [[ -z "$machine" ]]; then
     exit 1
 fi
 
-vault_hash=$(echo -n "$machine" | openssl shake256 | cut -d ' ' -f 2)
+vault_hash=$(echo -n "$machine" | openssl shake256 -xoflen 32 | cut -d ' ' -f 2)
 
 ZEBRAFISH_ZPOOL="zebrafish"
 ZEBRAFISH_ZPOOL_VAULT="$ZEBRAFISH_ZPOOL/vault"
