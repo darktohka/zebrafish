@@ -5,7 +5,7 @@
 ################################################################################
 
 CRUN_VERSION = origin/main
-CRUN_SITE = https://github.com/containers/crun
+CRUN_SITE = https://github.com/darktohka/crun
 CRUN_SITE_METHOD = git
 CRUN_GIT_SUBMODULES = YES
 CRUN_DEPENDENCIES += yajl
