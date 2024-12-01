@@ -6,6 +6,7 @@
 
 STRACE_VERSION = master
 STRACE_SITE = $(call github,strace,strace,master)
+STRACE_AUTORECONF = YES
 STRACE_CONF_OPTS = --enable-mpers=no
 
 ifeq ($(BR2_PACKAGE_LIBUNWIND),y)
