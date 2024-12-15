@@ -1,0 +1,92 @@
+#!/bin/sh
+#
+# nfs           This shell script takes care of starting and stopping
+#               the NFS services. Stolen from RedHat FC5.
+
+CFG_FILE=/etc/default/nfsd
+EXPORTS_FILE=/etc/exports
+
+NR_THREADS=2
+if [ -f "${CFG_FILE}" ]; then
+	. "${CFG_FILE}"
+fi
+
+
+start() {
+	if [ ! -f ${EXPORTS_FILE} ]; then
+		echo "No exports file, not starting NFS server"
+		exit 0
+	fi
+
+	# Create temporary files
+	mkdir -p /var/lock/subsys
+	mkdir -p /run/nfs/sm
+	mkdir -p /run/nfs/sm.bak
+	touch /run/nfs/rmtab
+
+	# Start daemons.
+	printf "Starting NFS statd: "
+	rpc.statd
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+	touch /var/lock/subsys/nfslock
+
+	printf "Starting NFS services: "
+	/usr/sbin/exportfs -r
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+
+	printf "Starting NFS daemon: "
+	rpc.nfsd ${NR_THREADS}
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+
+	printf "Starting NFS mountd: "
+	rpc.mountd
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+	touch /var/lock/subsys/nfs
+}
+
+stop() {
+	# Stop daemons.
+	printf "Shutting down NFS mountd: "
+	killall -q rpc.mountd 2>/dev/null
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+
+	printf "Shutting down NFS daemon: "
+	killall -q nfsd 2>/dev/null
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+
+	printf "Shutting down NFS services: "
+	/usr/sbin/exportfs -au
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+
+	printf "Stopping NFS statd: "
+	killall -q rpc.statd 2>/dev/null
+	[ $? = 0 ] && echo "OK" || echo "FAIL"
+	rm -f /var/lock/subsys/nfs
+	rm -f /var/run/rpc.statd.pid
+	rm -f /var/lock/subsys/nfslock
+}
+
+# See how we were called.
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		start
+		;;
+	reload)
+		if [ -f ${EXPORTS_FILE} ]; then
+			/usr/sbin/exportfs -r
+			touch /var/lock/subsys/nfs
+		fi
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+esac
+
+exit 0
