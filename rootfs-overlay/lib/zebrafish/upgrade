@@ -52,8 +52,16 @@ unmount_efi() {
 
 trap unmount_efi EXIT
 
+# Find the folder containing zebrafish-kernel
+ACTUAL_DIR=$(find "$EFI_DIR" -type f -name "zebrafish-kernel" -exec dirname {} \;)
+
+if [[ -z "$ACTUAL_DIR" ]]; then
+    echo "zebrafish-kernel not found in EFI!"
+    exit 1
+fi
+
 # Read the manifest
-EFI_RELEASE="$EFI_DIR/$ZF_ARCH"
+EFI_RELEASE="$ACTUAL_DIR/$ZF_ARCH"
 EFI_MANIFEST="$EFI_RELEASE.json"
 
 CDN_RELEASE="$CDN_HOSTNAME/$ZF_ARCH"
@@ -114,7 +122,7 @@ while read -r filename expected_hash; do
     DOWNLOAD_FILENAME="$DOWNLOAD_FOLDER/$filename"
     echo "Installing $filename..."
 
-    cp --no-preserve=mode "$DOWNLOAD_FOLDER/$filename" "$EFI_DIR/$filename"
+    cp --no-preserve=mode "$DOWNLOAD_FOLDER/$filename" "$ACTUAL_DIR/$filename"
 done <<< "$(echo "$HASHES")"
 
 # Write the manifest
