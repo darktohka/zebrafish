@@ -66,6 +66,13 @@ jobs:
             "${{ github.workspace }}/buildroot" \
             "${{ github.workspace }}/zebrafish" \
             "${{ matrix.architecture }}"
+      - name: Download sources for packages
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          ./download.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/zebrafish"
       - name: Build Buildroot
         shell: bash
         run: |
