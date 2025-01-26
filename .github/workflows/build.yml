@@ -49,6 +49,7 @@ jobs:
         shell: bash
         run: |
           cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x patch.sh
           ./patch.sh \
             "${{ github.workspace }}/buildroot" \
             "${{ github.workspace }}/zebrafish"
@@ -62,6 +63,7 @@ jobs:
         shell: bash
         run: |
           cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x config.sh
           ./config.sh \
             "${{ github.workspace }}/buildroot" \
             "${{ github.workspace }}/zebrafish" \
@@ -70,6 +72,7 @@ jobs:
         shell: bash
         run: |
           cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x download.sh
           ./download.sh \
             "${{ github.workspace }}/buildroot" \
             "${{ github.workspace }}/zebrafish"
@@ -77,6 +80,7 @@ jobs:
         shell: bash
         run: |
           cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x build.sh
           ./build.sh \
             "${{ github.workspace }}/buildroot" \
             "${{ github.workspace }}/zebrafish"
@@ -84,6 +88,7 @@ jobs:
         shell: bash
         run: |
           cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x prepare-artifacts.sh
           ./prepare-artifacts.sh \
             "${{ github.workspace }}/buildroot" \
             "${{ github.workspace }}/artifacts" \
@@ -107,6 +112,7 @@ jobs:
         shell: bash
         run: |
           cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x prepare-cache.sh
           ./prepare-cache.sh \
             "${{ github.workspace }}/buildroot"
       - name: Save Buildroot cache
