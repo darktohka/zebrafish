@@ -5,11 +5,11 @@
 ################################################################################
 
 DIVE_VERSION = main
-DIVE_SITE = $(call github,darktohka,dive,zebrafish)
+DIVE_SITE = $(call github,darktohka,dive,feature/joschi-nerdctl)
 DIVE_LICENSE = MIT
 DIVE_LICENSE_FILES = LICENSE
 
-DIVE_GOMOD = github.com/darktohka/dive
+DIVE_GOMOD = github.com/joschi/dive
 
 define DIVE_REWRITE_SCRIPT
 	$(SED) 's/"container-engine", "docker"/"container-engine", "nerdctl"/' $(@D)/cmd/root.go
