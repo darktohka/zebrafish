@@ -1,6 +1,6 @@
 #!/bin/bash
 
-this=S45ssh
+this=S47ssh
 . /lib/zebrafish/functions
 assert_root $this
 
