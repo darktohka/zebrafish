@@ -1,6 +1,6 @@
 #!/bin/bash
 
-this=S45mounts
+this=S46mounts
 . /lib/zebrafish/functions
 assert_root $this
 

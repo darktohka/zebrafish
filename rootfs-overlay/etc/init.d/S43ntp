@@ -1,6 +1,6 @@
 #!/bin/bash
 
-this=S42ntp
+this=S43ntp
 . /lib/zebrafish/functions
 assert_root $this
 

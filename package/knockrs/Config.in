@@ -1,0 +1,8 @@
+config BR2_PACKAGE_KNOCKRS
+	bool "knockrs"
+	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+	select BR2_PACKAGE_HOST_RUSTC
+	help
+	  knock-rs is a port-knocking implementation in Rust.
+
+	  https://github.com/darktohka/knock-rs

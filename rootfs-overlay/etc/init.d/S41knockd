@@ -1,0 +1,53 @@
+#!/bin/sh
+
+this=S41knockd
+. /lib/zebrafish/functions
+assert_root $this
+
+CONFIGFILE=/etc/knockd/config.json
+NAME=knockd
+DAEMON=knockd
+PIDFILE=/var/run/$NAME.pid
+LOGFILE=/logs/system/$NAME.log
+
+DAEMON_ARGS="--config $CONFIGFILE"
+
+do_start() {
+    if ! [[ -f $CONFIGFILE ]]; then
+        echo "Config file $CONFIGFILE not found"
+        exit 0
+    fi
+
+    echo -n "Starting $NAME: "
+    start-stop-daemon --start --quiet --background \
+        --make-pidfile --pidfile $PIDFILE \
+        --startas /bin/sh -- -c "exec stdbuf -oL -eL $DAEMON $DAEMON_ARGS >> $LOGFILE 2>&1" \
+        && echo "OK" || echo "FAIL"
+}
+
+do_stop() {
+    if ! [[ -f "$PIDFILE" ]]; then
+        exit 0
+    fi
+
+    echo -n "Stopping $NAME: "
+    start-stop-daemon --stop --quiet --pidfile $PIDFILE \
+        && echo "OK" || echo "FAIL"
+}
+
+case "$1" in
+    start)
+        do_start
+        ;;
+    stop)
+        do_stop
+        ;;
+    restart)
+        do_stop
+        sleep 1
+        do_start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
