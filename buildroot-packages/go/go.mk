@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-GO_VERSION = 1.23.4
+GO_VERSION = 1.23.6
 
 HOST_GO_GOPATH = $(HOST_DIR)/share/go-path
 HOST_GO_HOST_CACHE = $(HOST_DIR)/share/host-go-cache
@@ -129,6 +129,7 @@ define GO_BINARIES_INSTALL
 	cp -a $(@D)/pkg/tool $(HOST_GO_ROOT)/pkg/
 
 	# The Go sources must be installed to the host/ tree for the Go stdlib.
+	rm -rf $(HOST_GO_ROOT)/src
 	cp -a $(@D)/src $(HOST_GO_ROOT)/
 
 	# Set file timestamps to prevent the Go compiler from rebuilding the stdlib
