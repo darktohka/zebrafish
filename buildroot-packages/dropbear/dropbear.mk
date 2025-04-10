@@ -50,10 +50,12 @@ define DROPBEAR_CONFIG
 	echo '#define DROPBEAR_DH_GROUP14_SHA1 0'       >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_DH_GROUP14_SHA256 0'     >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_DH_GROUP16 0'            >> $(@D)/localoptions.h
-	echo '#define DROPBEAR_CURVE25519 1'            >> $(@D)/localoptions.h
+	echo '#define DROPBEAR_CURVE25519 0'            >> $(@D)/localoptions.h
+	echo '#define DROPBEAR_SNTRUP761 1'             >> $(@D)/localoptions.h
+	echo '#define DROPBEAR_MLKEM768 0'              >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_ECDH 0'                  >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_DH_GROUP1 0'             >> $(@D)/localoptions.h
-	echo '#define DROPBEAR_SFTPSERVER 0'	        >> $(@D)/localoptions.h
+	echo '#define DROPBEAR_SFTPSERVER 1'	        >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_SMALL_CODE 0'            >> $(@D)/localoptions.h
 	echo '#define DO_HOST_LOOKUP 0'	                >> $(@D)/localoptions.h
 	echo '#define DEFAULT_RECV_WINDOW 10485760'     >> $(@D)/localoptions.h
