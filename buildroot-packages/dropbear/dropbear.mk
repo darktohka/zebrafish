@@ -35,7 +35,6 @@ define DROPBEAR_CONFIG
 	echo '#define DROPBEAR_AES256 0'                >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_3DES 0'                  >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_CHACHA20POLY1305 1'      >> $(@D)/localoptions.h
-	echo '#define DROPBEAR_CHACHA20POLY1305 1'      >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_ENABLE_CTR_MODE 0'       >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_ENABLE_CBC_MODE 0'       >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_SHA1_HMAC 0'             >> $(@D)/localoptions.h

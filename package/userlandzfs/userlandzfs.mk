@@ -5,7 +5,7 @@
 ################################################################################
 
 USERLANDZFS_VERSION = origin/master
-USERLANDZFS_SITE = https://github.com/darktohka/zfs
+USERLANDZFS_SITE = https://github.com/openzfs/zfs
 USERLANDZFS_SITE_METHOD = git
 USERLANDZFS_LICENSE = CDDL
 USERLANDZFS_LICENSE_FILES = LICENSE COPYRIGHT
