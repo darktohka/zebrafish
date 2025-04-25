@@ -25,7 +25,7 @@ git checkout
 #patch -sf --no-backup-if-mismatch "$BR/linux/linux.mk" "$ZF/buildroot-patches/0001-add-zfs-to-linux.patch"
 ZFS_SCRIPT='define LINUX_IMPORT_ZFS
   cd $(LINUX_DIR) && make $(LINUX_MAKE_FLAGS) olddefconfig && make $(LINUX_MAKE_FLAGS) prepare && \
-  curl -sL https://github.com/darktohka/zfs/archive/refs/heads/master.tar.gz | tar -xz && cd zfs-master && $(AUTORECONF) && rm -rf config.cache && \
+  curl -sL https://github.com/openzfs/zfs/archive/refs/heads/master.tar.gz | tar -xz && cd zfs-master && $(AUTORECONF) && rm -rf config.cache && \
   $(TARGET_CONFIGURE_OPTS) \
   $(TARGET_CONFIGURE_ARGS) \
   $(LINUX_MAKE_FLAGS) ./configure \
