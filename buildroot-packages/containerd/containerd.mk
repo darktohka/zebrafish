@@ -13,9 +13,10 @@ CONTAINERD_GOMOD = github.com/containerd/containerd/v2
 
 CONTAINERD_BUILD_TARGETS = \
 	cmd/containerd \
-	cmd/containerd-shim-runc-v2
+	cmd/containerd-shim-runc-v2 \
+	cmd/ctr
 
-CONTAINERD_INSTALL_BINS = containerd containerd-shim-runc-v2
+CONTAINERD_INSTALL_BINS = containerd containerd-shim-runc-v2 ctr
 CONTAINERD_TAGS = no_aufs
 
 ifeq ($(BR2_PACKAGE_LIBAPPARMOR),y)
