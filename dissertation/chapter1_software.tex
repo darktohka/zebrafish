@@ -1,0 +1,364 @@
+\chapter{Elméleti megalapozás} \label{chapter1}
+
+\section {Használt szoftverek, könyvtárak}
+
+A dolgozat ezen részében megvizsgáljuk azokat a szoftvereket, amelyeket felhasználtunk a platform készítéséhez. A felhasznált szoftvereket két részre bontjuk: a végtermék által használt függőségek, valamint a tervezés és a fejlesztés során használt egyéb szoftverek.
+
+\subsection{Next.js}
+
+\begin{figure}[h]
+	\centering
+	\includesvg[scale=0.75]{images/next.svg}
+	\caption{A Next.js logója}
+        \label{nextjs}
+\end{figure}
+
+A Next.js (\ref{nextjs}. ábra) egy nagy teljesítményű \cite{ssrjs} JavaScript keretrendszer (\textit{framework}), amelyet modern webes alkalmazások készítésére használnak. A felhasználói felületek építésére széles körben elfogadott JavaScript-könyvtár, mely a React rugalmasságát szerveroldali rendereléssel és több optimalizálási technikával ötvözi. Elsősorban optimalizált és skálázható webes alkalmazások létrehozására használják, mivel akár szerver nélküli (\textit{serverless}) függvényekre is képes felosztani a fejlesztők által írt kódokat.
+
+A Next.js tökéletesen illeszkedik a mi felhasználási esetünkhöz, mivel nemcsak azt teszi lehetővé, hogy a teljes webalkalmazás JavaScriptben íródjon, hanem mindezt teljesítményhatékony módon teszi, lehetőséget adva arra, hogy a frontendet és a backendet egy egységes projekt részeként valósítsuk meg.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.75]{images/ssr-explanation.png}
+	\caption{A szerveroldali renderelés magyarázata}
+        \label{nextjs-ssr}
+\end{figure}
+
+A Next.js-t különösen hasznossá teszi az a tény, hogy az alkalmazás igényeitől függően zökkenőmentesen tud váltani a szerveroldali renderelés (SSR) és a kliensoldali renderelés (CSR) között. Ez számunkra nagyszerű, hiszen így mindkét megközelítés legjobb tulajdonságait élvezhetjük a kezdeti oldalbetöltési sebesség és az interaktivitás szempontjából. A szerveroldali renderelés és a kliensoldali renderelés ötvözése elősegíti a projekt keresőmotor optimalizálását (\textit{search engine optimization}) is. 
+
+A \ref{nextjs-ssr}. ábrán látható a két megközelítés ötvözése. Legelső lépésben a felhasználó kapcsolatba lép a webhellyel, és elkéri a weboldalt jellemző HTML fájlt a szervertől. A szerver egy kész HTML fájlt hoz létre, melyet visszaküld a felhasználónak. A felhasználó böngészője megjeleníti a HTML oldalt, amely még ebben a stádiumban nem interaktív, csupán előre legyártott tartalmakat jelenít meg. Mivel ezek az előre legyártott tartalmak nem szükségeltetik a JavaScript használatát, ezért az egyes keresőmotrok, mint például a Google Search vagy a Yandex Search, könnyedén indexelhetik a weboldalunkon található tartalmakat. Ez nagyszerű, hiszen nem minden keresőmotor támogatja a JavaScript végrehajtását. A böngésző a HTML megjelenítése után letölti a kliensoldali renderelést végrehajtó JavaScript modulokat a webszerverről, majd végrehajtja őket. A végeredmény egy olyan weboldal megjelenítése a felhasználó számára, amely előre elkészített tartalmakat is tartalmaz, viszont teljes mértékben interaktív abból a szempontból, hogy a weboldalon látható tartalmak bármikor frissíthetőek az egész weboldal újratöltése nélkül.
+
+Emellett a Next.js kiváló fejlesztői élményt nyújt olyan funkciókkal, mint a \textit{hot module replacement} (automatikusan megjeleníti a kód által renderelt eredményt, miközben a programozó írja a kódot), az automatikus kódfelosztás (\textit{code splitting}) és a \textit{serverless} telepítés beépített támogatása (tekintettel arra, hogy a \textit{Vercel}\footnote{A Vercel egy felhő szolgáltató, mely lehetővé teszi a fejlesztők számára a webes projektek egyszerű telepítését és skálázását \textit{serverless} technológiákkal.} a Next.js projekt vezető fejlesztője). A kiterjedt ökoszisztéma és a közösségi támogatás tovább növelte a vonzerejét, így a Next.js meggyőző választás volt a \textit{Project Raccoon} kivitelezéséré. Tökéletes egyensúlyt képvisel a szolgáltatások mennyisége és az általunk elképzelt platform létrehozásához szükséges fejlesztési idő között.
+
+\subsection{Node.js}
+
+\begin{figure}[h]
+	\centering
+	\includesvg[scale=0.50]{images/nodejs.svg}
+	\caption{A Node.js logója}
+        \label{nodejs}
+\end{figure}
+
+A Node.js (\ref{nodejs}. ábra) egy nyílt forráskódú, szerveroldali JavaScript futtatási környezet, amely képes futtatni a Next.js szolgáltatásait. Lehetővé teszi a JavaScript kód böngészőn kívüli végrehajtását, így nem szükséges külön nyelvet választani a szerveroldali kódok megvalósítására. Tekintettel arra, hogy a szerveroldali kód így JavaScriptben is írható, a különféle modulok, például az adatmodellek újrafelhasználhatóakká válnak a kliens és a szerveroldal között, kevesebb kódduplikációt eredményezve.
+
+A Node.js egyik meggyőző aspektusa az eseményvezérelt, nem blokkoló (\textit{non-blocking}) I/O modellje, amely lehetővé teszi az egyidejű kapcsolatok hatékony kezelését. Ez a tulajdonsága különösen alkalmassá teszi weboldalak készítésére, hiszen egyszerre több felhasználót kell kiszolgáljanak. A Node.js emellett hatalmas ökoszisztémával rendelkezik, mely magába foglalja a a fejlesztést egyszerűsítő könyvtárakat és keretrendszereket, így népszerű választás a szerveroldali alkalmazások és kliensoldali alkalmazások készítéséhez egyaránt. 
+
+Csomagkezelői, az npm és a yarn értékes eszközzé teszik a nagyméretű alkalmazások felépítéséhez. A Node.js sokoldalúságával, eseményalapú megközelítésével, Next.js támogatásával és közösségi támogatásával vonzó választást jelentett a \textit{Project Raccoon} fejlesztése számára. Egy másik szoftver használatát is fontolóra vettük: a \textit{Deno JavaScript Runtime}-t\footnote{A Deno egy biztonságos TypeScript futási környezet, amely a V8-ra, a Google JavaScript futtatómotorjára épül.}, egy másik JavaScript szerveroldali környezetet. Azonban sajnos ezt az ötletet elvetettük, mivel a választott keretrendszer, a Next.js támogatására még nem alkalmas a dolgozat írásakor.
+
+\subsection{React}
+
+\begin{figure}[h]
+	\centering
+        \includesvg[scale=5.5]{images/react.svg}
+	\caption{A React logója}
+        \label{react}
+\end{figure}
+
+A React (\ref{react}. ábra) egy felhasználói felületek építésére szolgáló JavaScript-könyvtár, amely elsősorban interaktív és újrafelhasználható UI-komponensek létrehozására összpontosít. A Reactot általában egyoldalas alkalmazások (\textit{SPA-k}) és mobilalkalmazások készítésére használják. A React bevezeti a virtuális DOM fogalmát, amely lehetővé teszi a komponensek hatékony frissítését és renderelését, jobb teljesítményt eredményezve. A React komponensek a virtuális DOM-ban megfelelnek egy-egy igazi HTML elemnek a böngésző DOM-jában. Egy frissítés során a React felépíti a változtatások részfáját a virtuális DOM újraépítése során, és csupán azokat a HTML elemeket frissíti a böngésző DOM-jából, amelyek módosultak, optimalizálva a frissítéseket. A React komponensalapú architektúrát követ, lehetővé téve a fejlesztők számára, hogy moduláris és újrafelhasználható felhasználói felület elemeket hozzanak létre, ami könnyebb karbantartást jelent, a kód újrafelhasználhatóságát eredményezve. A React-ot használva a fejlesztők valós idejű frissítéseket láthatnak a fejlesztési folyamat során. Az erős közösségi támogatás, a komponensek újrafelhasználhatóságának, a hatékony megjelenítésnek illetve a kiterjedt dokumentáció, egyaránt hivatalos és nem hivatalos forrásokból, megerősítette döntésünket a Next.js keretrendszer és a React könyvtár használata mellett.
+
+\subsection{Tailwind CSS}
+
+\begin{figure}[h]
+	\centering
+        \includesvg[scale=0.75]{images/tailwind.svg}
+	\caption{A Tailwind CSS logója}
+        \label{tailwindcss}
+\end{figure}
+
+A hagyományos webhelyprojektekben szoros kapcsolat van a CSS és a HTML között, mivel a CSS struktúrája a HTML-struktúrát tükrözi. \cite{cssutils} Általában a programozók egyszerre írják a weboldalaik HTML és CSS részeit, és emiatt jön létre ez a szoros kapcsolat a HTML és a CSS szerkezete között (lásd \ref{code:HTMLcomponent}. és \ref{code:CSScomponent}. kódrészlet). Ez azt eredményezi, hogy a megírt CSS osztályok nem újrafelhasználhatóak, mindig mikor egy új HTML elemet hozunk létre, vele együtt egy új CSS osztályt is létre kell hoznunk. Ritkaság, hogy a programozók létrehozzák a HTML megírása előtt tudatosan a CSS osztályokat. Emiatt találták ki a Tailwind CSS-et (\ref{tailwindcss}. ábra), amely segítségével a CSS osztályok megírása a múlt mulatságává válik. A Tailwind CSS új paradigmát vezet be: saját CSS osztályok írása helyett a HTML tagokat előre megírt, általános CSS osztályok ötvözésével stílusozzuk (lásd \ref{code:tailwindCSS}. kódrészlet). A Tailwind CSS által nyújtott CSS osztályok annyira általánosak, hogy egyetlen osztály a legtöbb esetben csupán egy-egy CSS stílussal (értékpárral) egyezik meg. A Tailwind CSS csökkenti a függőséget a HTML és a CSS között, és kikerüli a komplikált CSS-szelektorok szükségességét.
+
+\begin{lstlisting}[caption={ Példa megvalósítása egy HTML komponensnek Tailwind CSS segítségével }, captionpos=b, language = HTML, label={code:tailwindCSS}]
+<div class="max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow">
+  <a href="https://meow.com">
+    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">Miert kelnek fel a cicak?</h5>
+  </a>
+  <p class="mb-3 font-normal text-gray-700">Mert megkattannak.</p>
+  <a href="https://meow.com" class="inline-flex items-center rounded-lg bg-blue-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300">Olvass tovabb</a>
+</div>
+\end{lstlisting}
+
+\begin{lstlisting}[caption={ Példa megvalósítása egy HTML komponensnek sima HTML és CSS kombinációval: HTML komponens }, captionpos=b, language = HTML, label={code:HTMLcomponent}]
+<div class="card">
+  <a href="https://meow.com" class="card-link">
+    <h5 class="card-title">Miert kelnek fel a cicak?</h5>
+  </a>
+  <p class="card-description">Mert megkattannak.</p>
+  <a href="https://meow.com" class="card-button">Olvass tovabb</a>
+</div>
+\end{lstlisting}
+
+\pagebreak
+
+\begin{lstlisting}[caption={ Példa megvalósítása egy HTML komponensnek sima HTML és CSS kombinációval: CSS komponens }, language = css, label={code:CSScomponent}]
+.card {
+  max-width: 20rem;
+  border-radius: 0.5rem;
+  border-width: 1px;
+  border-color: #edf2f7;
+  background-color: #fff;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+.card-title {
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+.card-description {
+  margin-bottom: 0.75rem;
+  font-weight: 400;
+  color: #4a5568;
+}
+.card-button {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  background-color: #4299e1;
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #fff;
+  text-decoration: none;
+}
+.card-button:hover {
+  background-color: #2b6cb0;
+}
+.card-button:focus {
+  outline: 2px solid transparent;
+}
+\end{lstlisting}
+
+\subsection{TypeScript}
+
+\begin{figure}[!h]
+	\centering
+        \includesvg[scale=0.33]{images/typescript.svg}
+	\caption{A TypeScript logója}
+        \label{typescript}
+\end{figure}
+
+A TypeScript (\ref{typescript}. ábra) a JavaScript statikusan típusos továbbbővítése, amely kibővíti statikus típusokkal bővíti ki a JavaScript nyelvet. A statikus típusok bevezetésével a TypeScript lehetővé teszi a fejlesztők számára, hogy a fejlesztés során minél hamarább észrevegyék a hibákat, megőrizve a kód minőségét és javítva a végeredmény karbantarthatóságát. A TypeScript képes kijavítani a JavaScript projektekben fellelhető hibák akár 15\%-át is, csupán a típusellenőrzések végett. \cite{jsbugs}
+
+Magába foglalja az objektumorientált programozást (\textit{OOP}), lehetővé téve a fejlesztők számára, hogy interfészeket, osztályokat és modulokat definiáljanak, és felhasználják az objektumorientált programozásból az öröklődést, az egységbezárást és a polimorfizmust. A TypeScript ötvözése a Visual Studio Code integrált fejlesztői környezettel lehetővé teszi a kód automatikus kitöltését és refaktorálását, jelentősen elősegítve minket, fejlesztőket a tiszta és hibamentes kód megírásában.
+
+Emellett olyan fejlett funkciókat is kínál, mint a generikusok és dekorátorok, amelyek kibővítik a kódabsztrakció és a kódbázis-szervezés lehetőségeit. A mi esetünkben a dekorátorokat teljes mértékben kihasználja a TypeORM rendszer, lehetővé téve az adatbázis modelleink leképezését tényleges adatbázis sémára. Mivel a TypeScript kompatibilitas a meglévő JavaScript-ben írt projektekkel, és sima JavaScriptre le is fordítható, ezért könnyen integrálható a Next.js keretrendszerbe is.
+
+A TypeScript programozási nyelv önmagában nem futtatható a Node.js környezettel. Jelenleg csupán a Deno környezet engedélyezi a TypeScript tényleges láthatatlan futtatását, viszont a Deno környezet nem támogatja az általunk kiválasztott web keretrendszert, a Next.js-t. Mivel önmagában nem futtatható, a TypeScript nyelv nem csupán a megfelelő linterekkel és szintaxisfa elemző programokkal telepítendő, hanem a TypeScript kompilátorral is, amely a TypeScript forráskód állományokat képes átalakítani JavaScript forráskód álommányokká.
+
+\subsection{Docker és Docker Desktop}
+
+\begin{figure}[!h]
+	\centering
+        \includegraphics[scale=0.4]{images/docker-desktop.png}
+	\caption{A Docker Desktop kinézete}
+        \label{docker}
+\end{figure}
+
+A Docker (\ref{docker}. ábra) egy nyílt forráskódú platform, amely megkönnyíti az alkalmazások telepítését, skálázását és kezelését elszigetelt konténerekben. A konténerek elindított Docker \textit{imageknek} felelnek meg, amelyek mögött mindig egy virtuális fájlrendszer és futó folyamatok állnak. A Docker imagek olyan önálló, hordozható környezetek, amelyek egy alkalmazást és függőségeit - beleértve az operációs rendszert és a könyvtárakat - foglalják magukba.
+
+Annak ellenére, hogy megosztják a gazdagép operációs rendszerének kernelét, a konténerek hasonló biztonsági szintet szolgáltatnak, mint a hagyományos virtuális gépek. \cite{containersec} Az alkalmazás és a függőségei egységbe vannak zárva, csökkentve a konfliktusokat és biztosítva a környezet reprodukálhatóságát. Tekintettel arra, hogy a konténerek el vannak szigetelve a rendszer többi részétől. A konténerek kevesebb rendszererőforrást fogyasztanak, mint a tradicionális virtuális gépek és gyorsan elindulnak, a hardver hatékony kihasználását és az alkalmazások gyorsabb skálázódását eredményezve.
+
+A Docker leegyszerűsíti a függőségek kezelését azáltal, hogy az alkalmazást az adott \textit{runtime}-al, könyvtárakkal és függőségekkel együtt egy image-be csomagolja. Így a fejlesztőknek nem kell manuálisan konfigurálniuk és kezelniük a függőségeket minden egyes célrendszeren. A kompatibilitási problémákat ezáltal kiszűri a Docker és megbízhatóbbá teszi a telepítéseket.
+
+A nagy webes alkalmazások kontextusában a Docker nagyon hasznos, mivel az olyan segédprogramok, mint a Docker Compose (mely a dolgozat írásakor már alapértelmezétten a Docker része) lehetővé teszik, hogy a konténerek konfigurációját Compose fájlként - rendszerleírófájlként mentse el. Ezek a Compose fájlok YAML "markup" nyelven íródnak, melyek még azok számára is nagyon könnyen manipulálhatóak, akik nem rendelkeznek programozási ismeretekkel. A konténerek közötti kapcsolatokat ezekben a Compose fájlokban írhatjuk le.
+
+Mind a Dockert, mind a Docker Compose-t széles körben használjuk a kitelepített környezetünkben és a fejlesztési környezetünkben is. A Docker Compose segítségével létrehozott szolgáltatásokat gyakran külön Docker Compose projektekbe csoportosítják, amelyek atomi módon a rendszerben esetleg meglévő más Docker Compose projektektől függetlenül indíthatók, újraindíthatók és leállíthatók, így a karbantartás gyerekjátékká válik.
+
+\subsection{Cloudflare R2}
+
+\begin{figure}[!h]
+	\centering
+        \includesvg[scale=3]{images/cloudflare.svg}
+	\caption{A Cloudflare logója}
+        \label{cloudflare}
+\end{figure}
+
+A Cloudflare R2 (\ref{cloudflare}. ábra) a Cloudflare felhő alapú szolgáltató 2022-ben bevezetett új ajánlata, amely az Amazon S3 platformjának leváltására szolgál. A Cloudflare R2 célja, hogy az S3-hoz hasonló funkciókat biztosítson, lehetővé téve a felhasználók számára a fájlok és adatok tárolását és visszakeresését.
+
+Paradigmaváltást vezet be azonban azzal, hogy megszünteti a régió megadásának szükségességét. Az Amazon S3 használatához mindenképp szükséges megadni annak a régiónak a nevét, ahol a feltöltött adatok élni fognak. Ehelyett a Cloudflare globális számítógép-hálózata automatikusan biztosítja, hogy a fájlok a kérést benyújtó felhasználóhoz legközelebbi adatközpontban elérhetőek legyenek. Az adattárolás ily módon decentralizált megközelítése jobb teljesítményt és kisebb késleltetést (\textit{latency-t}) eredményez a végfelhasználók számára.
+
+A Cloudflare R2-t különösen vonzóvá teszi a Cloudflare globális hálózatának a legközelebbi adatközpontból történő adatkiszolgálásra való kihasználása. A felhasználók a gyorsabb adathozzáférés és az optimalizált felhasználói élmény előnyeit élvezhetik.
+
+Abban az esetben, ha részletesebb adattárolási törvények vannak érvényben, például az európai adatvédelmi törvények, amelyek előírják, hogy az illékony adatokat európai régiókon belül kell tárolni, ez az automatikus régió konfigurálható úgy, hogy csak egy adott joghatóságon belül engedélyezze a tárolást. \cite{cloudflarejurisdiction} Mint ilyen, a Cloudflare R2 kompatibilis a használati célunkkal, és megfelelő létesítményeket biztosít az Amazon S3-nál olcsóbb, biztonságosabb és gyorsabb adattárolásért.
+
+\subsection{Google Cloud Storage}
+
+\begin{figure}[!h]
+	\centering
+        \includesvg[scale=2]{images/googlecloud.svg}
+	\caption{A Google Cloud logója}
+        \label{gcloud}
+\end{figure}
+
+Hasonlóan az Amazon-hoz és a Cloudflare-hez, a Google is szolgáltat saját objektum- és fájltároló rendszert: a Google Cloud Storage-t (\ref{gcloud}. ábra). A Google Cloud Storage hasonlít az S3 alapú megoldásokhoz, de egy teljesen más API használatát kérvényezi, bár létezik egy már nem karbantartott S3-kompatibilis API-ja, amely a Google Cloud Storage XML API-ját használja. \cite{gcloudxml}
+
+Mivel a Firebase keretén belül használható a Google Cloud Storage is, ezért akkor ajánlatos a Google Cloud Storage használata, mikor az egész projektünk Firebase alapú. A mi esetünkben nincs különösebb értelme, hogy Google Cloud Storage alapú fájltárolást használjunk, viszont a lehetőség adott. Szerettük volna bebizonyítani azt a tényt, hogy a választott architektúra megengedi a különféle fájltárolási stratégiák egyszerű implementálását és kicserélését, ezért a \textit{Project Raccoon} képes Google Cloud Storage-ra is menteni a fájljait.
+
+\subsection{TypeORM}
+
+\begin{figure}[!h]
+	\centering
+        \includegraphics[scale=0.4]{images/typeorm.png}
+	\caption{A TypeORM logója}
+        \label{typeorm}
+\end{figure}
+
+A TypeORM (\ref{typeorm}. ábra) egy objektum-relációs leképező (\textit{Object-Relational Mapping - ORM}) könyvtár a TypeScript számára, amelyet az adatbázisokkal való interakciók egyszerűsítésére terveztek. A TypeORM használatával leképezhetjük TypeScript osztályainkat adatbázis táblákká, lehetővé téve számunkra, hogy objektumorientált paradigmák segítségével dolgozzunk a relációs és nemrelációs adatbázisokkal egyaránt.
+
+A TypeORM több adatbázis-rendszert is támogat, többek között a MySQL, PostgreSQL, SQLite és Microsoft SQL Server adatbázisokat is. Nyers SQL-lekérdezések írása helyett TypeScript szintaxissal írhatunk adatbázis-lekérdezéseket. Emellett a TypeORM olyan funkciókat is biztosít, mint például az entitáskapcsolatok (one-to-one, one-to-many, many-to-many), a validáció, tranzakciókezelés és automatikus adatmigráció. Jelen projektünkben a TypeORM rendszer segítségével építettük fel a modelleinket, és MySQL, illetve PostgreSQL adatbázist használva tároljuk az adatainkat.
+
+\subsection{MariaDB}
+
+\begin{figure}[!h]
+	\centering
+        \includesvg[scale=0.5]{images/mariadb.svg}
+	\caption{A MariaDB logója}
+        \label{mariadb}
+\end{figure}
+
+A MariaDB (\ref{mariadb}. ábra) egy nyílt forráskódú relációs adatbázis-kezelő rendszer, amely az eredeti MySQL adatbázis-kezelőrendszer kódbázisán alapszik. A MariaDB-t készítő vállalatot, Monty Program AB-t, Michael ``Monty'' Widenius, a MySQL egyik eredeti fejlesztője alapította, miután az Oracle felvásárolta a MySQL vállalatot 2010-ben. Az új adatbázis-kezelő rendszert pedig második lánya után, Maria után nevezte el. A MariaDB alapítványt 2012 decemberében hozták létre, hogy elkerüljék a MariaDB vállalati felvásárlását, mint ami a MySQL-lel is történt. A MariaDB Alapítvány kezdeményezései a MariaDB folytonos fejlesztésének támogatása és a nyílt együttműködés globális kapcsolati pontjaként szolgálnak.
+
+A MariaDB nagy hangsúlyt fektet az adatbázis-kezelés teljesítményére, skálázhatóságára és megbízhatóságára. Támogatja a szerver-kliens architektúrát, amely lehetővé teszi a többfelhasználós környezetek használatát, és számos funkciót biztosít az adatok hatékony tárolására, lekérdezésére és kezelésére. Számos kiterjesztéssel és bővített funkcióval rendelkezik, amelyek lehetővé teszik az adatok magasabb fokú biztonságát, a tranzakciók kezelését, a replikációt és a szerverkülső hozzáférést. Emellett számos eszközt és interfészt biztosít a fejlesztők és rendszergazdák számára, hogy könnyen dolgozhassanak az adatbázissal.
+
+Mivel alapjául a MySQL szolgál, így a legtöbb esetben a MariaDB kompatibilis vele, ami azt jelenti, hogy a meglévő MySQL alkalmazások és kódok általában gond nélkül futtathatók a MariaDB környezetben is.
+
+\subsection{PostgreSQL}
+
+\begin{figure}[!h]
+	\centering
+        \includesvg[scale=0.33]{images/postgres.svg}
+	\caption{A PostgreSQL logója}
+        \label{postgres}
+\end{figure}
+
+A PostgreSQL (\ref{postgres}) egy nyílt forráskódú relációs adatbázis-kezelő rendszer. Az elnevezése a ``Postgres'' (utalva a POSTGRES projektre, amely egy másik adatbázis-kezelő rendszer, az Ingres hibáit hivatott kijavítani, innen ered a projekt neve: \textit{Post-Ingres}, azaz ``Ingres utáni'' ) és a ``SQL'' (\textit{Structured Query Language}, strukturált lekérdezési nyelv) szavak összetételéből származik. A PostgreSQL eredete 1986-ig nyúlik vissza, a Berkeley-i Kaliforniai Egyetem POSTGRES projektjének részeként, és több mint 35 évnyi aktív fejlesztéssel rendelkezik az alapplatformon. Azóta a világ egyik legnépszerűbb adatbázis-kezelő rendszerévé nőtte ki magát.
+
+A PostgreSQL erős hangsúlyt fektet az adatintegritásra, a megbízhatóságra és adataink biztonságára. Támogatja az ACID (\textit{atomicity}, azaz atomikus, \textit{consistency}, azaz konzisztens, \textit{isolation}, azaz elszigetelt és \textit{durability}, azaz tartós) műveleteket, amelyek biztosítják az adatbázis tranzakcióinak megbízhatóságát és konzisztenciáját.
+
+Képes kezelni a hagyományos relációs adatbázisok által nyújtott lehetőségeket, mint például a táblák és az SQL használata, és emellett további funkciókat és adattípusokat is kínál az objektumok tárolására és kezelésére. A PostgreSQL sok kiterjesztést és funkciót nyújt a felhasználók számára, mint például az indexelés, nézetek, tárolt eljárások, triggerek és sok más. Emellett a rendszer nagy skálázhatóságot biztosít, így nagy adathalmazokat is hatékonyan kezelhet.
+
+A PostgreSQL széles körben használatos webes alkalmazásokban, vállalati rendszerekben és kutatási projektekben is. A fejlesztői közösség aktív és folyamatosan fejleszti a rendszert, biztosítva a stabilitást, biztonságot és a funkcionális bővítményeket.
+
+\subsection{Google Docs}
+
+\begin{figure}[!h]
+	\centering
+        \includesvg[scale=0.6]{images/googledocs.svg}
+	\caption{A Google Docs logója}
+        \label{googledocs}
+\end{figure}
+
+
+A Google Docs (avagy magyarosan Google Dokumentumok) (\ref{googledocs}. ábra) egy ingyenes, felhőalapú dokumentumkezelő szolgáltatás, amelyet a Google fejlesztett ki és tárt a nyilvánosság elé 2006-ban. A Google lehetővé teszi, hogy online létrehozhassunk dokumentumokat, szerkeszthessük ezeket, illetve megoszthassuk másokkal őket. Ezen dokumentumok között szerepelhet szöveges állomány, de szerkeszthetünk táblázatokat (Google Sheets, vagyis Google Táblázatok), létrehozhatunk prezentációkat (Google Slides, vagyis Google Diák), készíthetünk űrlapokat (Google Forms, vagyis Google Űrlapok) és egyéb fájlokat is.
+
+A Google Docs online kezelőfelülete nagyon hasonló a hagyományos szövegszerkesztőkhöz, de az előnye, hogy az adatokat felhőalapú tárhelyen tárolja, így a dokumentumjaikhoz a felhasználók bárhonnan és bármilyen eszközről (legyen ez akár számítógép, mobiltelefon vagy táblagép) hozzáférhetnek, csupán internetkapcsolattal kell rendelkezniük.
+
+Másik nagy előnye, hogy a Google Docs lehetővé teszi a valós idejű együttműködést is. Ez azt jelenti, hogy több felhasználó egyszerre szerkesztheti ugyanazt a dokumentumot, és azonnal láthatják egymás változtatásait. Emellett lehetőség van a dokumentumok megosztására másokkal csak megtekintési joggal is. Egy másik hasznos funkciója a szerkesztési előzmények megtartása, így bármikor visszaállítható egy dokumentum az adott időpontban elmentett verziójára. Az adatok automatikusan mentésre kerülnek az adott felhasználó Google Drive-ján (a Google felhőalapú adattároló szolgáltatása), így nem kell aggódni az elveszett munka miatt.
+
+A Google Docs összekapcsolható más Google szolgáltatásokkal is, például a már említett Google Drive-val, ahol az összes dokumentumot tárolni lehet, vagy a Google Classroommal, amely lehetővé teszi adott dokumentumok megosztását a virtuális osztályteremben lévő személyekkel.
+
+\subsection{MDX}
+
+\begin{figure}[!h]
+	\centering
+        \includesvg[scale=4]{images/mdx.svg}
+	\caption{Az MDX logója}
+        \label{mdx}
+\end{figure}
+
+Az MDX (Markdown eXtended) (\ref{mdx}. ábra) egy formázási nyelv és fájlformátum, amely Markdown-alapú szöveges tartalomhoz kiterjesztett lehetőségeket biztosít. 
+
+A Markdown egy egyszerű és könnyen értelmezhető szöveges formázási nyelv, amely lehetővé teszi a formázott tartalom egyszerű és gyors létrehozását. Az MDX ennek a Markdownnak a szintaxisát használja alapul, de kiegészíti azzal, hogy lehetőséget ad React komponensek használatára a szövegben.
+
+Az MDX fájlok kiterjesztése általában ``.mdx''. Tartalmukat egyszerű szöveges formátumban írják, de lehetőséget adnak a JSX (JavaScript XML) szintaxis használatára is. Ez azt jelenti, hogy az MDX fájlokban React komponenseket is be lehet illeszteni, amelyek összetett funkciókat adhatnak a tartalomhoz. Ez különösen hasznos lehet például dokumentációk, blogbejegyzések stb. esetén, ahol az egyszerű szöveg mellett egyúttal reaktív, interaktív vagy testreszabott elemeket is szeretnénk hozzáadni (gondolhatunk itt például interaktív diagrammokra).
+
+A Next-MDX egy olyan függvénykönyvtár, amely a Next.js keretrendszerhez készült és a React-alapú MDX tartalmak kezelését és renderelését hivatott kezelni - a Next.js és az MDX kombinációjával teszi lehetővé a dinamikus és interaktív MDX tartalmak könnyű kezelését a Next.js projektjeinkben.
+
+A \ref{code:mdxexample}. kódrészletben egy egyszerű .mdx fájl megvalósítására adunk példát.
+
+\begin{lstlisting}[caption={ Példa megvalósítása egy .mdx fájlnak }, captionpos=b, language = HTML, label={code:mdxexample}]
+# Cím
+## Alcím
+Az MDX Markdown lehetővé teszi a szöveg formázását is, például:
+    - *Dőlt betű* vagy _Dőlt betű_
+    - **Félkövér betű** vagy __Félkövér betű__
+    - `Kódstílusú szöveg`
+MDX Markdownban könnyedén hozhatunk létre hiperlinkeket is, például: [Google](https://www.google.com).
+Az MDX Markdown lehetővé teszi React komponensek beágyazását is:
+<MyComponent prop1="érték1" prop2="érték2" />
+A képek beillesztése is lehetséges:
+![Alt szöveg a képhez](/path/to/image.jpg)
+\end{lstlisting}
+
+\subsection{Iron Session}
+
+Az Iron Session egy munkamenet-kezelő (\textit{session manager}) middleware\footnote{A middleware-ek lehetővé teszik egy webes lekérés válaszának módosítását az eredeti kérés átírásával, átirányításával, a kérés vagy a válasz fejlécének módosításával vagy közvetlen válaszadással.} webes alkalmazásoknak. A munkamenetek biztonságos kezelésére és tárolására használandó. A munkamenetadatok tárolására digitálisan aláírt és titkosított cookie-kat használ (``pecsétek'' - \textit{seals}). A digitális aláírásokhoz az Iron nevű kriptográfiai könyvtárat használja. A pecséteket csak a szerver tudja dekódolni. Nem léteznek munkamenet azonosítók, így a munkamenetek a szerver szempontjából állapot nélküliek (\textit{stateless-ek}). Az Iron Session biztosítja, hogy a munkamenetadatok hamisíthatatlanok legyenek, és védi a munkamenetek állapotainak integritását.
+
+A hagyományos alkalmazásokban, például a régi PHP alkalmazásokban a munkamenetadatok nyomon követése munkamenetazonosítók segítségével történt. A munkamenet adatait egy relációs adatbázisba mentették. Amikor a felhasználó egy munkamenethez szerette volna hozzákötni kérését, a munkamenetazonosítót mutatta be a szervernek, amely ezután megkereste a munkamenetet az adatbázisában.
+
+Az Iron Session használatával egyáltalán nem szükséges a munkamenetadatokat az adatbázisban tárolni. Ez a megközelítés csökkenti a szerver memóriaigényét, és lehetővé teszi, hogy a munkamenetek akkor is fennmaradjanak, ha a szerver újraindul, vagy esetleg elveszti kacpsolatát az adatbázissal. Minden munkamenetadat a kliensoldalon kerül elmentésre és tárolásra. Ezeket a munkamenetadatokat egy olyan titkos kulcs segítségével írja alá az Iron Session rendszer, amelyet csak a webszolgáltatás ismer. Így csak a kiszolgáló webszerver képes érvényes munkameneteket létrehozni, amelyeket teljes egészében átküld a kliensnek. Ezeket a digitálisan aláírt munkafolyamatokat majd később a kliens a szervernek elküldi. A bemutatott érvénytelen munkameneteket a rendszer elveti. 
+
+Mivel a munkamenetadatokat nem tárolja a webszerver, a munkamenet keresésének ideje jelentősen csökken. Az Iron Session használatával elkerülhető az adatbázis-szoftverrel történő hiábavaló kommunikáció, ami az alkalmazás érzékelhető gyorsulását eredményezheti. Tekintettel e megközelítés használatának előnyeire, úgy döntöttünk, hogy az Iron Session-t a \textit{Project Raccoon} részeként alkalmazzuk.
+
+\subsection{bcrypt.js}
+
+A bcrypt.js egy kriptográfiai hashelési függvénykönyvtár, amely a bcrypt hashelési algoritmus implementációját nyújtja JavaScriptben. A bcrypt algoritmus \cite{provos1999bcrypt} egy (akaratlagosan) lassú és erős jelszóhashelő, amely tervezésétől fogva célja a jelszavak biztonságos átalakítása.
+
+Amikor a felhasználó elküld egy jelszót, a jelszó hashelésre kerül, majd tárolásra az adott alkalmazás adatbázisában. A mi alkamazásunkon belül a felhasználóink és adminisztrátoraink jelszavait hasheljük. Később, amikor a felhasználó hitelesíteni akarja magát, a webszervernek össze kell hasonlítania a felhasználó által beírt jelszót az adatbázisban tárolt hash értékkel, hogy megegyezik-e. A jelszavak ``megbízható'' hashfüggvényekkel való hashelésére biztonsági szempontból van szükség, hogy egy esetleges adatszivárgás vagy hackertámadás esetén a feltört jelszavak továbbra is érthetetlenek, használhatatlanak maradjanak a támadók számára. 
+
+A bcrypt.js segítségével a fejlesztők JavaScript alkalmazásokban használhatják a bcrypt algoritmust a felhasználók jelszavainak hashelésére és ellenőrzésére. A bcrypt hashelése egy egyirányú folyamat, ami azt jelenti, hogy a hashelt értékből nem lehet visszafejteni az eredeti jelszót. Ez a tulajdonság növeli a jelszavak biztonságát, mivel még akkor sem lenne lehetséges a jelszavak helyreállítása, ha a hash értékek valahogy illetéktelen kezekbe kerülnének.
+
+A bcrypt-et Niels Provos és David Mazières tervezte a Blowfish titkosító alapján, nevét is innen kapta: a ``b''-t a Blowfishtől, a ``crypt'' részét pedig az UNIX jelszórendszere által használt hash-függvény nevéről. 
+
+A bcrypt algoritmus emellett beépített biztonsági funkciókat is tartalmaz, például sózást (\textit{salting}), ami tovább erősíti a hashelést. A sózás a jelszóhoz egy véletlenszerű értéket (sót) ad hozzá, amelyet a hashelés során használ. Ez megnehezíti a támadóknak a prekalkulált támadásokat, mivel minden jelszóhoz különböző sót használ. Így lehetetlenné válik a \textit{rainbow table} típusú támadások kivitelezése. Emellett bevezet egy nehzéségi fokozatot is, egy szabadon állítható költséget (\textit{work factor}, \textit{cost} vagy munkatényező) a függvénynek, amely extra biztonsági réteget nyújt: a jelszavak hashelésének ideje exponenciálisan növekszik a költségek növekedésével. Ezáltal a nyers erő módszere (\textit{brute force attacks}) és a szivárványtáblás támadások (\textit{rainbow table attacks}) ellen is erős védelmet nyújt.
+
+
+\section{Piacelemzés}
+
+A Project Raccoon elkészítése előtt elvégeztünk egy részletes piacelemzést. Utána jártunk annak, hogy milyen hasonló szoftverek léteznek már használatban a piacon, és annak is utána néztünk, hogy az akadémiában milyen hasonló kezdeményezések léteznek.
+
+A való világban számos olyan platform létezik, mely célja az ingatlanügyletek és a szerződéskötések egyszerűsítése. Ezek közül a platformok közül néhány hasonlít a \textit{Project Raccoon} által szolgáltatott Íme néhány példa:
+
+\subsection{Zillow}
+
+\begin{figure}[!h]
+	\centering
+        \includegraphics[scale=0.3]{images/zillow-header.jpg}
+	\caption{A Zillow főoldala}
+        \label{zillow}
+\end{figure}
+
+A Zillow egy online ingatlanpiac, amely ingatlanok vásárlásával, eladásával és bérlésével kapcsolatos szolgáltatásokat nyújt. Lényegében a Zillow számos ingatlanhirdetés adatbázisaként szolgál, összesítve az ingatlanügynököktől és maguktól a lakástulajdonosoktól származó információkat. A \ref{zillow} ábrán látható, hogy a felhasználók házakat, lakásokat és más típusú ingatlanokat kereshetnek keresőszűrők segítségével, mint például a hely, az árkategória, a hálószobák és a fürdőszobák száma.
+
+A Zillow részletes információkat nyújt az ingatlanokról, beleértve az ingatlanok leírásait, kiváló minőségű fényképeket, az ingatlanok előzményeit és a becsült értékeit. Ez a rengeteg információ segít a felhasználóknak tájékozott döntéseket hozni ingatlanok vásárlásakor vagy bérlésekor.
+
+Ha azonban a témát ingatlanszerződésekre tereljük, a Zillow egyáltalán nem segíti elő a szerződések létrehozását vagy aláírását. Ehelyett olyan platformként működik, amely összeköti a vevőket, az eladókat és az ingatlanszakértőket. Amint a vevő és az eladó megállapodásra jut az ingatlanvásárlás vagy bérbeadás feltételeiről, általában egy ingatlanügynök vagy egy ügyvéd szolgáltatásait veszik igénybe a szerződés kidolgozásához. Az olyan platformok, mint a Zillow, gyakran nem teszik lehetővé a tényleges szerződések létrehozását. Az ingatlanokat könnyű létrehozni és számon tartani, de nem olyan egyszerű létrehozni a jogi keretet, sem megvalósítani a követelményeket egy ilyen rendszerhez. Itt ragyoghat a Project Raccoon. Célunk a szerződések létrehozása, generálása és sablonozása, nem pedig az ingatlanok nyilvános kilistázása.
+
+Nem csupán a Zillow az egyetlen ilyen ingatlanvásárlást megkönnyítő platform. Léteznek más platformok is, mint például a Redfin vagy a Trulia, viszont ezek a platformok annyira hasonlítanak a Zillow-ra, hogy nem éri meg külön tárgyalni őket.
+
+\subsection{LawDepot}
+
+\begin{figure}[!h]
+	\centering
+        \includegraphics[scale=0.2]{images/lawdepot.png}
+	\caption{A LawDepot főoldala}
+        \label{LawDepot}
+\end{figure}
+
+A LawDepot egy online platform, amely jogi dokumentum sablonok széles skáláját nyújtja magánszemélyek és vállalkozások számára. Kényelmes megoldást kínál személyre szabott jogi dokumentumok, többek között ingatlanszerződések létrehozására is.
+
+A LawDepot elsődleges célja a jogi szerződések létrehozásának egyszerűsítése azáltal, hogy testreszabható sablonokat biztosít, amelyek a felhasználók egyedi igényeihez igazíthatóak. A felhasználók a LawDepot weboldalán keresztül hozzáférhetnek ezekhez a sablonokhoz, és könnyen kitölthetik a szükséges információkat a jogilag kötelező erejű dokumentumok létrehozásához.
+
+Ami az ingatlanszerződéseket illeti, a LawDepot különböző sablonokat kínál, amelyek az ingatlanügyletek különböző aspektusait fedik le. A felhasználók sajátos körülményeik és követelményeik alapján választhatják ki a megfelelő sablont. A LawDepot legnagyobb hibája, hogy bár megkönnyíti a legális dokumentumsablonok kitöltését, nem teremt kapcsolatot az adó és a vevő felek között. A kigenerált dokumentumok csupán egy ember által láthatóak, és csupán egy emberre érvényesek. Ehhez képest a \textit{Project Raccoon} kapcsolatot teremt az adó és a vevő felek között, és az adásvételi folyamatokat elejétől végéig követhetővé teszi. Ezeknek a folyamatoknak a végeredménye digitális aláírásra is kerül, ami növeli jogi értéküket, amit a LawDepot képtelen elérni.
+
+\pagebreak
+\subsection{Kormányzati kezdeményezések}
+
+Egyes kormányok online portálokat hoztak létre, amelyek megkönnyítik az ingatlantranzakciókat és a szerződéskötéseket. Ezek a kezdeményezések országonként és joghatóságonként eltérőek.
+
+Szingapúrban például a kormány bevezette az ``e-Stamping' néven ismert ingatlantranzakciós platformot. Az ``e-Stamping'' platform digitalizálja az ingatlannal kapcsolatos dokumentumok bélyegzési folyamatát, ami a szingapúri szerződésalkotási és hitelesítési folyamat utolsó lépése. \cite{estamp}
+
+Az e-Stamping lehetővé teszi a felhasználók számára, hogy elektronikusan fizessenek bélyegilletéket, és igazolásokat állítsanak elő az ingatlannal kapcsolatos tranzakciókhoz, beleértve az adásvételi szerződéseket, bérléseket és jelzálogkölcsönöket. A platform biztonságos és kényelmes módot biztosít magánszemélyek és vállalkozások számára a bélyegzési folyamat befejezésére, fizikai dokumentumok benyújtása vagy kézi bélyegzés nélkül.
+
+Ezek a megközelítések sajnos nagyon korlátozottak, és csak egyetlen konkrét problémát oldanak meg. Ezzel szemben arra törekszünk a \textit{Project Raccoon} keretén belül, hogy olyan megoldást alkossunk, amely számos helyzetben újrahasznosítható, nem csak ingatlanügyleteknél. Tekintettel arra, hogy az adminisztrátorok tetszés szerint hozhatnak létre újabb és újabb szerződéseket, semmi sem akadályozza meg az adminisztrátorainkat abban, hogy a \textit{Project Raccoon}-t más típusú szerződések kezelésére is kiterjesszék.

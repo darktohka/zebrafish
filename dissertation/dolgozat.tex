@@ -1,0 +1,111 @@
+\documentclass[12pt,a4paper,oneside]{report}             % Single-side
+%\documentclass[11pt,a4paper,twoside,openright]{report}  % Duplex
+
+\input{content/packages}
+
+%--------------------------------------------------------------------------------------
+% Language configuration -- choose one
+%--------------------------------------------------------------------------------------
+\input{content/thesis-hu}  % Beállítások magyar nyelvű dolgozathoz
+
+%--------------------------------------------------------------------------------------
+% Main variables
+%--------------------------------------------------------------------------------------
+
+
+
+% Szak alapkepzes vagy mesteri
+\newcommand{\szakHU}{INFORMATIKA SZAK} % SZOFTVERFEJLESZTES
+\newcommand{\szakRO}{SPECIALIZAREA INFORMATIC\v A} % SPECIALIZAREA DEZVOLTAREA APLICA\c TIILOR SOFTWARE
+\newcommand{\szakEN}{COMPUTER SCIENCE SPECIALIZATION} %SOFTWARE DEVELOPMENT SPECIALIZATION
+
+
+\newcommand{\dolgozattipusHU}{DIPLOMADOLGOZAT} % MESTERI DISSZERT\'ACI\'O
+\newcommand{\dolgozattipusRO}{LUCRARE DE DIPLOM\v A} %TEZA DE MASTERAT
+\newcommand{\dolgozattipusEN}{BACHELOR THESIS} % MASTER THESIS
+
+\newcommand{\szerzo}{Derzsi Dániel} % Szerző neve
+\newcommand{\temavezetoA}{Győrfi Ágnes} 
+
+
+% Fokozatok
+
+%Egyetemi tan\'ar/ Profesor universitar/Full Professor
+%Egyetemi docens/ Conferențiar universitar/Associate professor
+%Egyetemi adjunktus/Lector universitar sau Șef de lucrări /Lecturer
+%Egyetemi tan\'arseg\'ed/Asistent universitar/Assistant professor
+
+
+\newcommand{\temavezetoAfokozat}{Tanársegéd}% Első konzulens neve
+\newcommand{\temavezetoAfokozatRo}{Asistent universitar}
+\newcommand{\temavezetoAfokozatEn}{Assistant lecturer}
+\newcommand{\temavezetoB}{Kátai Zoltán} % Második konzulens neve; hagyd üresen, ha egy konzulensed van.
+\newcommand{\temavezetoBfokozat}{Egyetemi docens}% Első konzulens neve
+\newcommand{\temavezetoBfokozatRo}{Conferențiar universitar}
+\newcommand{\temavezetoBfokozatEn}{Associate professor}
+\newcommand{\cimHu}{Project Raccoon - Szerződéskötések és ingatlanértékesítések korszerűsítése internetes platformon keresztül} % Cím
+\newcommand{\cimRO}{Project Raccoon - Gestionarea unei platforme pentru eficientizarea finalizării de contracte și a vânzărilor de proprietăți prin intermediul internetului}
+\newcommand{\cimEN}{Project Raccoon - Management of a Platform to Streamline Contract Creation and Property Sales Through the Web}
+\newcommand{\ev}{2023} %az aktualis ev
+
+\input{content/preamble.tex}
+
+
+
+
+%--------------------------------------------------------------------------------------
+% Table of contents and the main text
+%--------------------------------------------------------------------------------------
+\begin{document}
+	
+% CIMOLDALAK
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	\include{content/titlepage}
+	\include{content/titlepage-ro}
+	\include{content/titlepage-en}
+	
+	\includepdf[pages={1}]{embed/fisa.pdf}
+	\includepdf[pages={1}]{embed/declaratie.pdf}
+
+        \include{abstract}
+ 
+% Tartalomjegyzek
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	\pagenumbering{arabic}
+	\setcounter{page}{9}
+	\tableofcontents\vfill
+
+% A diplomadolgozat lenyegi resze
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	\include{chapter0_introduction}
+	\include{chapter1_software}
+        \include{chapter2_specification}
+        \include{chapter3_architecture}
+	\include{chapter4_interface}
+	\include{chapter5_measurements}
+	\include{chapter6_final}
+
+% Koszonetnyilvanitas
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%	\include{acknowledgement}
+
+
+% Tablazatok es abrak jegyzeke (EZ NEM KOTELEZO)
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	\listoffigures\addcontentsline{toc}{chapter}{\abrakjegyzeke}
+	\listoftables\addcontentsline{toc}{chapter}{\tablazatokjegyzeke}
+
+
+% Bibliography
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	\bibliography{bibliography}
+	\addcontentsline{toc}{chapter}{\irodalomjegyzek}
+	\bibliographystyle{ieeetr}
+	
+% Appendix
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%	\include{appendices}
+
+\label{page:last}
+\end{document}

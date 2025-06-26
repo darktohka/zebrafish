@@ -1,0 +1,343 @@
+\chapter{A rendszer specifikációja} \label{chapter2}
+
+\section{Felhasználói követelmények}
+
+A felhasználói követelmények leírják azokat a funkciókat, amelyeket a felhasználók elvárnak egy adott szolgáltatástól. Ezek a követelmények felvázolják a felhasználók igényeit és céljait, és alapul szolgálnak a későbbi szoftver megtervezéséhez és fejlesztéséhez. A rendszerünk felhasználói követelményeit négy részre bontom a továbbiakban:
+
+\begin{enumerate}
+  \item Felhasználói követelmények vendég felhasználók számára,
+  \item Felhasználói követelmények hitelesített felhasználók számára,
+  \item Felhasználói követelmények ügyvéd felhasználok számára.
+  \item Felhasználói követelmények adminisztrátor felhasználok számára.
+\end{enumerate}
+
+\subsection{Vendég felhasználók}
+
+A vendég felhasználók olyan személyek, akik még nem hoztak létre fiókot vagy nem jelentkeztek be a rendszerbe.
+
+\pagebreak
+
+\begin{requirementstable}
+  \caption{Felhasználói követelmények vendég felhasználók számára} \\
+
+  \requirementtitle{Hitelesítés} &
+  \requirementslist{
+    \item A vendég felhasználóknak lehetőségük van egy fiók létrehozására, további funkciók eléréséhez.
+    \item Ebben az esetben a regisztrációs folyamatnak intuitívnak és egyszerűnek kell lennie, végigvezetve a felhasználókat a szükséges lépéseken.
+    \item A felhasználók minél kevesebb adat megadásával már szeretnének regisztrálni.
+    \item Ideális esetben captcha kitöltése nélkül szeretnének regisztrálni.
+    \item Abban az esetben, hogyha már van fiókjuk, regisztrálás helyett meg kell legyen adva a lehetőség, hogy a már meglévő fiókjába lépjen be a felhasználó.
+  } \\
+
+  \requirementtitle{Kapcsolatfelvétel} &
+  \requirementslist{
+    \item A felhasználók bármelyik időpillanatban használatba vehetnek egy kapcsolatfelvételi űrlapot, amellyel felvehetik a kapcsolatot a weboldal készítőivel.
+    \item A felhasználók a weboldal készítőinek szeretnének egy e-mail címet is hagyni, hogy a weboldal készítői tudják felvenni a kapcsolatot a felhasználóval.
+    \item A kapcsolatfelvételi űrlap elegendő helyet kell szolgáltasson ahhoz, hogy a felhasználók tudják elejétől végéig leírni a problémáikat, észrevételeiket vagy kéréseiket.
+  } \\
+
+  \requirementtitle{Kézikönyv} &
+  \requirementslist{
+    \item A felhasználók bármelyik időpillanatban segítséget szeretnének kérni a weboldal felhasználásával kapcsolatban.
+    \item Mivel nem minden felhasználó szeretne emberi kommunikációval előre haladni a weboldal használátában, ezért meg kell adni a lehetőséget, hogy egy felhasználói kézikönyvet lapozgassanak.
+    \item A felhasználói kézikönyv leírásokat kell tartalmazzon a regisztrációról, a tulajdonok menedzsmentjéről és a szerződéskötés folyamatáról is.
+  }
+\end{requirementstable}
+
+\subsection{Hitelesített felhasználók}
+
+A hitelesített felhasználók olyan személyek, akik munkamenetéhez egy fiók van csatolva. Ez azt jelenti, hogy vagy beléptek egy meglévő fiókba, vagy regisztráltak egy új fiókot. A hitelesített felhasználók lehetnek rendes felhasználók, vagy akár adminisztrátor felhasználók is. A következő felhasználói követelmények az összes hitelesített felhasználóra érvényesek.
+
+\pagebreak
+
+\begin{requirementstable}
+  \caption{Felhasználói követelmények hitelesített felhasználók számára} \\
+
+  \requirementtitle{Szerződéskötés} &
+  \requirementslist{
+    \item A hitelesített felhasználók bármelyik pillanatban létrehozhatnak egy új szerződést.
+    \item Az új szerződés kötése során egy másik felhasználóval egy közös szerződést lehet létrehozni, egy meglévő szerződés sablon alapján.
+    \item Új szerződés kötés esetén a felhasználók kiválaszthatnak egy olyan tulajdoncikket, amit el szeretnének adni a vevő félnek.
+    \item A felhasználók a második fél e-mail címének ismeretében tudnak szerződést létrehozni.
+    \item A felhasználók nem csupán szerződéseket tudnak létrehozni, hanem a meglévő szerződéseiket meg is tekinthetik.
+    \item A szerződéskötés befejezése előtt a felhasználók feltölthetnek mellékleteket, amelyek a szerződésre érvényesek.
+    \item A szerződések megtekintése során a felhasználók kereshetnek a szerződéseik között. A keresés intuitív kell legyen.
+  } \\
+
+  \requirementtitle{Digitális aláírások} &
+  \requirementslist{
+    \item A szerződés digitális aláírása előtt a felhasználók meghívhatnak a szerződéshez tanúkat (bármilyen hitelesített felhasználót) vagy ügyvédeket (különleges felhasználókat), az e-mail címük ismeretében.
+    \item A szerződés megkötése előtt a tanúk és az ügyvédek egyaránt át kell nézzék a szerződést, és digitálisan alá kell írják azt.
+    \item Az adó és a vevő is digitálisan alá kell írja a szerződést.
+    \item Abban az esetben, hogyha a felhasználók nem szeretnék kézírással aláírni digitálisan a szerződést, kiválaszthatják, hogy csupán a nevükkel írják alá azt.
+  } \\
+
+  \requirementtitle{Szerződésletöltés} &
+  \requirementslist{
+    \item A szerződések kitöltése és digitális aláírása után a felhasználók letölthetik a végleges szerződést.
+    \item A letöltött szerződések tartalmazzák az összes mellékletet, amely a szerződésre, illetve az esetlegesen eladott tulajdoncikkre érvényesek.
+    \item A letöltött szerződések tartalmaznak egy AVDH (\textit{Azonosításra Visszavezetett
+Dokumentumhitelesítés}) igazolást, amely igazolja a felek mivoltát. \cite{avdh}
+    \item A végleges szerződés minden fél által alá kell legyen írva.
+    \item A szerződések végtelen ideig letölthetőek kell legyenek, a letöltési idő lejárata nem életképes megközelítés.
+    \item A végleges szerződés továbbküldhető e-mailben is egy gombnyomásra.
+  } \\
+
+  \requirementtitle{Tulajdoncikkek} &
+  \requirementslist{
+    \item A felhasználók létrehozhatnak saját tulajdoncikkeket egy meglévő tulajdon sablon alapján.
+    \item A tulajdonsablonok megjelennek a tulajdoncikkek létrehozása előtt.
+    \item Egy tulajdoncikk létrehozása után a felhasználók ki kell töltsék a tulajdoncikkhez tartozó tulajdonságokat.
+    \item A tulajdoncikk tulajdonságai bekerülnek a szerződések tulajdonságai közé.
+    \item Egy szerződés keretén belül lehet hivatkozni az eladott tulajdoncikk tulajdonságaira.
+    \item A tulajdoncikk létrehozása közben, illetve létrehozása után is feltölthetőek olyan mellékletek, amelyek a tulajdoncikkre érvényesek.
+    \item A felhasználók bármikor megnézhetik, hogy milyen tulajdoncikkeik vannak egy adott tulajdonsablonon belül.
+  }
+\end{requirementstable}
+
+\subsection{Ügyvéd felhasználók}
+
+Az ügyvéd felhasználók azok a felhasználók, akiknek az oldal adminisztrátorai igazolták személyazonosságukat igazolt ügyvédként. Az ügyvéd felhasználók feladata, hogy átnézzék klienseik szerződéseit, és ellenőrizzék, hogy helyesen kitöltötték az adataikat.
+
+\begin{requirementstable}
+  \caption{Felhasználói követelmények ügyvéd felhasználók számára} \\
+
+  \requirementtitle{Szerződéskötés} &
+  \requirementslist{
+    \item Az ügyvédeket bármilyen felhasználó hozzáadhatja a szerződéséhez, amennyiben ismeri az e-mail címét.
+    \item Az ügyvédek csak akkor kerülnek rá egy szerződésre, amennyiben elfogadják a szerződést, amely megjelenik a fiókukban.
+    \item Az ügyvédek rálátást kapnak az egész szerződésre, és látják a tulajdoncikkek tulajdonságait is.
+    \item A szerződéskötés befejezése előtt a felhasználók feltölthetnek mellékleteket, amelyek a szerződésre érvényesek.
+    \item A szerződések megtekintése során az ügyvéd felhasználók kereshetnek a szerződéseik között. A keresés minél intuitívabb kell legyen.
+  } \\
+
+  \requirementtitle{Digitális aláírások} &
+  \requirementslist{
+    \item Az ügyvédek ugyanúgy alá tudják írni digitálisan a szerződéseket, és a szerződésre rá kerül az aláírásuk, illetve az AVDH igazolásuk is.
+    \item Az ügyvédek aláírása nélkül nem kerülhet végleges szerződés kinyomtatásra.
+  }
+\end{requirementstable}
+
+\subsection{Rendszergazda felhasználók}
+
+A rendszergazda (másnéven \textit{adminisztrátor}) felhasználók felelősek az oldalon található dokumentumsablonok, illetve tulajdoncikksablonok létrehozásáért. Rendszergazda felhasználót csak egy más rendszergazda felhasználó tud létrehozni. Másodlagos feladatuk, hogy az ügyvéd felhasználókat ellenőrizzék, hogy mivoltuk a valóságnak megfelel.
+
+\begin{requirementstable}
+  \caption{Felhasználói követelmények rendszergazda felhasználók számára} \\
+
+  \requirementtitle{Adminisztráció} &
+  \requirementslist{
+    \item A rendszergazda felhasználók bármikor el kell tudják érni a rendszergazdai munkához szükséges munkálatokat a felhasználói felületről.
+    \item A rendszergazda felhasználók munkálatai a rendes munkálatok mellett kell megjelenjenek.
+    \item Hasonlóan a rendes munkálatokhoz, az adminisztrációs tevékenységek is többnyelvűsítésre szorulnak.
+  } \\
+
+  \requirementtitle{Kézikönyv} &
+  \requirementslist{
+    \item A rendszergazda felhasználók bármikor meg kell tudják tekinteni az adminisztrátorok számára készített kézikönyvet.
+    \item Hasonlóan a rendes felhasználóknak készített kézikönyvhöz, az adminisztrátorok kézikönyve is használati utasításokat kell tartalmazzon.
+    \item A használati utasítások ki kell terjedjenek a szerződéssablonok, illetve a tulajdoncikksablonok készítésére.
+    \item A kézikönyv elérhető kell legyen ugyanúgy a honlapról, mint az adminisztrációs panelből is.
+  } \\
+
+  \requirementtitle{Szerződéssablonok} &
+  \requirementslist{
+    \item A rendszergazda felhasználók képesek kell legyenek önállóan szerződéssablonokat létrehozni.
+    \item A szerződéssablonokat létre tudják hozni az adminisztrátorok hozzátarsított tulajdoncikktípussal is, avagy anélkül is.
+    \item A szerződéssablonok könnyen szerkeszthetőek kell legyenek, egy online szerkesztési felület segítségével.
+    \item A szerződéssablonok létrehozhatóak csupán egy név és egy leírás megadásával is, nincs értelme, hogy meglevő sablon feltöltése is kötelező legyen.
+    \item Ha mégis van meglevő sablon a szerződésről, a rendszergazda felhasználónak meg kell adni a lehetőséget, hogy feltöltsön egy ilyen sablont.
+    \item A sablon dokumentumok a feltöltés után is módosíthatóak kell legyenek.
+    \item A sablonhoz tartozó \textit{placeholder} opciók könnyen átláthatóak kell legyenek.
+    \item A sablonhoz tartozó \textit{placeholder} opciók konfigurálhatónak kell lennie összetett adatok, például azonosítószámok és telefonszámok kezelésére.
+  }
+\end{requirementstable}
+
+\section{Rendszerkövetelmények}
+
+\subsection{Funkcionális követelmények}
+
+Az alkalmazásnak rendelkeznie kell egy főoldallal, amely rövid áttekintést és magyarázatot nyújt a felhasználóknak az oldal funkcióiról. Marketing szempontjából a főoldalnak olyan nyelvezetet és vizuális elemeket is használnia kell, amelyek meggyőzik a felhasználót a weboldal használatáról.
+
+A hitelesítési oldalaknak, illetve a dokumentációnak is könnyen elérhetőnek kell lenniük a főoldal menüjén keresztül. Miután a felhasználó sikeresen hitelesíti magát, át kell irányítani az alkalmazás szerződéskötési részének kezdőlapjára. A kezdőlapon az ingatlanok létrehozása és kezelése, illetve szerződések létrehozása és menedzsmentje, valamint a személyes adatok kitöltésének lehetősége jelenjen meg.
+
+A szerződéskötés kezdőlapjának fontos eleme az oldalsáv, amely a menüt tartalmazza. A menü a \textit{Project Raccoon} összes fontosabb funkcionális részéhez rálátást nyújt, maximum három klikkelésen keresztül. Mobileszközökön a menü kezdetben el van rejtve, hogy elegendő helyet biztosítson a tartalomnak. A menü helyett egy hamburger menü gomb jelenjen meg, hogy szükség esetén a felhasználó tudja átkapcsolni a menüt.
+
+\subsubsection{Vendég felhasználók}
+
+\begin{requirementstable}
+  \caption{Funkcionális követelmények vendég felhasználók számára} \\
+
+  \requirementtitle{Hitelesítés} &
+  \requirementslist{
+    \item A vendég felhasználók számára a fiókok adatait, felhasználónevet, e-mail címet és egyéb adatokat relációs adatbázisban kell tárolni.
+    \item A felhasználó profilképét egy \textit{object storage} rendszerben kell tárolni, semmiképp sem egy relációs adatbázisban.
+    \item Ha egy felhasználó nagyon gyenge jelszóval próbál felregisztrálni az oldalra, a weboldalnak figyelmeztetnie kell a felhasználót és nem szabad engednie a regisztrációt.
+    \item A rendszer nem engedhet két felhasználó regisztrációjat ugyanazzal az e-mail címmel.
+    \item A regisztrációs folyamat után, hogyha a felhasználói adatai nincsenek kitöltve, egy \textit{onboarding} folyamat révén meg kell kérni a felhasználókat, hogy töltsék ki hiányzó adataikat, mielőtt a rendszer többi részéhez férhetnek.
+    \item Vizuális captcha rendszer helyett láthatatlan captcha használata szükséges regisztrációkor.
+    \item A felhasználók jelszavát a rendszer soha nem mentheti le egyszerű szövegként. Használjunk erős jelszó hashelő algoritmust.
+  } \\
+
+  \requirementtitle{Kapcsolatfelvétel} &
+  \requirementslist{
+    \item A felhasználók kapcsolatfelvételi űrlapja a beküldött üzeneteket egy előre meghatározott e-mail fiókba kell továbbítsa.
+    \item A felhasználók által hagyott e-mail cím és tárgy bekerül a kapcsolatfelvételi űrlap üzenete mellé abban az e-mailben, amit a rendszer generál a kapcsolatfelvételi űrlap elküldésekor.
+    \item A kapcsolatfelvételi űrlap elküldésekor egy e-mail generálódik, ami tartalmazza a felhasználó nevét, e-mail címét, a kapcsolatfelvétel tárgyát és a kapcsolatfelvétel üzenetét.
+    \item A kapcsolatfelvételi űrlap legalább 15000 karaktert kell támogasson.
+  } \\
+
+  \requirementtitle{Kézikönyv} &
+  \requirementslist{
+    \item A weboldal fejléce kell tartalmazzon egy hivatkozást a felhasználói kézikönyvre.
+    \item A felhasználói kézikönyv egy külön weboldal, amely Markdown formátumban szerkeszthető a fejlesztők által.
+  }
+\end{requirementstable}
+
+\pagebreak
+
+\subsubsection{Hitelesített felhasználók}
+
+\begin{requirementstable}
+  \caption{Funkcionális követelmények hitelesített felhasználók számára} \\
+
+  \requirementtitle{Szerződéskötés} &
+  \requirementslist{
+    \item A szerződéskötéseket le kell menteni egy relációs adatbázisba.
+    \item A szerződéskötések tartalmaznak hivatkozásokat az adóra, a vevőre, illetve a tulajdoncikkre, ha létezik.
+    \item A végső, kigenerált és digitálisan aláírt szerződéseket a rendszer végtelen ideig tárolja.
+    \item A végső szerződések digitálisan alá kell legyenek írva, 
+    \item A szerződések kilistázása során az összes szerződést meg kell jeleníteni a felhasználónak.
+    \item A szerződéskötés folyamán feltöltött mellékleteket a rendszernek tárolnia kell.
+    \item A feltöltött mellékletek biztonságos módon kell elérhetőek legyenek. Azok a felhasználók, akiknek nincs rálátásuk a szerződésre, a mellékleteket sem tudják letölteni. 
+    \item A szerződések keresése a kliensoldalon történik.
+  } \\
+
+  \requirementtitle{Digitális aláírások} &
+  \requirementslist{
+    \item A szerződések során létrejött digitális aláírásokat a rendszer lementi egy \textit{object storage}-ba.
+    \item A szerződés megkötése előtt a rendszer ellenőrzi, hogyha az adó, a vevő, az ügyvédek illetve a tanúk is mind aláírták a szerződést.
+    \item Abban az esetben, hogyha a felhasználók nem szeretnék kézírással aláírni digitálisan a szerződést, a rendszer lementi az adatbázisba, hogy nincsen kézzel írt digitális aláírás, és az aláírást a felhasználó nevével helyettesíti a rendszer.
+  } \\
+
+  \requirementtitle{Szerződésletöltés} &
+  \requirementslist{
+    \item A szerződések kitöltésének előfeltétele a szerződés kigenerálása.
+    \item A rendszer a letöltött szerződésekbe beleékeli a szerződés összes mellékletét, illetve a tulajdon mellékleteit is, ha ez létezik.
+    \item A letöltött szerződése tartalmaz egy AVDH (\textit{Azonosításra Visszavezetett
+Dokumentumhitelesítés}) igazolást, amely igazolja a felek mivoltát. Ez az igazolás egy PDF dokumentum, amely a végső szerződésben megjelenik, mint \textit{attachment}.
+    \item A végleges szerződés, melyet e-mailben továbbküldtek, nem módosulhat a továbbküldés után.
+  } \\
+
+  \requirementtitle{Tulajdoncikkek} &
+  \requirementslist{
+    \item A felhasználókhoz tartozó tulajdoncikkeket egy relácios adatbázisba menti a rendszer.
+    \item Egy tulajdoncikk felhasználása előtt a rendszer ellenőrzi, hogyha a felhasználók kitöltötték a tulajdoncikkhez tartozó tulajdonságokat.
+    \item A szerződések tulajdonságainak kilistázása során a rendszer lekéri a szerződéshez tartozó tulajdoncikk tulajdonságait is.
+    \item Ha egy szerződés keretén belül egy tulajdoncikkre hivatkozunk, a rendszer először megbizonyosodik arról, hogy a tulajdoncikk nem része egy másik, folyamatban lévő szerződésnek.
+    \item A tulajdoncikkekhez feltöltött mellékleteket a rendszer \textit{object storage}-ba menti.
+    \item A felhasználók csupán a saját tulajdoncikkeiket kérhetik le a rendszerből.
+  }
+\end{requirementstable}
+
+\subsubsection{Ügyvéd felhasználók}
+
+\begin{requirementstable}
+  \caption{Funkcionális követelmények ügyvéd felhasználók számára} \\
+
+  \requirementtitle{Szerződéskötés} &
+  \requirementslist{
+    \item A rendszer csak akkor számítja az ügyvédet egy szerződés részeként, hogyha az ügyvéd elfogadta a szerződést.
+    \item Ha az ügyvéd elutasítja a szerződést, az adatbázisból törlődik az ügyvéd kapcsolata a szerződéssel.
+    \item Ha egy ügyvéd része a szerződésnek, a rendszer engedélyezi, hogy lekérje a szerződés adatait.
+    \item A szerződéskötés mellékleteit a rendszer egy \textit{object storage}-ban tárolja.
+  } \\
+
+  \requirementtitle{Digitális aláírások} &
+  \requirementslist{
+    \item Az ügyvédek kézzel írt digitális aláírásait a rendszer \textit{object storage}-ban tárolja szerződéseket.
+    \item A szerződések kigenerálásakor a kézzel írt digitális aláírások átkerülnek az \textit{object storage}-ből a kigenerált PDF dokumentumba, az AVDH állományokon láthatóakká válnak.
+    \item A végleges szerződés kinyomtatása előtt a rendszer ellenőrzi, hogy az összes ügyvéd aláírta-e a szerződést vagy sem. Ha nem írta alá az összes ügyvéd a szerződést, a szerződés nem kerül kigenerálásra.
+  }
+\end{requirementstable}
+
+\pagebreak
+
+\subsubsection{Rendszergazda felhasználók}
+
+\begin{requirementstable}
+  \caption{Funkcionális követelmények rendszergazda felhasználók számára} \\
+
+  \requirementtitle{Szerződéssablonok} &
+  \requirementslist{
+    \item A rendszergazda felhasználók által létrehozott szerződéssablonok metaadatai relációs adatbázisba kerülnek.
+    \item A szerződéssablonok dokumentumait a Google Docs rendszeren belül tároljuk. 
+    \item A szerződéssablonok létrehozásakor, ha hozzá szeretnének társítani tulajdoncikktípust is a felhasználók, akkor a rendszernek ellenőriznie kell, hogy a kért tulajdoncikktípus létezik-e.
+    \item A szerződéssablon dokumentumának szerkesztésére a Google Docs rendszert használjuk.
+    \item A szerződéssablon dokumentumának feltöltésénél nem kötelező már meglévő sablon feltöltése.
+    \item Ha a rendszergazda nem tölt fel előre elkészített szerződéssablont, akkor a rendszer automatikusan létrehoz egy üres Google Docs dokumentumot, és lementi a hozzá tartozó dokumentum azonosítót relációs adatbázisba.
+    \item Ha a rendszergazda egy előre elkészített szerződéssablont tölt fel, akkor a rendszer arról egy másolatot készít a Google Docs rendszerben.
+    \item A sablon dokumentum módosítása során a rendszer létrehoz egy Google Docs-os megosztott linket, ami segítségével bármilyen Google felhasználóval belépve a sablon szerkeszthetővé válik.
+    \item A sablonhoz tartozó \textit{placeholder} opciók kell támogassák: szám (minimum és maximum értékekkel), azonosítószám, e-mail cím, webhely link, dátum.
+  }
+\end{requirementstable}
+
+\pagebreak
+
+\subsection{Nem funkcionális követelmények}
+
+\begin{requirementstable}
+  \caption{Külső követelmények (\textit{external requirements})} \\
+
+  \requirementtitle{Etikai és legális} &
+  \requirementslist {
+    \item Mivel az alkalmazás a szerződések kezelésének és aláírásának koncepciója körül forog, biztosítanunk kell, hogy a felhasználó által létrehozott összes szerződést ellenőrizzük, digitális tanúsítvánnyal aláírjuk és biztonságosan tároljuk a felhőben.
+    \item Az alkalmazásnak biztosítania kell a felhasználó által megadott adatok helyességének ellenőrzését. Ez az AVDH rendszeren keresztül történik.
+    \item Az alkalmazást a GDPR törvényei köré kell építsük, ezért a weboldal első meglátogatásakor engedélyt kell kérnie a felhasználótól a sütik (\textit{cookies}) tárolására a számítógépén.
+    \item Ha az adminisztrátorokat törlési kéréssel keresik meg, akkor eleget kell tenniük a kérésnek egy rövid ellenőrzési folyamat után.
+    \item A rendszer összes komponense használható kell legyen szigorú kormányzati törvények alatt. Ha az adatok tárolását például csak az Európai Unióban engedélyezi a felhasználási környezet, akkor az összes komponensnek ebben a korlátozott módban kell működnie.
+  }
+\end{requirementstable}
+
+\pagebreak
+
+\begin{requirementstable}
+  \caption{Termékkövetelmények (\textit{product requirements})} \\
+
+  \requirementtitle{Használhatóság} &
+  \requirementslist {
+    \item A felhasználóknak képesnek kell lenniük bármely művelet elvégzésére a platformon segítség nélkül.
+    \item Ha egy felhasználónak segítségre van szüksége, képesnek kell lennie arra, hogy az alkalmazás által biztosított dokumentációra hivatkozzon.
+    \item A felhasználói felületnek elég intuitívnak kell lennie ahhoz, hogy a mezei felhasználók is kényelmesen tudják használni.
+    \item A felhasználói felület nem tartalmazhat olyan gombokat, szöveget vagy piktogramokat, amelyek túlságosan homályosak ahhoz, hogy megértsék őket a felhasználók.
+  } \\
+
+  \requirementtitle{Tárolás} &
+  \requirementslist {
+    \item A rendszer soha nem tárolhat blobokat relációs adatbázisban. Az ilyen fajta tárolást \textit{object storage} rendszer segítségével kell végrehajtani.
+    \item A rendszer összes komponense használható kell legyen szigorú kormányzati törvények alatt. Ha az adatok tárolását például csak az Európai Unióban engedélyezi a felhasználási környezet, akkor az összes komponensnek ebben a korlátozott módban kell működnie.
+  } \\
+
+  \requirementtitle{Tervezés} &
+  \requirementslist { 
+  
+    \item A rendszernek kerülni kell a szoros kapcsolódásokat (\textit{tight coupling}-ot). Csak olyan alkatrészeket használjon, amelyek szoros csatlakozás nélkül bármikor cserélhetők.
+  } \\
+
+  \requirementtitle{Teljesítmény} &
+  \requirementslist {
+    \item Az alkalmazásnak válaszolnia kell minden felhasználói interakcióra.
+    \item Ha egy művelet elvégzéséhez több időre van szükség, a felhasználónak vizuálisan jeleznie kell a rendszernek a haladását.
+  }
+\end{requirementstable}
+
+\begin{requirementstable}
+  \caption{Szervezési követelmények (\textit{organizational requirements})} \\
+
+  \requirementtitle{Környezet} &
+  \requirementslist {
+    \item A GitHub-ot használjuk, mint verzió követő rendszer.
+    \item A verzió követő rendszeren tárolt kód privát kell legyen. Azokban az esetekben, amikor ez a döntés nem a mi hatáskörünkbe tartozik, a platform forráskódját ideiglenesen nyilvánossá tehetjük.
+    \item Fejlesztéshez a Visual Studio Code környezetet használjuk. Szükség esetén alkalmazhatóak a felhő alapú környezetek is, mint például a GitHub Codespaces.
+  }
+\end{requirementstable}
