@@ -1,0 +1,158 @@
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+  <!-- Server 1 -->
+  <g transform="translate(50, 50)">
+    <!-- Virtual Machines -->
+    <rect x="0" y="0" width="180" height="80" rx="8" fill="#4fc3f7"/>
+    <text x="90" y="20" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">Virtuális gépek</text>
+    
+    <!-- VM boxes with proper centering -->
+    <rect x="15" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="27.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="45" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="57.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="75" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="87.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="105" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="117.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="135" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="147.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <!-- OS boxes with proper centering -->
+    <rect x="15" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="27.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="45" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="57.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="75" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="87.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="105" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="117.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="135" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="147.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <!-- ESXi Server -->
+    <rect x="0" y="90" width="180" height="40" rx="8" fill="#1565c0"/>
+    <text x="90" y="115" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">ESXi kernel</text>
+    
+    <!-- Arrow down -->
+    <polygon points="90,140 80,150 100,150" fill="#00bcd4"/>
+    
+    <!-- Physical Server -->
+    <rect x="30" y="160" width="120" height="30" rx="15" fill="#37474f"/>
+    <text x="90" y="180" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">••• |||| ••• |||| •••</text>
+  </g>
+  
+  <!-- Server 2 -->
+  <g transform="translate(310, 50)">
+    <!-- Virtual Machines -->
+    <rect x="0" y="0" width="180" height="80" rx="8" fill="#4fc3f7"/>
+    <text x="90" y="20" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">Virtuális gépek</text>
+    
+    <!-- VM boxes with proper centering -->
+    <rect x="15" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="27.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="45" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="57.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="75" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="87.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="105" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="117.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="135" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="147.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <!-- OS boxes with proper centering -->
+    <rect x="15" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="27.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="45" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="57.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="75" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="87.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="105" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="117.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="135" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="147.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <!-- ESXi Server -->
+    <rect x="0" y="90" width="180" height="40" rx="8" fill="#1565c0"/>
+    <text x="90" y="115" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">ESXi kernel</text>
+    
+    <!-- Arrow down -->
+    <polygon points="90,140 80,150 100,150" fill="#00bcd4"/>
+    
+    <!-- Physical Server -->
+    <rect x="30" y="160" width="120" height="30" rx="15" fill="#37474f"/>
+    <text x="90" y="180" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">••• |||| ••• |||| •••</text>
+  </g>
+  
+  <!-- Server 3 -->
+  <g transform="translate(570, 50)">
+    <!-- Virtual Machines -->
+    <rect x="0" y="0" width="180" height="80" rx="8" fill="#4fc3f7"/>
+    <text x="90" y="20" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">Virtuális gépek</text>
+    
+    <!-- VM boxes with proper centering -->
+    <rect x="15" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="27.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="45" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="57.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="75" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="87.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="105" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="117.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <rect x="135" y="30" width="25" height="20" rx="3" fill="#1976d2"/>
+    <text x="147.5" y="43" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8">App</text>
+    
+    <!-- OS boxes with proper centering -->
+    <rect x="15" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="27.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="45" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="57.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="75" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="87.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="105" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="117.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <rect x="135" y="55" width="25" height="20" rx="3" fill="#90caf9"/>
+    <text x="147.5" y="68" text-anchor="middle" fill="#1976d2" font-family="Arial, sans-serif" font-size="8">OS</text>
+    
+    <!-- ESXi Server -->
+    <rect x="0" y="90" width="180" height="40" rx="8" fill="#1565c0"/>
+    <text x="90" y="115" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">ESXi kernel</text>
+    
+    <!-- Arrow down -->
+    <polygon points="90,140 80,150 100,150" fill="#00bcd4"/>
+    
+    <!-- Physical Server -->
+    <rect x="30" y="160" width="120" height="30" rx="15" fill="#37474f"/>
+    <text x="90" y="180" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10">••• |||| ••• |||| •••</text>
+  </g>
+  
+  <!-- Connection lines between physical servers -->
+  <line x1="200" y1="225" x2="340" y2="225" stroke="#00bcd4" stroke-width="3"/>
+  <line x1="460" y1="225" x2="600" y2="225" stroke="#00bcd4" stroke-width="3"/>
+  
+  <!-- Physical Servers label -->
+  <text x="400" y="280" text-anchor="middle" fill="#37474f" font-family="Arial, sans-serif" font-size="24" font-weight="bold">Fizikai szerverek</text>
+</svg>

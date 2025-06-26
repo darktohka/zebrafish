@@ -69,16 +69,45 @@
 \lstset{
   language=Python,
   basicstyle=\ttfamily,
-  literate=
-    {á}{{\'a}}1
-    {é}{{\'e}}1
-    {í}{{\'i}}1
-    {ó}{{\'o}}1
-    {ö}{{\"o}}1
-    {ő}{{\H{o}}}1
-    {ú}{{\'u}}1
-    {ü}{{\"u}}1
-    {ű}{{\H{u}}}1
+}
+
+\lstdefinelanguage{CSS}{
+  keywords={color,background,font-size,margin,padding,border,width,height,display,position,top,left,right,bottom,float,clear,text-align,vertical-align,list-style,text-decoration,text-transform,line-height,letter-spacing,word-spacing,white-space,overflow,visibility,z-index,opacity,box-shadow,text-shadow,border-radius,transform,transition,animation,flex,grid},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  string=[d]{"},
+  string=[d]{'},
+  alsoother={-},
+  morekeywords=[2]{!important},
+  morekeywords=[3]{:root,::before,::after,:hover,:active,:focus,:visited,:link,:first-child,:last-child,:nth-child,:not},
+  morekeywords=[4]{@media,@keyframes,@font-face,@import},
+  morestring=[b]",
+  morestring=[b]',
+  tabsize=2,
+  breaklines=true,
+  captionpos=b,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  frame=single,
+  frameround=tttt,
+  framesep=5pt,
+  rulesepcolor=\color{gray},
+  backgroundcolor=\color{white},
+  showspaces=false,
+  showtabs=false,
+  showstringspaces=false,
+  extendedchars=true,
+  inputencoding=utf8,
+  columns=flexible,
+  upquote=true,
+  identifierstyle=\color{black},
+  keywordstyle=\color{blue},
+  keywordstyle=[2]{\color{red}},
+  keywordstyle=[3]{\color{purple}},
+  keywordstyle=[4]{\color{orange}},
+  stringstyle=\color{green},
+  commentstyle=\color{gray},
 }
 
 \usepackage{dirtree}

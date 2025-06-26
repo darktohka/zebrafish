@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Build and Preview Dissertation",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "echo 'Running build and preview tasks...'",
+            "preLaunchTask": "latex-build",
+            "postBuildTask": "latex-preview"
+        }
+    ],
+    "compounds": [],
+    "inputs": [],
+    "tasks": [
+        {
+            "label": "latex-build",
+            "type": "shell",
+            "command": "cd dissertation && ./build.sh && firefox-nightly dissertation/output.pdf",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}

@@ -1,5 +1,62 @@
 \chapter{Elméleti megalapozás} \label{chapter1}
 
+\section {Piacelemzés}
+
+A dolgozat ezen részében megvizsgáljuk a konténerizációs világ adta lehetőségeket, és bemutatjuk a Zebrafish által kitöltött piaci rést. A felhőplatformokra való nagyfokú összpontosítás miatt a konténerizáció világa az elmúlt években jelentős növekedésnek indult, mivel a vállalatok egyre inkább felismerik a konténerek előnyeit: a hordozhatóságot, a skálázhatóságot és az erőforrás-hatékonyságot.
+
+\subsection {Virtuális gépek: VMWare vSphere / ESXi}
+
+\begin{figure}[h]
+        \centering
+        \includesvg[scale=0.75]{images/survey/vmwarevsphere.svg}
+        \caption{A VMWare vSphere logója}
+        \label{vsphere}
+\end{figure}
+
+Mielőtt elkezdenénk beszélni a konténerekről, meg kell értenünk a virtualizáció jelenlegi helyzetét. A virtualizáció már régóta létezik, és széles körben elterjedt az iparágban. Az egyik legnépszerűbb virtualizációs platform a \ref{vsphere} ábrán látható VMWare vSphere, azon belül pedig a VMware ESXi. A VMWare ESXi egy hipervizor: lehetővé teszi több virtuális gép futtatását egyetlen fizikai szervergépen. Más szavakkal élve: lehetőséget biztosít több operációs rendszer futtatására egyetlen gépen.
+
+A VMWare ESXi azonban rendelkezik bizonyos korlátozásokkal. Ez egy szabadalmaztatott szoftver, ami azt jelenti, hogy nem nyílt forráskódú és nem szabadon használható. Ha ez nem elég, 2024 elején a VMWare megszüntette az ESXi ingyenes verzióját, ami azt jelenti, hogy a felhasználóknak mostantól licenszt kell fizetniük a használatáért. Ez sok frusztrációhoz vezetett a közösségben, mivel sokan személyes projektekhez vagy a virtualizáció megismeréséhez az ingyenes verziót használta. \cite{esxi2024}
+
+\begin{figure}[h]
+        \centering
+        \includegraphics[scale=0.75]{images/survey/esxiexplanation.png}
+        \caption{A VMWare ESXi működési elve}
+        \label{esxi}
+\end{figure}
+
+Az \ref{esxi} ábrán látható a VMWare ESXi működése. A felhasználók telepíthetik az ESXi-t a fizikai gépre, majd létrehozhatnak és kezelhetnek virtuális gépeket a vSphere kliens segítségével. A virtuális gépek teljesen elszigetelt környezetek, amelyek saját operációs rendszerrel rendelkeznek. Az egyes operációs rendszereken elkülönített alkalmazások futnak.
+
+Az ESXi operációsrendszer-független. Közel áll nagyon egy hagyományos operációs rendszerhez, mivel saját kernellel és felhasználói felülettel rendelkezik. Ez a komplexitás azonban nem száll át a virtualizált operációs rendszerek rendszergazdáira. Ugyanakkor nem olyan rugalmas, mint más virtualizációs megoldások, például a KVM vagy a Xen, mivel csak bizonyos hardverkonfigurációkat támogat.
+
+\subsection{KVM}
+
+A KVM rövidítése a \textit{Kernel-based Virtual Machine}-nek, ami egy nyílt forráskódú virtualizációs technológia, amely a Linux kernelbe van integrálva. A KVM lehetővé teszi, hogy egy Linux rendszeren hipervizorként futva több virtuális gép futtatható legyen egyetlen fizikai gépen.
+
+A VMware ESXi-hez képest a KVM nyílt forráskódú. Rugalmasabb, hiszen a felhasználók a szokásos Linux parancsokkal hozhatnak létre és kezelhetnek virtuális gépeket. A KVM emellett pehelysúlyúbb is, mivel a meglévő Linux kernelt használja a virtualizációs képességek biztosításához, ahelyett, hogy külön hypervisort igényelne.
+
+A VMware ESXi-t leginkább vállalati környezetben telepítenek, míg a KVM-et inkább felhőkörnyezetekben használják, vagy olyan fejlesztők, akik virtuális gépeket szeretnének futtatni saját hardverükön. A Linux hardvertámogatását kihasználva számos hardverkonfigurációt támogat. Emellett ingyenes, ami miatt számos tárhelyszolgáltató kínál KVM-alapú virtuális privát szervereket (VPS) versenyképes áron. \cite{kvm2024}
+
+Azonban mind a VMWare ESXi, mind a KVM rendelkezik korlátokkal. Elsősorban virtuális gépek futtatására tervezték őket, amelyek erőforrás-igényesek lehetnek, és nem feltétlenül a leghatékonyabb módja a könnyű alkalmazások vagy mikroszolgáltatások futtatásának. \footnote{Meglepő módon még a konténerizáció is visszanyúl néha a virtualizációhoz, mivel néhány konténer-futtatórendszer, mint például a \textit{Firecracker}, biztonsági okokból KVM-et használ a konténerek virtuális gépen történő futtatására.} Itt jön képbe a konténerizáció.
+
+\subsection{Konténerizáció: Docker és Docker Desktop}
+
+\begin{figure}[!h]
+	\centering
+        \includegraphics[scale=0.4]{images/survey/dockerdesktop.png}
+	\caption{A Docker Desktop kinézete}
+        \label{docker}
+\end{figure}
+
+A Docker (lásd \ref{docker}. ábra) egy részben nyílt forráskódú platform, amely lehetővé teszi alkalmazások elkülönített konténerekben történő telepítését, skálázását és kezelését. A Docker már a konténerizáció szinonimája. A konténerek gyakorlatilag futó Docker image-ek, amelyek mögött egy virtuális fájlrendszer és a hozzájuk tartozó folyamatok állnak. A Docker image-ek önálló, hordozható környezetet biztosítanak, amelyek tartalmazzák az alkalmazást, valamint annak minden függőségét, beleértve az operációs rendszer könyvtárait és szükséges könyvtárakat is.
+
+Bár a konténerek közösen használják a gazdagép operációs rendszerének kernelét a Docker környezeten belül, biztonsági szempontból hasonló védelmet nyújtanak, mint a hagyományos virtuális gépek \cite{containersec}. Az alkalmazás függőségeivel egyött egyetlen egységbe zárva futnak, így minimalizálódnak az esetleges fájlrendszerbeli konfliktusok, és biztosítható a környezet pontos reprodukálhatósága. Mivel a konténerek mögött nem áll hagyományos operációs rendszer, kevesebb erőforrást igényelnek, mint a hagyományos virtuális gépek, valamint gyorsabban indíthatók. A hardvert hatékonyabban ki tudjuk használni, és gyorsabban skálázhatjuk az alkalmazásainkat.
+
+A Dockert és a Docker Compose-t széles körben alkalmazzuk mind a fejlesztési, mind az éles környezetünkben. A Docker Compose segítségével definiált szolgáltatásokat gyakran különálló projektekbe szervezzük, így ezek a rendszer más Compose-projektjeitől függetlenül, atomi módon indíthatók, újraindíthatók vagy leállíthatók: ezáltal a karbantartás rendkívül egyszerűvé válik.
+
+Manapság a Docker Engine egy nyílt-forráskódú konténer-platformon alapszik, a Moby projekten. A Moby projekt célja, hogy egy moduláris, szabadon bővíthető alapot biztosítson konténeres rendszerek építéséhez, amelyből a Docker saját megoldása is építkezik. Ez a projekt a Docker projektből született, amely eredetileg egy monolitikus alkalmazás volt. \cite{moby} A Docker CLI-on kívül a Docker további termékei, mint például a Docker Desktop, zárt forráskódúák és külön licenszelemeket is tartalmaznak. \cite{dockerdesktopclosed}
+
+\subsection{GEMINI HELP ME}
+
 \section {Használt szoftverek, könyvtárak}
 
 A dolgozat ezen részében megvizsgáljuk azokat a szoftvereket, amelyeket felhasználtunk a platform készítéséhez. A felhasznált szoftvereket két részre bontjuk: a végtermék által használt függőségek, valamint a tervezés és a fejlesztés során használt egyéb szoftverek.
@@ -145,25 +202,6 @@ Magába foglalja az objektumorientált programozást (\textit{OOP}), lehetővé 
 Emellett olyan fejlett funkciókat is kínál, mint a generikusok és dekorátorok, amelyek kibővítik a kódabsztrakció és a kódbázis-szervezés lehetőségeit. A mi esetünkben a dekorátorokat teljes mértékben kihasználja a TypeORM rendszer, lehetővé téve az adatbázis modelleink leképezését tényleges adatbázis sémára. Mivel a TypeScript kompatibilitas a meglévő JavaScript-ben írt projektekkel, és sima JavaScriptre le is fordítható, ezért könnyen integrálható a Next.js keretrendszerbe is.
 
 A TypeScript programozási nyelv önmagában nem futtatható a Node.js környezettel. Jelenleg csupán a Deno környezet engedélyezi a TypeScript tényleges láthatatlan futtatását, viszont a Deno környezet nem támogatja az általunk kiválasztott web keretrendszert, a Next.js-t. Mivel önmagában nem futtatható, a TypeScript nyelv nem csupán a megfelelő linterekkel és szintaxisfa elemző programokkal telepítendő, hanem a TypeScript kompilátorral is, amely a TypeScript forráskód állományokat képes átalakítani JavaScript forráskód álommányokká.
-
-\subsection{Docker és Docker Desktop}
-
-\begin{figure}[!h]
-	\centering
-        \includegraphics[scale=0.4]{images/docker-desktop.png}
-	\caption{A Docker Desktop kinézete}
-        \label{docker}
-\end{figure}
-
-A Docker (\ref{docker}. ábra) egy nyílt forráskódú platform, amely megkönnyíti az alkalmazások telepítését, skálázását és kezelését elszigetelt konténerekben. A konténerek elindított Docker \textit{imageknek} felelnek meg, amelyek mögött mindig egy virtuális fájlrendszer és futó folyamatok állnak. A Docker imagek olyan önálló, hordozható környezetek, amelyek egy alkalmazást és függőségeit - beleértve az operációs rendszert és a könyvtárakat - foglalják magukba.
-
-Annak ellenére, hogy megosztják a gazdagép operációs rendszerének kernelét, a konténerek hasonló biztonsági szintet szolgáltatnak, mint a hagyományos virtuális gépek. \cite{containersec} Az alkalmazás és a függőségei egységbe vannak zárva, csökkentve a konfliktusokat és biztosítva a környezet reprodukálhatóságát. Tekintettel arra, hogy a konténerek el vannak szigetelve a rendszer többi részétől. A konténerek kevesebb rendszererőforrást fogyasztanak, mint a tradicionális virtuális gépek és gyorsan elindulnak, a hardver hatékony kihasználását és az alkalmazások gyorsabb skálázódását eredményezve.
-
-A Docker leegyszerűsíti a függőségek kezelését azáltal, hogy az alkalmazást az adott \textit{runtime}-al, könyvtárakkal és függőségekkel együtt egy image-be csomagolja. Így a fejlesztőknek nem kell manuálisan konfigurálniuk és kezelniük a függőségeket minden egyes célrendszeren. A kompatibilitási problémákat ezáltal kiszűri a Docker és megbízhatóbbá teszi a telepítéseket.
-
-A nagy webes alkalmazások kontextusában a Docker nagyon hasznos, mivel az olyan segédprogramok, mint a Docker Compose (mely a dolgozat írásakor már alapértelmezétten a Docker része) lehetővé teszik, hogy a konténerek konfigurációját Compose fájlként - rendszerleírófájlként mentse el. Ezek a Compose fájlok YAML "markup" nyelven íródnak, melyek még azok számára is nagyon könnyen manipulálhatóak, akik nem rendelkeznek programozási ismeretekkel. A konténerek közötti kapcsolatokat ezekben a Compose fájlokban írhatjuk le.
-
-Mind a Dockert, mind a Docker Compose-t széles körben használjuk a kitelepített környezetünkben és a fejlesztési környezetünkben is. A Docker Compose segítségével létrehozott szolgáltatásokat gyakran külön Docker Compose projektekbe csoportosítják, amelyek atomi módon a rendszerben esetleg meglévő más Docker Compose projektektől függetlenül indíthatók, újraindíthatók és leállíthatók, így a karbantartás gyerekjátékká válik.
 
 \subsection{Cloudflare R2}
 
