@@ -20,6 +20,10 @@ Zebrafish is designed to be lightweight, shipping only the necessary libraries a
 - **containerd:** Zebrafish uses `containerd` as its container runtime, providing a stable and efficient environment for running OCI-compliant containers.
 - **ocitool**: The OS includes `ocitool`, a tool for managing OCI container images, making it easy to work with images.
 
+### Flexible
+
+- **Remote Disk Support:** Zebrafish can connect to remote disks hosted on other servers using the Linux Network Block Device (NBD) protocol. This makes it possible to integrate with remote storage solutions.
+
 ### Data Integrity and Recovery
 
 - **ZFS File System:** Zebrafish is built on top of the ZFS file system, which provides strong data integrity and protection against data corruption.
@@ -28,6 +32,8 @@ Zebrafish is designed to be lightweight, shipping only the necessary libraries a
 ### Security First
 
 - **Immutable:** The core operating system is immutable, meaning that it cannot be modified at runtime. This ensures that the system is always in a known good state.
+- **Encrypted Root File System:** The root file system is always encrypted using ZFS, providing an additional layer of security for your data.
+- **Public Key Authentication:** Zebrafish uses public key authentication for SSH access.
 - **Port Knocking:** Zebrafish supports port knocking, a technique used to hide network ports from unauthorized users. This adds an extra layer of security to your applications.
 - **DNS over HTTPS (DoH):** All DNS queries are encrypted and sent over HTTPS, preventing eavesdropping and man-in-the-middle attacks.
 - **HTTP/3:** Zebrafish uses HTTP/3 by default, providing a faster and more secure web experience.
@@ -112,7 +118,7 @@ If you prefer to download a pre-built version of Zebrafish, you can find the lat
 
 - `ovmf_aarch64.fd` can be found at: [Debian Package List](https://packages.debian.org/sid/all/qemu-efi-aarch64/download)
 
-4. **Run the OS:**
+4. **Run the OS using QEMU:**
 
    ```bash
    if [[ $(uname -s) == "Linux" ]]; then
@@ -131,17 +137,27 @@ If you prefer to download a pre-built version of Zebrafish, you can find the lat
    fi
 
    "$target" $accel \
-   -drive file=disk.img -m 2G \
-   -device virtio-rng-pci \
-   -net nic,model=virtio \
-   -net user,hostfwd=tcp::10022-:22,hostfwd=tcp::10080-:80 \
-   -kernel zebrafish-kernel -initrd zebrafish-initrd \
-   -display gtk \
-   -device virtio-gpu-pci \
-   -append "console=tty0 ipv4=10.0.2.15 ipv4gateway=10.0.2.2" \
-   -device virtio-keyboard-pci \
-   -bios "$bios"
+     -drive file=disk.img -m 2G \
+     -device virtio-rng-pci \
+     -net nic,model=virtio \
+     -net user,hostfwd=tcp::10022-:22,hostfwd=tcp::10080-:80 \
+     -kernel zebrafish-kernel -initrd zebrafish-initrd \
+     -display gtk \
+     -device virtio-gpu-pci \
+     -append "console=tty0 ipv4=10.0.2.15 ipv4gateway=10.0.2.2" \
+     -device virtio-keyboard-pci \
+     -bios "$bios"
    ```
+
+## Installation on a real machine
+
+Zebrafish supports installation on the following configurations:
+
+- **UEFI x86_64**: A computer with UEFI firmware and x86_64 architecture. Boots directly using the EFI stub in the kernel. Requires at least Haswell microarchitecture (4th generation Intel Core processors).
+- **UEFI ARM64**: Requires at least ARMv8-A architecture (tuned for Neoverse-N1 processors).
+- **BIOS x86_64**: Booting is implemented through `syslinux`. Requires at least Haswell microarchitecture (4th generation Intel Core processors).
+
+Please refer to the [Installation Guide](INSTALL.md) for detailed instructions on how to install Zebrafish on your machine.
 
 ## Contributing
 
