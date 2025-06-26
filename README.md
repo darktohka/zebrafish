@@ -7,7 +7,9 @@
   An immutable OCI container runtime operating system.
 </p>
 
-## Key Features
+---
+
+## Overview
 
 Zebrafish is a modern, security-focused, and containerized operating system designed for reliability and performance. It leverages cutting-edge technologies to provide a robust platform for running containerized applications.
 
@@ -15,8 +17,8 @@ Zebrafish is designed to be lightweight, shipping only the necessary libraries a
 
 ### Containerization
 
-- **Containerd:** Zebrafish uses `containerd` as its container runtime, providing a stable and efficient environment for running OCI-compliant containers.
-- **Ocitool**: The OS includes `ocitool`, a tool for managing OCI container images, making it easy to work with images.
+- **containerd:** Zebrafish uses `containerd` as its container runtime, providing a stable and efficient environment for running OCI-compliant containers.
+- **ocitool**: The OS includes `ocitool`, a tool for managing OCI container images, making it easy to work with images.
 
 ### Data Integrity and Recovery
 
@@ -114,22 +116,19 @@ If you prefer to download a pre-built version of Zebrafish, you can find the lat
 
    ```bash
    if [[ $(uname -s) == "Linux" ]]; then
-   accel="-accel kvm"
+     accel="-accel kvm"
    else
-   accel="-accel whpx,kernel-irqchip=off"
+     accel="-accel whpx,kernel-irqchip=off"
    fi
 
    if file zebrafish-kernel | grep ARM64; then
-   target=qemu-system-aarch64
-   accel="-cpu neoverse-n1 -machine virt"
-   bios="ovmf_aarch64.fd"
+     target=qemu-system-aarch64
+     accel="-cpu neoverse-n1 -machine virt"
+     bios="ovmf_aarch64.fd"
    else
-   target=qemu-system-x86_64
-   bios="ovmf_x64.fd"
+     target=qemu-system-x86_64
+     bios="ovmf_x64.fd"
    fi
-
-   #console="-append 'console=ttyS0' -serial stdio"
-   #onsole="-append 'console=tty0'"
 
    "$target" $accel \
    -drive file=disk.img -m 2G \
