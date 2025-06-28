@@ -304,13 +304,21 @@ A névterek a folyamatok elszigetelését biztosítják azáltal, hogy egy virtu
     \item \textbf{User névtér:} Elkülöníti a felhasználói- és csoportazonosítókat, lehetővé téve, hogy egy folyamatnak egy konténeren belül egy normális, nem root jogosultságú felhasználója legyen. Ez nagyon fontos a biztonság szempontjából, mivel a konténereket ezáltal csökkentett jogosultságokkal tudjuk futatni.
 \end{itemize}
 
-A cgroups segítségével kiosztjuk a rendszer erőforrásait. Például a CPU-nak, a memóriának és az I/O-nak a prioritását és határértékeit (limitjeit) tudjuk meghatározni meghatározását egy folyamatgyűjtemény számára. Ezáltal egyetlen egy konténer nem tudja monopolizálni a rendszer erőforrásait. Ha monopolizálni tudná, akkor negatív hatással lehetne a többiekre. Míg az ütemező alapból elég jó munkát végez az erőforrások elosztásában, a cgroups lehetővé teszi számunkra, hogy korlátokat és kéréseket tegyünk.
+A cgroups segítségével kiosztjuk a rendszer erőforrásait. Például a CPU-nak, a memóriának és az I/O-nak a prioritását és határértékeit (limitjeit) tudjuk meghatározni egy folyamatgyűjtemény számára. Ezáltal egyetlen egy konténer nem tudja monopolizálni a rendszer erőforrásait. Ha monopolizálni tudná, akkor negatív hatással lehetne a többiekre. Míg az ütemező alapból elég jó munkát végez az erőforrások elosztásában, a cgroups segítségével korlátokat és kéréseket tehetünk.
 
-Másrészt a Zebrafish platform számára alapként szolgál a Linux kernel. Rendelkezik mindazon fájlrendszer-kezeléshez és biztonsághoz szükséges kényelmi funkciókkal, amik biztosítják, hogy nem kell újra feltalálnunk a spanyol viaszt.
+A Zebrafish platform számára alapként szolgál a Linux kernel. Rendelkezik mindazon fájlrendszer-kezeléshez és biztonsághoz szükséges kényelmi funkciókkal, amik biztosítják, hogy nem kell újra feltalálnunk a spanyol viaszt: számos fájlrendszert támogat, amelyek közül néhány erős adatkonzisztencia-garanciát biztosít; támogatja az olyan fejlett funkciókat, mint például az SMB, az NFS és az NBD, amelyek elengedhetetlenek a Zebrafish távoli fájlrendszer-képességeihez; és olyan biztonsági modellt biztosít, amely lehetővé teszi, hogy a konténereket csökkentett jogosultságokkal futtassuk, biztosítva, hogy még ha egy konténer veszélybe is kerül, a kár korlátozott legyen.
 
 \subsection{Buildroot}
 
-ADD BUILDROOT
+A Buildroot egy egyszerű, hatékony és könnyen használható eszköz egyedi beágyazott Linux rendszerek létrehozására keresztkompilálással (\textit{cross-compilation}). Automatizálja a teljes Linux-rendszer építésének folyamatát, beleértve a keresztkompilációs eszköztárat, a gyökérfájlrendszert, a kernelképet (\textit{kernel image}) és a bootloadert (\textit{EFI stub} vagy \texttt{syslinux}). Mivel a cél egy minimális, hatékony operációs rendszer létrehozása volt, amely \texttt{ARM64} és \texttt{x86\_64} architektúrákon egyaránt futtatható, a Buildroot-ra esett a választás.
+
+A Zebrafish tervezése során több build rendszert is kipróbáltunk, köztük a Yocto Projectet, azonban a Buildrootra esett a választásunk az egyszerű konfigurálhatósága és a gyors ütemű közösségi fejlesztése miatt. A gyakori frissítések biztosítják, hogy mindig a legújabb szoftverekre építhetjük a Zebrafish platformot. A Kconfig-alapú konfigurációs rendszerének egyszerűsége pedig kivételesen egyszerűvé teszi az operációs rendszer képének beállítását.
+
+A Buildroot azt is lehetővé teszi, hogy a generált lemezképekhez létrehozzunk egy \textit{software bill of materials}-t (SBOM), ami elengedhetetlen ahhoz, hogy tisztában legyünk azzal, hogy valójában milyen szoftvereket futtatunk a szervereinken. A SBOM segítségével nyomon követhetjük az összes beépített szoftverkomponenst és azok verzióit.
+
+A projekt fejlesztése során lehetőség nyílt arra, hogy a Buildroot közösségnek változtatásokat visszaadjunk. Ez magába foglalta a javítások küldését a hivatalos levelezési listára. Értékes tapasztalat volt számomra, hiszen a Buildroot közösség, a Linux közösséghez hasonlóan, még mindig levelezőlistákon keresztül kommunikál.
+
+A jövőre nézve a \texttt{bootc} projekt a bootolható konténer alapú operációs rendszerek érett eszközévé válhat. A \texttt{bootc} használatának további vizsgálata indokolt. Jelentős előnyöket kínálhat a rendszerfrissítések és a rendszerkezelés terén.
 
 \subsection{Next.js}
 
