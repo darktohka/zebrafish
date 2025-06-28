@@ -294,7 +294,23 @@ Ennek a fejezetnek a célja, hogy áttekintést adjon a felhasznált szoftverekr
 
 \subsection{A Linux kernel}
 
-{{ ROO }}
+A Linux kernel számos alapvető funkciót biztosít a Zebrafish által biztosított konténerizációhoz. A Linux felelős a folyamatok elkülönítésének és erőforrásainak kezeléséért. Elsősorban a Linux névterek (namespaces) funkcióját használjuk a szükséges elszigetelés biztosítására. Másodsorban a rendszer erőforrásainak priorizálására a cgroups (control groups) funkciót használjuk.
+
+A névterek a folyamatok elszigetelését biztosítják azáltal, hogy egy virtuális környezetet hoznak létre a folyamatok egy csoportja számára. Minden névtér úgy tűnik a benne lévő folyamatok számára, hogy egy globális rendszererőforrás saját, elszigetelt példányával rendelkeznek. A Linux kernel többféle névteret biztosít, amelyek közül a legfontosabbak, amelyeket a Zebrafish platformon használunk, a következők:
+\begin{itemize}
+    \item \textbf{PID névtér:} Elkülöníti a folyamatazonosítókat, ami azt jelenti, hogy a konténeren belüli folyamatoknak saját PID-készletük van. Mivel a PID 1-es folyamat az init folyamat, ő felelős a zombi folyamatok leállításáért és az árva folyamatok kezeléséért. Annak biztosítására, hogy az init folyamat ténylegesen kezelje ezeket a feladatokat, egy speciális init folyamatot (tini) használunk, amely PID 1-ként fut a konténeren belül és megvalósítja ezeket a funkciókat.
+    \item \textbf{Hálózati névtér:} Elkülöníti a hálózati interfészeket, útválasztási táblákat és portokat. Minden konténer saját virtuális hálózati veremmel rendelkezik. Ezt használjuk annak biztosítására, hogy a konténerek kommunikálni tudjanak egymással és a gazdarendszerrel anélkül, hogy más konténereket zavarnának. Természetesen ehhez tartozik egy userland réteg is.
+    \item \textbf{Mount névtér:} Elkülöníti a fájlrendszert. A különböző mount névterekben lévő folyamatok különböző nézetekkel rendelkeznek a fájlrendszerre. Tiszta és elszigetelt fájlrendszert biztosítunk minden konténer számára. Egy konténerben végrehajtott változtatások nem befolyásolhatják a többit.
+    \item \textbf{User névtér:} Elkülöníti a felhasználói- és csoportazonosítókat, lehetővé téve, hogy egy folyamatnak egy konténeren belül egy normális, nem root jogosultságú felhasználója legyen. Ez nagyon fontos a biztonság szempontjából, mivel a konténereket ezáltal csökkentett jogosultságokkal tudjuk futatni.
+\end{itemize}
+
+A cgroups segítségével kiosztjuk a rendszer erőforrásait. Például a CPU-nak, a memóriának és az I/O-nak a prioritását és határértékeit (limitjeit) tudjuk meghatározni meghatározását egy folyamatgyűjtemény számára. Ezáltal egyetlen egy konténer nem tudja monopolizálni a rendszer erőforrásait. Ha monopolizálni tudná, akkor negatív hatással lehetne a többiekre. Míg az ütemező alapból elég jó munkát végez az erőforrások elosztásában, a cgroups lehetővé teszi számunkra, hogy korlátokat és kéréseket tegyünk.
+
+Másrészt a Zebrafish platform számára alapként szolgál a Linux kernel. Rendelkezik mindazon fájlrendszer-kezeléshez és biztonsághoz szükséges kényelmi funkciókkal, amik biztosítják, hogy nem kell újra feltalálnunk a spanyol viaszt.
+
+\subsection{Buildroot}
+
+ADD BUILDROOT
 
 \subsection{Next.js}
 
