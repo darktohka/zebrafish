@@ -5,24 +5,41 @@
 \begin{figure}[!h]
 	\centering
         \includegraphics[scale=0.3]{images/software/architecture.png}
-	\caption{A Project Raccoon architektúrája, felülnézetből}
+	\caption{A Zebrafish OS architektúrája, felülnézetből}
         \label{architecture}
 \end{figure}
 
-Célunk az volt, hogy olyan szoftverarchitektúrát hozzunk létre, amely könnyen érthető és nehezen komplikálható túl. A legtöbb projekt kudarcot vall, hiszen túl gyorsan túl bonyolulttá válik. A kód- és mappaszerkezetet is úgy választottuk, hogy egyértelmű és tömör legyen.
+A Zebrafish operációs rendszer egy valós igényből született. Célunk az, hogy a konténereket egy szervergépen futtassuk egy modern operációs rendszeren, amely nem igényli ok nélkül függőségek sokaságát. Egy olyan biztonságos alapot szerettünk volna létrehozni, amelyet konténeres munkafolyamatok, például alkalmazások és weboldalak futtatására lehet használni.
 
-A bővíthetőségre nagy hangsúlyt fektettünk. Az új funkciók beépítése a kódbázisba egyszerű folyamat az MVC alapelveit követve. A projekt keretrendszerét, könyvtárait és telepítési stratégiáit úgy választottuk, hogy támogassák a horizontális skálázhatóságot. Ez azt biztosítja, hogy a Project Raccoon működőképes maradjon, még akkor is, ha a bejövő forgalom megnövekszik - a Project Raccoon teljesen megfelel 
-a \textit{serverless} paradigmának.
+A legtöbb operációs rendszer, például a Debian és az Ubuntu nem alkalmas erre a célra, mert túlságosan általánosak, és emiatt felesleges függőségeket hordoznak magukkal. Nem elég biztonságosak, és nem úgy tervezték őket, hogy konténeres környezetet futtassanak. Esettanulmány: az operációs rendszer egyetlen frissítése megtörheti az egész rendszer biztonságát. Egy Debian frissítés inspirálta a Zebrafish-t, mivel az egyik éles szerverem tűzfalai egyetlen csomagfrissítés után leálltak. Ez egy éles szerver esetében elfogadhatatlan, biztonsági résekhez vezethet. Ezért hoztuk létre a Zebrafish-t.
 
-A Project Raccoon 5 nagyobb komponensből áll:
+A Zebrafish fő ötlete, hogy egy immutable alapot biztosítson, amely képes konténerek futtatására. A Zebrafish egyetlen artifactként kerül kibocsátásra, amely bármely modern \texttt{x86\_64} vagy \texttt{ARM64} gépen elindítható. Az artifact két komponenst tartalmaz:
+\begin{itemize}
+    \item \textbf{Kernel} - A Linux kernel, amelyet a Zebrafish a rendszerindításhoz használ.
+    \item \textbf{Gyökér fájlrendszer} - A Zebrafish gyökér fájlrendszere. Tartalmaz minden szükséges komponenst a Zebrafish OS futtatásához, beleértve a konténer futtattókörnyezetet, a rendszerdémonokat és a CLI eszközöket. Futás közben egy RAM-diskként él, biztosítva, hogy a rendszer mindig a memóriában cachelve legyen.
+\end{itemize}
+
+Minden frissítés során egy új artifact kerül kibocsátásra, amely tartalmazza a kernel és a root filesystem új verzióját. A Zebrafish frissítését egy manifest állomány segítségével végezzük, amely tartalmazza a kernel és a root filesystem hash értékét. A manifest állomány segítségével ellenőrizzük, hogy van-e szükség frissíŧésre, illetve hogy a letöltött frissítések helyesek-e. 
+
+A Zebrafish operációs rendszer a következő nagyobb komponensekből áll:
 
 \begin{enumerate}
-    \item \textbf{Web Frontend} - A felhasználói felület, amelyet a felhasználók látni fognak. Az API backend-el fog kommunikálni. A \textit{Project Raccoon} keretén belül a Next.js keretrendszert használjuk a web frontend megvalósítására, hiszen a React könyvtárra épül, reszponzív oldalak készítését engedi anélkül, hogy bármilyen szoftverarchitektúrai döntésekre kényszerítsen minket.
-    \item \textbf{API Backend} - Kezeli a frontendtől érkező kéréseket, feldolgozza azokat, majd megfelelő választ küld. Kommunikál az általunk választott tároló- és adatbázis-szolgáltatásokkal, illetve a Google Docs rendszerrel. Feladata, hogy biztonságosan lehetővé tegye a szolgáltatásaink működtetését. Futtatható egyaránt külön, erre a célra kitalált szerveren, vagy \textit{serverless} felhőben.
-    \item \textbf{Adatbázis} - Itt tároljuk a felhasználók adatait, valamint a platformon keresztül létrejött és aláírt szerződéseik részleteit. Használhatunk MySQL, PostgreSQL, MongoDB vagy Firestore adatbázisokat, hogy ezt a szolgáltatást működtessük.
-    \item \textbf{Fájltároló} - Itt tároljuk magukat a szerződéseket, miután véglegesítették őket. Ezeket a fájlokat később nem lehet törölni vagy módosítani. A felhasználók profilképeit is a fájltároló intézi. Használhatunk S3 kompatibilis felhő szolgáltatókat, mint például magát az Amazon S3-at, a Cloudflare R2-t vagy akár a Wasabi-t is. A Google szolgáltatásai közül a Google Cloud Storage is használható.
-    \item \textbf{Google Docs} - Itt tároljuk a szerződések sablonait. Az adminisztrátorok közvetlenül használják a Project Raccoon keretén belül a Google Docs rendszert, hogy a sablonokat szerkesszék. Projektünk mélyen összefonódik a Google Docs rendszerével, és a dokumentumsablonok szerkesztésének frontendjeként szolgál.
+        \item \textbf{Linux kernel} - A legújabb mainline kiadásra épül. Biztosítja a legújabb funkciók és frissítések elérhetőségét az optimális teljesítmény érdekében.
+        \item \textbf{Gyökér fájlrendszer} - Tartalmazza az összes alapvető komponenst, amelyek szükségesek a Zebrafish operációs rendszer működéséhez:
+        \begin{itemize}
+                \item \textbf{Containerd} - Konténerek futtatására használt, könnyű és hatékony konténer futtatókörnyezet.
+                \item \textbf{Zebrafish CLI (ocitool)} - Egy parancssori eszköz több-Compose-os projektek kezelésére.
+                \item \textbf{Dropbear} - Egy pehelysúlyú SSH szerver, amelyet módosítottunk, hogy biztonsági okokból csak modern titkosítókészleteket engedélyezzen, és kötelezővé tettük a privát-kulcs alapú hitelesítést a fokozott biztonság érdekében.
+                \item \textbf{Unbound} - DNS over HTTPS (DoH) rendszerdémon a biztonságos DNS domain-címek feloldása érdekében.
+                \item \textbf{NTPd} - Biztosítja, hogy a rendszer órája szinkronban legyen a hálózati idővel a pontosság érdekében.
+                \item \textbf{Crony} - Cron démon, amely időzített és ismétlődő feladatok kezelésére szolgál.
+                \item \textbf{Zrepl (ZFS replication)} - Automatikus replikációt biztosít és időszakos biztonsági mentéseket végez az adatok biztonsága érdekében.
+                \item \textbf{ACPId, udevd} - Hardver plug-and-play támogatást biztosít, lehetővé téve az eszközök zökkenőmentes kezelését.
+                \item \textbf{syslogd} - Rendszer naplózási démon, amely a Zebrafish rendszer naplóit rögzíti.
+        \end{itemize}
 \end{enumerate}
+
+Ezek közül a komponensek közül leginkább a konténerek futtatásához elengedhetetlen komponensekre fogunk koncentrálni, leginkább a \textit{containerd}-re és a Zebrafish CLI-ra (\texttt{ocitool}). A többi komponens elengedhetetlen a Zebrafish operációs rendszer futtatásához, de a jelenlegi téma szempontjából nagyrészt nem relevánsak. Érvelhetnénk azzal, hogy például az NTPd-t a rendszeróra szinkronizálására használjuk, ami ugyanaz az óra, amit minden konténer használ, de ez inkább pedáns lenne, mint hasznos.
 
 \pagebreak
 
@@ -30,46 +47,42 @@ A Project Raccoon 5 nagyobb komponensből áll:
 
 \dirtree{%
 .1 /.
-.2 {/.avdh}.
 .2 {/.github}.
-.2 {/.vscode}.
-.2 {assets}.
-.3 {...}.
-.2 {components}.
-.3 {providers}.
-.3 {...}.
-.2 {config}.
-.2 {content}.
-.3 {...}.
-.2 {controllers}.
-.3 {...}.
-.2 {db}.
-.3 {common}.
-.3 {migrations}.
-.3 {models}.
-.4 {...}.
-.2 {hooks}.
-.2 {layouts}.
-.2 {lib}.
-.3 {storageStrategies}.
-.2 {middleware}.
-.2 {pages}.
-.3 {api}.
-.4 {...}.
-.3 {...}.
-.2 {public}.
-.3 {...}.
-.2 {services}.
-.3 {apis}.
-.4 {...}.
-.2 {storage}.
-.3 {...}.
-.2 {styles}.
-.3 {components}.
-.3 {fonts}.
-.2 {tsconfig}.
-.2 {typings}.
-.2 {validators}.
+.3 {workflows}.
+.2 {/board}.
+.3 {pc}.
+.2 {/buildroot-packages}.
+.3 {cni-plugins}.
+.3 {containerd}.
+.3 {\ldots}.
+.2 {/buildroot-scripts}.
+.3 {build.sh}.
+.3 {prepare-artifacts.sh}.
+.3 {\ldots}.
+.2 {/configs}.
+.3 {zebrafish\_aarch64\_defconfig}.
+.3 {zebrafish\_x64\_defconfig}.
+.2 {/images}.
+.3 {zebrafish.svg}.
+.2 {/package}.
+.3 {dive}.
+.3 {knockrs}.
+.3 {\ldots}.
+.2 {/patches}.
+.3 {busybox}.
+.3 {kbd}.
+.2 {/rootfs-overlay}.
+.3 {etc}.
+.3 {lib}.
+.3 {\ldots}.
+.2 {.dockerignore}.
+.2 {.gitignore}.
+.2 {Config.in}.
+.2 {INSTALL.md}.
+.2 {README.md}.
+.2 {users.txt}.
+.2 {zebrafish-version.env}.
+.2 {\ldots}.
 }
 
 \pagebreak
@@ -79,65 +92,23 @@ A Project Raccoon 5 nagyobb komponensből áll:
   \hline
   \textbf{Mappa neve} & \textbf{Mappa tartalomjegyzéke} \\
   \hline
-  .avdh & Tartalmazza az AVDH azonosításhoz és a digitális aláírások technikai megvalósításához szükséges digitális kulcsokat, .P12 formátumban. \\
+  .github & Tartalmazza a GitHub Actions munkafolyamatokat, amelyek automatizálják a Zebrafish operációs rendszer buildelését, tesztelését és releaselését minden commit után. \\
   \hline
-  .github & Tartalmazza azokat a GitHub Actions munkafolyamatokat, amelyek ellenőrzik a kódbázis helyességét, és linting hibákat keresnek minden egyes commit felkerülése után. \\
+  board & Tartalmazza a PC (x86\_64) architektúrához tartozó BIOS-specifikus konfigurációkat. \\
   \hline
-  .vscode & Visual Studio Code-hoz tartozó segédleírásokat tartalmaz, melyek megkönnyítik a Tailwind CSS használatával írt komponensek fejlesztését. \\
+  buildroot-packages & Egyedi Buildroot csomagokat tartalmaz, amelyeket a Zebrafish operációs rendszer felülírt custom változtatások, frissítések révén. Példa erre a containerd csomag, amelyet frissítettünk, hogy támogassa a ZFS snapshotter plugint. \\
   \hline
-  assets & Tartalmazza a weboldal statikus elemeit - képeket, ikonokat és zászlókat többnyelvűsítésre. \\
+  buildroot-scripts & A Zebrafish operációs rendszer buildeléséhez, kitelepítéséhez szükséges shell scripteket tartalmazza. Példa erre a \texttt{build.sh} script, amely vezérli a Zebrafish rendszer teljes fordítási folyamatát, vagy például a \texttT{prepare-artifacts.sh} script, ami előkészíti a lebuildelt operációs rendszert a releasere  \\
   \hline
-  components & Tartalmazza az alkalmazásban használt felhasználói felületek újrafelhasználható React komponenseit. \\
+  configs & Tartalmazza a különböző architektúrákhoz (\texttt{ARM64}, \texttt{x86\_64}) tartozó Buildroot konfigurációs fájlokat, amelyek meghatározzák, hogy mely csomagok kerülnek be az operációs rendszerbe. \\
   \hline
-  components/providers & Tartalmazza azokat a React providereket, amelyek a felhasználó szolgáltatásáért felelősek a komponensek számára. \\
+  images & A projekthez tartozó grafikai elemeket tartalmazza: jelenleg a Zebrafish hivatalos logóját SVG formátumban. \\
   \hline
-  config & Tartalmazza a projekt konfigurációs fájljainak a specifikációját TypeScriptes interfészek formájában. \\
+  package & Egyedi, Zebrafish-specifikus szoftver csomagokat tartalmaz, amelyek nem részei a standard Buildroot csomaggyűjteménynek. Erre példa például a \texttt{dive}, amely egy CLI program - segítségével meg lehet tekinteni a konténerimage-ek tartalmát debuggolás céljából, vagy a \texttt{knockrs}, amely a Zebrafish operációs rendszernek készített saját port knocking implementáció. \\
   \hline
-  content & Tartalmazza a felhasználói kézikönyv \textit{Markdown}-ban írt tartalmait. \\
+  patches & Tartalmazza a meglévő upstream szoftverek módosításait (patch-eket), amelyek szükségesek a Zebrafish környezetben való megfelelő működés biztosításához. Jelenleg a \texttt{BusyBox} számára és a \textt{kbd} számára használunk patcheket, a \texttt{BusyBox} fordítási folyamatát javítja és a \texttt{kbd} csomagot optimalizálja. \\
   \hline
-  controllers & Tartalmazza azokat a vezérlőket (\textit{kontrollereket}), amelyek a business logikát implementálják az applikáción belül. \\
-  \hline
-  db &  Az adatbázissal kapcsolatos kódrészeket tartalmazza. \\
-  \hline
-  db/common & Olyan adatbázis modellek ősosztályait tartalmazza, amelyek több modellben szerepelnek. \\
-  \hline
-  db/migrations & Tartalmazza az adatbázismigrációs fájlokat, amelyekkel a sémaváltoztatásokat kezeljük a TypeORM rendszer segítségével. \\
-  \hline
-  db/models & Az adatbázismodelleket tartalmazza, amelyek adataink struktúráját reprezentálják a TypeORm keretrendszerében. \\
-  \hline
-  hooks & Több komponensben is használt React \textif{hook}-okat használ. A React hookok függőségbefecskendezést (\textit{dependency injection}-t) tesznek lehetővé. \\
-  \hline
-  layouts & Tartalmazza az alkalmazás különféle weblapjainak a \textit{wrapper} felrendezéseit. \\
-  \hline
-  lib & A projektben használt segédfüggvényeket tartalmazza. \\
-  \hline
-  lib/storageStrategies & Az adattárolási stratégiák implementációit tartalmazza: S3, Firebase, illetve lokális adattárolás. \\
-  \hline
-  middleware & Tartalmazza a kéréskezelésben használt middleware függvényeket. Az általunk használt middleware-ek a hitelesítés érvényesítéséért felelősek. \\
-  \hline
-  pages & Az alkalmazás egyes frontend oldalainak implementációját tartalmazza. \\
-  \hline
-  pages/api & Tartalmazza a szerveroldali logikát végző API végpontokat. Fontos megemlíteni, hogy itt nem valósul meg üzleti logika. Minden üzleti logika kontrollerekben valósul meg. \\
-  \hline
-  public & Tartalmazza azokat a szerver által kiszolgált nyilvános fájlokat, amelyek a felhasználói kézikönyv böngészése során elérhetőek. A konkrét weboldal statikus fájljai az assets mappában találhatóak.  \\
-  \hline
-  services & Tartalmazza a szerveroldal által használt szolgáltatások összeköttetéseinek implementációit. \\
-  \hline
-  services/apis & Tartalmazza a kliensoldal által használt API-ok meghívására használandó szolgáltatásokat. \\
-  \hline
-  storage & Abban az esetben, hogyha a weboldal magán a szerveren tárolja a fájlokat, itt találhatóak a másképp \textit{object storage}-ban tárolt állományok.\\
-  \hline
-  styles & Tartalmazza a globális stílusokat az alkalmazás megjelenítéséhez. \\
-  \hline
-  styles/components & Tartalmazza a komponensekhez tartozó stílusokat. \\
-  \hline
-  styles/fonts & Az alkalmazásban használt betűtípusokat tartalmazza. \\
-  \hline
-  tsconfig & A projekt TypeScript konfigurációs fájljait tartalmazza. \\
-  \hline
-  typings & Tartalmazza a projektben használt custom TypeScript típusdefiníciókat, olyan függőségek számára, amelyek nem támogatják a TypeScript típusait. \\
-  \hline
-  validators & Validátorokat tartalmaz az alkalmazásban használt különféle űrlapok ellenőrzésére. \\
+  rootfs-overlay & Tartalmazza a gyökér-fájlrendszer könyvtárstruktúráját. A végső root fájlrendszerbe bekerülnek ezek az állományok a Buildroot építési folyamat végén. \\
   \hline
 \end{longtable}
 
