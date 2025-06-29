@@ -18,7 +18,6 @@
 \usepackage{tabularx}
 \usepackage{lipsum}
 
-
 \pgfplotsset{width=7cm,compat=1.8}
 \usetikzlibrary{matrix,calc,shapes}
 
@@ -31,7 +30,6 @@
 	dummy/.style = {circle,draw}
 }
 
-
 \setcounter{secnumdepth}{0}
 \sectionfont{\large\upshape\bfseries}
 \setcounter{secnumdepth}{2}
@@ -40,37 +38,30 @@
 \widowpenalty=10000 \clubpenalty=10000 %A fattyú- és árvasorok elkerülése
 \def\hyph{-\penalty0\hskip0pt\relax} % Kötőjeles szavak elválasztásának engedélyezése
 
-
 %--------------------------------------------------------------------------------------
 % Setup hyperref package
 %--------------------------------------------------------------------------------------
 \usepackage{xcolor}
 \definecolor{bluecite}{HTML}{0875b7}
 \usepackage[unicode=true,
-bookmarksopen={true},
-pdffitwindow=true, 
-colorlinks=true, 
-linkcolor=bluecite, 
-citecolor=bluecite, 
-urlcolor=bluecite, 
-hyperfootnotes=false, 
-pdfstartview={FitH},
-pdfpagemode= UseNone]{hyperref}
-
+	bookmarksopen={true},
+	pdffitwindow=true, 
+	colorlinks=true, 
+	linkcolor=bluecite, 
+	citecolor=bluecite, 
+	urlcolor=bluecite, 
+	hyperfootnotes=false, 
+	pdfstartview={FitH},
+	pdfpagemode= UseNone]{hyperref}
 
 %--------------------------------------------------------------------------------------
 % Set up listings
 %--------------------------------------------------------------------------------------
 
-
-
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-
-
-
 
 \definecolor{lightgray}{rgb}{0.95,0.95,0.95}
 \definecolor{darkgreen}{RGB}{3,125,80}
@@ -86,13 +77,8 @@ pdfpagemode= UseNone]{hyperref}
 	keywordstyle=\color{blue},
 	commentstyle=\color{codegreen},
 	%stringstyle=\color{mauve},
-	breaklines=true,
-	breakatwhitespace=true,
-	tabsize=3,
-	backgroundcolor=\color{lightgray},
-}
-\def\lstlistingname{k\'odr\'eszlet}	
-
+	breaklines=true, breakatwhitespace=true, tabsize=3,
+	backgroundcolor=\color{lightgray}, } \def\lstlistingname{k\'odr\'eszlet}
 
 %--------------------------------------------------------------------------------------
 % Set up theorem-like environments
@@ -117,7 +103,6 @@ pdfpagemode= UseNone]{hyperref}
 
 \newtheorem{conclusion}{Következtetés}[section]
 
-
 %--------------------------------------------------------------------------------------
 % Some new commands and declarations
 %--------------------------------------------------------------------------------------
@@ -129,7 +114,6 @@ pdfpagemode= UseNone]{hyperref}
 \DeclareMathOperator{\sign}{sgn}
 \DeclareMathOperator{\rot}{rot}
 
-
 %--------------------------------------------------------------------------------------
 % Setup captions
 %--------------------------------------------------------------------------------------
@@ -140,7 +124,6 @@ pdfpagemode= UseNone]{hyperref}
 \renewcommand{\captionlabelfont}{\bf}
 %\renewcommand{\captionfont}{\footnotesize\it}
 
-
 %--------------------------------------------------------------------------------------
 % Redefine reference style
 %--------------------------------------------------------------------------------------
@@ -150,41 +133,45 @@ pdfpagemode= UseNone]{hyperref}
 \newcommand{\sectref}[1]{\ref{sect:#1}}
 \newcommand{\tabref}[1]{\ref{tab:#1}.}
 
-
 % -----
 % Table
 % -----
 \newenvironment{requirementstable}
 {\begin{longtable}{|p{0.25\textwidth}|p{0.70\textwidth}|}}
-{\hline\end{longtable}}
+		{\hline\end{longtable}}
 
 \newcommand{\requirementtitle}[1]{
-    \hline
-    \multirow{2}{*}[-0.25cm]{\textbf{#1}}
+	\hline
+	\multirow{2}{*}[-0.25cm]{\textbf{#1}}
+}
+
+\newcommand{\requirementtitlewordwrap}[1]{
+	\hline
+	\multirow{2}{*}[-0.25cm]{\parbox{4cm}{\centering\textbf{#1}}}
 }
 
 \newcommand{\requirementslist}[1]{
-    \setlist[enumerate]{leftmargin=0.8cm, rightmargin=0.5cm, topsep=0cm, parsep=0cm}
-    \begin{enumerate}
-        #1
-    \end{enumerate}
+	\setlist[enumerate]{leftmargin=0.8cm, rightmargin=0.5cm, topsep=0cm, parsep=0cm}
+	\begin{enumerate}
+		#1
+	\end{enumerate}
 }
 
 \lstdefinelanguage{TS}{
-  keywords={break, case, catch, continue, debugger, default, delete, do, else, finally, for, function, if, in, instanceof, new, return, switch, this, throw, try, typeof, var, void, while, with},
-  morecomment=[l]{//},
-  morecomment=[s]{/*}{*/},
-  morestring=[b]',
-  morestring=[b]",
-  sensitive=true
+	keywords={break, case, catch, continue, debugger, default, delete, do, else, finally, for, function, if, in, instanceof, new, return, switch, this, throw, try, typeof, var, void, while, with},
+	morecomment=[l]{//},
+	morecomment=[s]{/*}{*/},
+	morestring=[b]',
+	morestring=[b]",
+	sensitive=true
 }
 
 \newcommand{\hiddensubsection}[1]{
-    \subsection*{#1}
-    \stepcounter{subsection}
+	\subsection*{#1}
+	\stepcounter{subsection}
 }
 
 \newcommand{\hiddennumberedsubsection}[1]{
-    \subsection{#1}
-    \stepcounter{subsection}
+	\subsection{#1}
+	\stepcounter{subsection}
 }

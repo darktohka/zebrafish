@@ -1,154 +1,149 @@
+%----------------------------------------------------------------------------
 \chapter{A rendszer specifikációja} \label{chapter2}
+%----------------------------------------------------------------------------
 
 \section{Felhasználói követelmények}
 
-A felhasználói követelmények leírják azokat a funkciókat, amelyeket a felhasználók elvárnak egy adott szolgáltatástól. Ezek a követelmények felvázolják a felhasználók igényeit és céljait, és alapul szolgálnak a későbbi szoftver megtervezéséhez és fejlesztéséhez. A rendszerünk felhasználói követelményeit négy részre bontom a továbbiakban:
+A felhasználói követelmények részletezik a felhasználói elvárásokat a Zebrafish rendszerrel szemben. Ez a fejezet határozza meg azokat a követelményeket, amelyeknek a rendszernek meg kell felelnie a célközönség igényeinek kielégítése érdekében.
+
+A Zebrafish platform négy fő felhasználói csoportra összpontosít, mindegyiknek különböző igényeivel és munkafolyamataival:
 
 \begin{enumerate}
-  \item Felhasználói követelmények vendég felhasználók számára,
-  \item Felhasználói követelmények hitelesített felhasználók számára,
-  \item Felhasználói követelmények ügyvéd felhasználok számára.
-  \item Felhasználói követelmények adminisztrátor felhasználok számára.
+  \item \textbf{Rendszergazdák} - akik az összes összetett, több Compose-projektből álló egységeket kezelhetik
+  \item \textbf{Projektmenedzserek} - akik a Zebrafish platformon saját alkalmazásokat kezelnek
+  \item \textbf{Fejlesztők} - akik több Compose-projektből álló alkalmazásokat fejlesztenek
+  \item \textbf{Szervízfelhasználók} - akik automatizált módon hozzáférhetnek a Zebrafish platformhoz CI/CD rendszerekből
 \end{enumerate}
 
-\subsection{Vendég felhasználók}
+\subsection{Rendszergazdák}
 
-A vendég felhasználók olyan személyek, akik még nem hoztak létre fiókot vagy nem jelentkeztek be a rendszerbe.
-
-\pagebreak
+A rendszergazdák felelősek a Zebrafish operációs rendszer telepítéséért, karbantartásáért és felügyeletéért. Elvárásaik a stabilitásra, hatékonyságra és egyszerű kezelhetőségre összpontosítanak.
 
 \begin{requirementstable}
-  \caption{Felhasználói követelmények vendég felhasználók számára} \\
-
-  \requirementtitle{Hitelesítés} &
+  \caption{Felhasználói követelmények rendszergazdák számára} \\
+  
+  \requirementtitlewordwrap{Rendszertelepítés,\\image-kezelés} &
   \requirementslist{
-    \item A vendég felhasználóknak lehetőségük van egy fiók létrehozására, további funkciók eléréséhez.
-    \item Ebben az esetben a regisztrációs folyamatnak intuitívnak és egyszerűnek kell lennie, végigvezetve a felhasználókat a szükséges lépéseken.
-    \item A felhasználók minél kevesebb adat megadásával már szeretnének regisztrálni.
-    \item Ideális esetben captcha kitöltése nélkül szeretnének regisztrálni.
-    \item Abban az esetben, hogyha már van fiókjuk, regisztrálás helyett meg kell legyen adva a lehetőség, hogy a már meglévő fiókjába lépjen be a felhasználó.
+    \item A rendszergazdáknak képesnek kell lenniük az egész rendszer összes konténer image-ének egyetlen paranccsal történő letöltésére, frissítésére
+    \item A Compose-projektek első telepítése során az image-ek letöltésének gyorsnak kell lennie, kihasználva a párhuzamos letöltési lehetőséget
+    \item A rendszer nem pazarolhatja a lemezterületet; a megosztott image-rétegeket csak egyszer szabad tárolni
+    \item Az image-ek automatikus frissítésének támogatottnak kell lennie a teljes rendszerre vonatkozóan
   } \\
 
-  \requirementtitle{Kapcsolatfelvétel} &
+  \requirementtitlewordwrap{Rendszerfrissítés és karbantartás} &
   \requirementslist{
-    \item A felhasználók bármelyik időpillanatban használatba vehetnek egy kapcsolatfelvételi űrlapot, amellyel felvehetik a kapcsolatot a weboldal készítőivel.
-    \item A felhasználók a weboldal készítőinek szeretnének egy e-mail címet is hagyni, hogy a weboldal készítői tudják felvenni a kapcsolatot a felhasználóval.
-    \item A kapcsolatfelvételi űrlap elegendő helyet kell szolgáltasson ahhoz, hogy a felhasználók tudják elejétől végéig leírni a problémáikat, észrevételeiket vagy kéréseiket.
+    \item A teljes rendszer frissítésének gyorsnak és atomi műveletnek kell lennie
+    \item A frissítési folyamatnak egyszerűnek és könnyen kezelhetőnek kell lennie
+    \item A rendszernek stabilnak kell maradnia egy frissítést követően
+    \item Frissítés során nem szabad elvesztődnie a konfigurációs fájloknak
+    \item Frissíŧés után a rendszer különleges beavatkozás nélkül kell működjön
   } \\
 
-  \requirementtitle{Kézikönyv} &
+  \requirementtitlewordwrap{Rendszerfelügyelet és monitorozás} &
   \requirementslist{
-    \item A felhasználók bármelyik időpillanatban segítséget szeretnének kérni a weboldal felhasználásával kapcsolatban.
-    \item Mivel nem minden felhasználó szeretne emberi kommunikációval előre haladni a weboldal használátában, ezért meg kell adni a lehetőséget, hogy egy felhasználói kézikönyvet lapozgassanak.
-    \item A felhasználói kézikönyv leírásokat kell tartalmazzon a regisztrációról, a tulajdonok menedzsmentjéről és a szerződéskötés folyamatáról is.
+    \item A rendszergazdáknak egyetlen paranccsal átfogó képet kell kapniuk a rendszer állapotáról
+    \item Az állapotellenőrzésnek tartalmaznia kell, hogy mely konténerek futnak és melyek állnak
+    \item A platformnak terminál alapú felhasználói felületet (TUI) kell biztosítania a rendszer vizuális áttekintéséhez
+  } \\
+
+  \requirementtitlewordwrap{Projekt- és konténerkezelés} &
+  \requirementslist{
+    \item A rendszergazdáknak képesnek kell lenniük egy teljes Compose-projekt leállítására egyetlen paranccsal
+    \item Lehetőséget kell biztosítani az összes futó konténer azonnali újraindítására
+    \item A független projektek nem indulhatnak újra feleslegesen, amikor egy másik, nem kapcsolódó projekt függőségei frissülnek
+    \item A projektek közötti függőségeket a rendszernek automatikusan fel kell ismernie és kezelnie
+    \item A rendszergazdáknak képesnek kell lenniük az alkalmazások naplóinak megtekintésére és kezelésére
+    \item A rendszergazdák az összes projektet láthatják és módosíthatják a fájlrendszerből
+  } \\
+
+  \requirementtitlewordwrap{Hálózatkezelés} &
+  \requirementslist{
+    \item A hálózatokat a rendszernek proaktívan kell létrehoznia
+    \item A hálózatok konfigurációját meg kell tudja adni a Compose-fájlokban
+    \item A rendszergazdának nem kell manuálisan beavatkoznia a hálózatok létrehozásába
+  } \\
+
+  \requirementtitlewordwrap{Adatbiztonság és helyreállítás} &
+  \requirementslist{
+    \item A szerver adatainak automatikusan szinkronizálására lehetőséget kell adni
+    \item Az adatok integritását biztosítani kell
+    \item Katasztrófa esetén gyors helyreállítási mechanizmusnak kell rendelkezésre állnia
   }
 \end{requirementstable}
 
-\subsection{Hitelesített felhasználók}
+\subsection{Projektmenedzserek}
 
-A hitelesített felhasználók olyan személyek, akik munkamenetéhez egy fiók van csatolva. Ez azt jelenti, hogy vagy beléptek egy meglévő fiókba, vagy regisztráltak egy új fiókot. A hitelesített felhasználók lehetnek rendes felhasználók, vagy akár adminisztrátor felhasználók is. A következő felhasználói követelmények az összes hitelesített felhasználóra érvényesek.
-
-\pagebreak
+A projektmenedzserek a Zebrafish platformot saját alkalmazásaik kezelésére használják. Fő feladatuk a projektek létrehozása, konfigurálása és karbantartása. Fontos megemlíteni, hogy a projektmenedzserek nem látnak rá más felhasználók Compose-projektjeire, a rendszernek biztosítania kell a projektek közti izolációt.
 
 \begin{requirementstable}
-  \caption{Felhasználói követelmények hitelesített felhasználók számára} \\
+  \caption{Felhasználói követelmények projektmenedzserek számára} \\
 
-  \requirementtitle{Szerződéskötés} &
+  \requirementtitlewordwrap{Projektek karbantartás} &
   \requirementslist{
-    \item A hitelesített felhasználók bármelyik pillanatban létrehozhatnak egy új szerződést.
-    \item Az új szerződés kötése során egy másik felhasználóval egy közös szerződést lehet létrehozni, egy meglévő szerződés sablon alapján.
-    \item Új szerződés kötés esetén a felhasználók kiválaszthatnak egy olyan tulajdoncikket, amit el szeretnének adni a vevő félnek.
-    \item A felhasználók a második fél e-mail címének ismeretében tudnak szerződést létrehozni.
-    \item A felhasználók nem csupán szerződéseket tudnak létrehozni, hanem a meglévő szerződéseiket meg is tekinthetik.
-    \item A szerződéskötés befejezése előtt a felhasználók feltölthetnek mellékleteket, amelyek a szerződésre érvényesek.
-    \item A szerződések megtekintése során a felhasználók kereshetnek a szerződéseik között. A keresés intuitív kell legyen.
+    \item Szükséges, hogy saját projektjeiket láthatni tudják a fájlrendszerből
+    \item Képesnek kell lenniük új Compose-projektek létrehozására a fájlrendszerből
+    \item Terminálhozzáférést kell biztosítani a projektmenedzserek számára, hogy kezelhessék projektjeiket
+    \item Elvárják, hogy a projektek egymással tudjanak kommunikálni a megosztott hálózatokon keresztül
+    \item A projektmenedzsereknek nem láthatják más felhasználók projektjeit, csak a sajátjukat
   } \\
 
-  \requirementtitle{Digitális aláírások} &
+  \requirementtitlewordwrap{Erőforrásokhoz való hozzáférés} &
   \requirementslist{
-    \item A szerződés digitális aláírása előtt a felhasználók meghívhatnak a szerződéshez tanúkat (bármilyen hitelesített felhasználót) vagy ügyvédeket (különleges felhasználókat), az e-mail címük ismeretében.
-    \item A szerződés megkötése előtt a tanúk és az ügyvédek egyaránt át kell nézzék a szerződést, és digitálisan alá kell írják azt.
-    \item Az adó és a vevő is digitálisan alá kell írja a szerződést.
-    \item Abban az esetben, hogyha a felhasználók nem szeretnék kézírással aláírni digitálisan a szerződést, kiválaszthatják, hogy csupán a nevükkel írják alá azt.
-  } \\
-
-  \requirementtitle{Szerződésletöltés} &
-  \requirementslist{
-    \item A szerződések kitöltése és digitális aláírása után a felhasználók letölthetik a végleges szerződést.
-    \item A letöltött szerződések tartalmazzák az összes mellékletet, amely a szerződésre, illetve az esetlegesen eladott tulajdoncikkre érvényesek.
-    \item A letöltött szerződések tartalmaznak egy AVDH (\textit{Azonosításra Visszavezetett Dokumentumhitelesítés}) igazolást, amely igazolja a felek mivoltát. \cite{avdh}
-    \item A végleges szerződés minden fél által alá kell legyen írva.
-    \item A szerződések végtelen ideig letölthetőek kell legyenek, a letöltési idő lejárata nem életképes megközelítés.
-    \item A végleges szerződés továbbküldhető e-mailben is egy gombnyomásra.
-  } \\
-
-  \requirementtitle{Tulajdoncikkek} &
-  \requirementslist{
-    \item A felhasználók létrehozhatnak saját tulajdoncikkeket egy meglévő tulajdon sablon alapján.
-    \item A tulajdonsablonok megjelennek a tulajdoncikkek létrehozása előtt.
-    \item Egy tulajdoncikk létrehozása után a felhasználók ki kell töltsék a tulajdoncikkhez tartozó tulajdonságokat.
-    \item A tulajdoncikk tulajdonságai bekerülnek a szerződések tulajdonságai közé.
-    \item Egy szerződés keretén belül lehet hivatkozni az eladott tulajdoncikk tulajdonságaira.
-    \item A tulajdoncikk létrehozása közben, illetve létrehozása után is feltölthetőek olyan mellékletek, amelyek a tulajdoncikkre érvényesek.
-    \item A felhasználók bármikor megnézhetik, hogy milyen tulajdoncikkeik vannak egy adott tulajdonsablonon belül.
+    \item A projektmenedzserek saját projektjeiket hozzá kell tudják más projektmenedzserek hálózataihoz kapcsolni
+    \item A hálózati névfeloldásnak működnie kell a projekt határain belül
+    \item A projektmenedzsereknek képesnek kell lenniük a saját hálózataik konfigurálására
+    \item A volumok egymás között nem szabad megoszthatóak legyenek, csak a saját projektjeikhez férhetnek hozzá
   }
 \end{requirementstable}
 
-\subsection{Ügyvéd felhasználók}
+\subsection{Fejlesztők}
 
-Az ügyvéd felhasználók azok a felhasználók, akiknek az oldal adminisztrátorai igazolták személyazonosságukat igazolt ügyvédként. Az ügyvéd felhasználók feladata, hogy átnézzék klienseik szerződéseit, és ellenőrizzék, hogy helyesen kitöltötték az adataikat.
+A fejlesztők a Zebrafish platformot alkalmazásaik fejlesztésére, tesztelésére és futtatására használják. Számukra a legfontosabb a megszokott munkafolyamatok támogatása és a konténerek közötti zökkenőmentes kommunikáció.
 
 \begin{requirementstable}
-  \caption{Felhasználói követelmények ügyvéd felhasználók számára} \\
+  \caption{Felhasználói követelmények fejlesztők számára} \\
 
-  \requirementtitle{Szerződéskötés} &
+  \requirementtitlewordwrap{Compose-kompatibilitás} &
   \requirementslist{
-    \item Az ügyvédeket bármilyen felhasználó hozzáadhatja a szerződéséhez, amennyiben ismeri az e-mail címét.
-    \item Az ügyvédek csak akkor kerülnek rá egy szerződésre, amennyiben elfogadják a szerződést, amely megjelenik a fiókukban.
-    \item Az ügyvédek rálátást kapnak az egész szerződésre, és látják a tulajdoncikkek tulajdonságait is.
-    \item A szerződéskötés befejezése előtt a felhasználók feltölthetnek mellékleteket, amelyek a szerződésre érvényesek.
-    \item A szerződések megtekintése során az ügyvéd felhasználók kereshetnek a szerződéseik között. A keresés minél intuitívabb kell legyen.
+    \item A Compose-projektek felépítésének és konfigurációjának menete nem szabad eltérjen a megszokott Compose munkafolyamatoktól
+    \item A fejlesztőknek nem kell új szintaxist vagy struktúrát tanulniuk a meglévő Compose fájljaik használatához
+    \item Az összes standard Compose direktívának támogatottnak kell lennie (pl. services, networks, volumes)
   } \\
 
-  \requirementtitle{Digitális aláírások} &
+  \requirementtitlewordwrap{Multi-Compose projekt támogatás} &
   \requirementslist{
-    \item Az ügyvédek ugyanúgy alá tudják írni digitálisan a szerződéseket, és a szerződésre rá kerül az aláírásuk, illetve az AVDH igazolásuk is.
-    \item Az ügyvédek aláírása nélkül nem kerülhet végleges szerződés kinyomtatásra.
-  }
+    \item A különböző Compose-projektekben futó konténereknek képesnek kell lenniük egymással kommunikálni
+    \item A projektek közötti hálózati kommunikáció felépítésének zökkenőmentesnek kell lennie
+    \item A szolgáltatások közötti névfeloldásnak működnie kell projekt határokon keresztül is
+    \item A megosztott erőforrások (volumes, networks) nem kell projekteken keresztül használhatóak legyenek
+  } \\
+
+  \requirementtitlewordwrap{CLI integráció} &
+  \requirementslist{
+    \item A Zebrafish CLI-val készített konténerek kezelhetőek kell legyenek a containerd és nerdctl parancsokkal
+    \item A CLI parancsok megszokott Docker Compose parancsokhoz hasonlóan működjenek
+    }
 \end{requirementstable}
 
-\subsection{Rendszergazda felhasználók}
+\subsection{Szervízfelhasználók}
 
-A rendszergazda (másnéven \textit{adminisztrátor}) felhasználók felelősek az oldalon található dokumentumsablonok, illetve tulajdoncikksablonok létrehozásáért. Rendszergazda felhasználót csak egy más rendszergazda felhasználó tud létrehozni. Másodlagos feladatuk, hogy az ügyvéd felhasználókat ellenőrizzék, hogy mivoltuk a valóságnak megfelel.
+A szervízfelhasználók automatizált rendszerekből, például CI/CD pipeline-okból férnek hozzá a Zebrafish rendszerhez. Számukra a legfontosabb, hogy a rendszer könnyen automatizálható legyen.
 
 \begin{requirementstable}
-  \caption{Felhasználói követelmények rendszergazda felhasználók számára} \\
+  \caption{Felhasználói követelmények szervízfelhasználók számára} \\
 
-  \requirementtitle{Adminisztráció} &
+  \requirementtitlewordwrap{Automatizált hozzáférés} &
   \requirementslist{
-    \item A rendszergazda felhasználók bármikor el kell tudják érni a rendszergazdai munkához szükséges munkálatokat a felhasználói felületről.
-    \item A rendszergazda felhasználók munkálatai a rendes munkálatok mellett kell megjelenjenek.
-    \item Hasonlóan a rendes munkálatokhoz, az adminisztrációs tevékenységek is többnyelvűsítésre szorulnak.
+    \item A szervízfelhasználóknak képesnek kell lenniük a Zebrafish rendszerhez parancssori eszközökön keresztül hozzáférni
+    \item A rendszerre csatlakozni kell lehessen a CI/CD rendszerekből, például GitHub Actions-on keresztül
+    \item Az automatikus hozzáférés képes kell legyen terminál alapú parancsokat futtatni
+    \item A különböző compose parancsok nem szabad manuális beavatkozást igényeljenek
   } \\
 
-  \requirementtitle{Kézikönyv} &
+  \requirementtitlewordwrap{Biztonságos hozzáférés} &
   \requirementslist{
-    \item A rendszergazda felhasználók bármikor meg kell tudják tekinteni az adminisztrátorok számára készített kézikönyvet.
-    \item Hasonlóan a rendes felhasználóknak készített kézikönyvhöz, az adminisztrátorok kézikönyve is használati utasításokat kell tartalmazzon.
-    \item A használati utasítások ki kell terjedjenek a szerződéssablonok, illetve a tulajdoncikksablonok készítésére.
-    \item A kézikönyv elérhető kell legyen ugyanúgy a honlapról, mint az adminisztrációs panelből is.
-  } \\
-
-  \requirementtitle{Szerződéssablonok} &
-  \requirementslist{
-    \item A rendszergazda felhasználók képesek kell legyenek önállóan szerződéssablonokat létrehozni.
-    \item A szerződéssablonokat létre tudják hozni az adminisztrátorok hozzátarsított tulajdoncikktípussal is, avagy anélkül is.
-    \item A szerződéssablonok könnyen szerkeszthetőek kell legyenek, egy online szerkesztési felület segítségével.
-    \item A szerződéssablonok létrehozhatóak csupán egy név és egy leírás megadásával is, nincs értelme, hogy meglevő sablon feltöltése is kötelező legyen.
-    \item Ha mégis van meglevő sablon a szerződésről, a rendszergazda felhasználónak meg kell adni a lehetőséget, hogy feltöltsön egy ilyen sablont.
-    \item A sablon dokumentumok a feltöltés után is módosíthatóak kell legyenek.
-    \item A sablonhoz tartozó \textit{placeholder} opciók könnyen átláthatóak kell legyenek.
-    \item A sablonhoz tartozó \textit{placeholder} opciók konfigurálhatónak kell lennie összetett adatok, például azonosítószámok és telefonszámok kezelésére.
+    \item A hozzáférés biztonságos kell legyen: nem szabad illetéktelen felhasználók számára elérhetővé tenni
+    \item A szervízfelhasználók csak a saját projektjeikhez férnek hozzá
   }
 \end{requirementstable}
 
@@ -156,187 +151,142 @@ A rendszergazda (másnéven \textit{adminisztrátor}) felhasználók felelősek 
 
 \subsection{Funkcionális követelmények}
 
-Az alkalmazásnak rendelkeznie kell egy főoldallal, amely rövid áttekintést és magyarázatot nyújt a felhasználóknak az oldal funkcióiról. Marketing szempontjából a főoldalnak olyan nyelvezetet és vizuális elemeket is használnia kell, amelyek meggyőzik a felhasználót a weboldal használatáról.
-
-A hitelesítési oldalaknak, illetve a dokumentációnak is könnyen elérhetőnek kell lenniük a főoldal menüjén keresztül. Miután a felhasználó sikeresen hitelesíti magát, át kell irányítani az alkalmazás szerződéskötési részének kezdőlapjára. A kezdőlapon az ingatlanok létrehozása és kezelése, illetve szerződések létrehozása és menedzsmentje, valamint a személyes adatok kitöltésének lehetősége jelenjen meg.
-
-A szerződéskötés kezdőlapjának fontos eleme az oldalsáv, amely a menüt tartalmazza. A menü a \textit{Project Raccoon} összes fontosabb funkcionális részéhez rálátást nyújt, maximum három klikkelésen keresztül. Mobileszközökön a menü kezdetben el van rejtve, hogy elegendő helyet biztosítson a tartalomnak. A menü helyett egy hamburger menü gomb jelenjen meg, hogy szükség esetén a felhasználó tudja átkapcsolni a menüt.
-
-\subsubsection{Vendég felhasználók}
+Az alkalmazásnak olyan felülettel kell rendelkeznie, amely lehetővé teszi a felhasználók számára a projektek, konténerek és image-ek kezelését. A Zebrafish választott felülete egy parancssori felület (CLI - command line interface), amely parancsok sorát biztosítja a Docker Compose projektek, image-ek és konténerek kezeléséhez. A CLI-nak lehetővé kell tennie a felhasználók számára olyan általános feladatok elvégzését, mint a projektek indítása, leállítása és naplóinak megtekintése.
 
 \begin{requirementstable}
-  \caption{Funkcionális követelmények vendég felhasználók számára} \\
+  \caption{Funkcionális követelmények - Rendszerkezelés} \\
 
-  \requirementtitle{Hitelesítés} &
+  \requirementtitlewordwrap{Rendszer-\\kompatibilitás} &
   \requirementslist{
-    \item A vendég felhasználók számára a fiókok adatait, felhasználónevet, e-mail címet és egyéb adatokat relációs adatbázisban kell tárolni.
-    \item A felhasználó profilképét egy \textit{object storage} rendszerben kell tárolni, semmiképp sem egy relációs adatbázisban.
-    \item Ha egy felhasználó nagyon gyenge jelszóval próbál felregisztrálni az oldalra, a weboldalnak figyelmeztetnie kell a felhasználót és nem szabad engednie a regisztrációt.
-    \item A rendszer nem engedhet két felhasználó regisztrációjat ugyanazzal az e-mail címmel.
-    \item A regisztrációs folyamat után, hogyha a felhasználói adatai nincsenek kitöltve, egy \textit{onboarding} folyamat révén meg kell kérni a felhasználókat, hogy töltsék ki hiányzó adataikat, mielőtt a rendszer többi részéhez férhetnek.
-    \item Vizuális captcha rendszer helyett láthatatlan captcha használata szükséges regisztrációkor.
-    \item A felhasználók jelszavát a rendszer soha nem mentheti le egyszerű szövegként. Használjunk erős jelszó hashelő algoritmust.
+    \item A Zebrafish rendszer kompatibilis kell legyen a \texttt{x86_64} és \texttt{ARM64} architektúrákkal
+    \item A Zebrafish kell támogassa a BIOS és UEFI indítást is
+    \item A rendszer futtatható kell legyen a legelterjedtebb virtualizációs platformokon (KVM és VMware)
+  }
+
+  \requirementtitlewordwrap{Parancssori interfész (CLI)} &
+  \requirementslist{
+    \item A CLI-nek SSH-interfészen keresztül kell elérhetőnek lennie.
+    \item Letölthető kell legyen az összes definiált Compose-projekt összes image párhuzamosan egy CLI parancs lefuttatásával 
+    \item Megjeleníthető kell a rendszer általános állapota, beleértve a futó és leállított konténereket
+    \item Frissíthető kell legyen a rendszer magja egyetlen parancs segítségével
+    \item A rendszer különböző komponensei (pl. Crony, containerd) menedzselhetőek kell legyenek a CLI-on keresztül
+    \item Az SSH-interfésznek támogatnia kell a Zebrafish operációs rendszerben elérhető összes többi parancsot is.
+  } \\
+ 
+  \requirementtitlewordwrap{Compose projektkezelés} &
+  \requirementslist{
+    \item A Compose-fájloknak kompatibilisnek kell lenniük a Compose V2 formátumával
+    \item A hagyományos Compose-projektekhez hasonlóan a multi-Compose projekteket is konténerek létrehozásával és karbantartásával kell megvalósítani
+    \item A Zebrafish által létrehozott konténereket a szabványos containerd és nerdctl parancsokkal is lehet kezelni.
+    \item A parancsoknak támogatniuk kell a \texttt{-f} flag-et alternatív compose fájlok megadásához
   } \\
 
-  \requirementtitle{Kapcsolatfelvétel} &
+  \requirementtitlewordwrap{Image és tárolókezelés} &
   \requirementslist{
-    \item A felhasználók kapcsolatfelvételi űrlapja a beküldött üzeneteket egy előre meghatározott e-mail fiókba kell továbbítsa.
-    \item A felhasználók által hagyott e-mail cím és tárgy bekerül a kapcsolatfelvételi űrlap üzenete mellé abban az e-mailben, amit a rendszer generál a kapcsolatfelvételi űrlap elküldésekor.
-    \item A kapcsolatfelvételi űrlap elküldésekor egy e-mail generálódik, ami tartalmazza a felhasználó nevét, e-mail címét, a kapcsolatfelvétel tárgyát és a kapcsolatfelvétel üzenetét.
-    \item A kapcsolatfelvételi űrlap legalább 15000 karaktert kell támogasson.
-  } \\
-
-  \requirementtitle{Kézikönyv} &
-  \requirementslist{
-    \item A weboldal fejléce kell tartalmazzon egy hivatkozást a felhasználói kézikönyvre.
-    \item A felhasználói kézikönyv egy külön weboldal, amely Markdown formátumban szerkeszthető a fejlesztők által.
+    \item Az image-kezelésnek kompatibilisnek kell lennie az OCI formátummal
+    \item A rendszernek képesnek kell lennie a containerd image-ek kezelésére
+    \item A rendszernek támogatnia kell a párhuzamos image letöltést a Tokio aszinkron futtatókörnyezet használatával
   }
 \end{requirementstable}
 
-\pagebreak
-
-\subsubsection{Hitelesített felhasználók}
-
 \begin{requirementstable}
-  \caption{Funkcionális követelmények hitelesített felhasználók számára} \\
+  \caption{Funkcionális követelmények - Hálózat és biztonság} \\
 
-  \requirementtitle{Szerződéskötés} &
+  \requirementtitlewordwrap{Hálózatkezelés} &
   \requirementslist{
-    \item A szerződéskötéseket le kell menteni egy relációs adatbázisba.
-    \item A szerződéskötések tartalmaznak hivatkozásokat az adóra, a vevőre, illetve a tulajdoncikkre, ha létezik.
-    \item A végső, kigenerált és digitálisan aláírt szerződéseket a rendszer végtelen ideig tárolja.
-    \item A végső szerződések digitálisan alá kell legyenek írva, 
-    \item A szerződések kilistázása során az összes szerződést meg kell jeleníteni a felhasználónak.
-    \item A szerződéskötés folyamán feltöltött mellékleteket a rendszernek tárolnia kell.
-    \item A feltöltött mellékletek biztonságos módon kell elérhetőek legyenek. Azok a felhasználók, akiknek nincs rálátásuk a szerződésre, a mellékleteket sem tudják letölteni. 
-    \item A szerződések keresése a kliensoldalon történik.
+    \item A rendszernek automatikusan létre kell hoznia a Compose-fájlokban definiált hálózatokat
+    \item A CNI pluginokat (bridge, host-local, firewall, portmap, tuning) támogatni kell
+    \item A multi-project hálózati kommunikációt külön hálózati névterekkel kell kezelni
+    \item A szolgáltatások közötti névfeloldást DNS-sel kell biztosítani
   } \\
 
-  \requirementtitle{Digitális aláírások} &
+  \requirementtitlewordwrap{Biztonság} &
   \requirementslist{
-    \item A szerződések során létrejött digitális aláírásokat a rendszer lementi egy \textit{object storage}-ba.
-    \item A szerződés megkötése előtt a rendszer ellenőrzi, hogyha az adó, a vevő, az ügyvédek illetve a tanúk is mind aláírták a szerződést.
-    \item Abban az esetben, hogyha a felhasználók nem szeretnék kézírással aláírni digitálisan a szerződést, a rendszer lementi az adatbázisba, hogy nincsen kézzel írt digitális aláírás, és az aláírást a felhasználó nevével helyettesíti a rendszer.
+    \item A rendszer magjának megváltoztathatatlannak kell lennie (immutable)
+    \item SSH hozzáférés csak nyilvános kulcsos hitelesítéssel engedélyezett
+    \item Port knocking mechanizmust kell implementálni az SSH védelmére
+    \item DNS over HTTPS (DoH) kötelező az összes DNS lekérdezéshez
+    \item HTTP/3 alapértelmezett protokoll a külső kommunikációhoz
   } \\
 
-  \requirementtitle{Szerződésletöltés} &
+  \requirementtitlewordwrap{Adatkezelés} &
   \requirementslist{
-    \item A szerződések kitöltésének előfeltétele a szerződés kigenerálása.
-    \item A rendszer a letöltött szerződésekbe beleékeli a szerződés összes mellékletét, illetve a tulajdon mellékleteit is, ha ez létezik.
-    \item A letöltött szerződése tartalmaz egy AVDH (\textit{Azonosításra Visszavezetett
-Dokumentumhitelesítés}) igazolást, amely igazolja a felek mivoltát. Ez az igazolás egy PDF dokumentum, amely a végső szerződésben megjelenik, mint \textit{attachment}.
-    \item A végleges szerződés, melyet e-mailben továbbküldtek, nem módosulhat a továbbküldés után.
-  } \\
-
-  \requirementtitle{Tulajdoncikkek} &
-  \requirementslist{
-    \item A felhasználókhoz tartozó tulajdoncikkeket egy relácios adatbázisba menti a rendszer.
-    \item Egy tulajdoncikk felhasználása előtt a rendszer ellenőrzi, hogyha a felhasználók kitöltötték a tulajdoncikkhez tartozó tulajdonságokat.
-    \item A szerződések tulajdonságainak kilistázása során a rendszer lekéri a szerződéshez tartozó tulajdoncikk tulajdonságait is.
-    \item Ha egy szerződés keretén belül egy tulajdoncikkre hivatkozunk, a rendszer először megbizonyosodik arról, hogy a tulajdoncikk nem része egy másik, folyamatban lévő szerződésnek.
-    \item A tulajdoncikkekhez feltöltött mellékleteket a rendszer \textit{object storage}-ba menti.
-    \item A felhasználók csupán a saját tulajdoncikkeiket kérhetik le a rendszerből.
+    \item A ZFS fájlrendszernek biztosítania kell az adatintegritást
+    \item Automatikus pillanatfelvételek készítése konfigurálandó időközönként
+    \item Inkrementális replikáció támogatása távoli szerverekre
+    \item A konfigurációs változtatások overlay fájlrendszeren keresztüli kezelése
   }
 \end{requirementstable}
-
-\subsubsection{Ügyvéd felhasználók}
-
-\begin{requirementstable}
-  \caption{Funkcionális követelmények ügyvéd felhasználók számára} \\
-
-  \requirementtitle{Szerződéskötés} &
-  \requirementslist{
-    \item A rendszer csak akkor számítja az ügyvédet egy szerződés részeként, hogyha az ügyvéd elfogadta a szerződést.
-    \item Ha az ügyvéd elutasítja a szerződést, az adatbázisból törlődik az ügyvéd kapcsolata a szerződéssel.
-    \item Ha egy ügyvéd része a szerződésnek, a rendszer engedélyezi, hogy lekérje a szerződés adatait.
-    \item A szerződéskötés mellékleteit a rendszer egy \textit{object storage}-ban tárolja.
-  } \\
-
-  \requirementtitle{Digitális aláírások} &
-  \requirementslist{
-    \item Az ügyvédek kézzel írt digitális aláírásait a rendszer \textit{object storage}-ban tárolja szerződéseket.
-    \item A szerződések kigenerálásakor a kézzel írt digitális aláírások átkerülnek az \textit{object storage}-ből a kigenerált PDF dokumentumba, az AVDH állományokon láthatóakká válnak.
-    \item A végleges szerződés kinyomtatása előtt a rendszer ellenőrzi, hogy az összes ügyvéd aláírta-e a szerződést vagy sem. Ha nem írta alá az összes ügyvéd a szerződést, a szerződés nem kerül kigenerálásra.
-  }
-\end{requirementstable}
-
-\pagebreak
-
-\subsubsection{Rendszergazda felhasználók}
-
-\begin{requirementstable}
-  \caption{Funkcionális követelmények rendszergazda felhasználók számára} \\
-
-  \requirementtitle{Szerződéssablonok} &
-  \requirementslist{
-    \item A rendszergazda felhasználók által létrehozott szerződéssablonok metaadatai relációs adatbázisba kerülnek.
-    \item A szerződéssablonok dokumentumait a Google Docs rendszeren belül tároljuk. 
-    \item A szerződéssablonok létrehozásakor, ha hozzá szeretnének társítani tulajdoncikktípust is a felhasználók, akkor a rendszernek ellenőriznie kell, hogy a kért tulajdoncikktípus létezik-e.
-    \item A szerződéssablon dokumentumának szerkesztésére a Google Docs rendszert használjuk.
-    \item A szerződéssablon dokumentumának feltöltésénél nem kötelező már meglévő sablon feltöltése.
-    \item Ha a rendszergazda nem tölt fel előre elkészített szerződéssablont, akkor a rendszer automatikusan létrehoz egy üres Google Docs dokumentumot, és lementi a hozzá tartozó dokumentum azonosítót relációs adatbázisba.
-    \item Ha a rendszergazda egy előre elkészített szerződéssablont tölt fel, akkor a rendszer arról egy másolatot készít a Google Docs rendszerben.
-    \item A sablon dokumentum módosítása során a rendszer létrehoz egy Google Docs-os megosztott linket, ami segítségével bármilyen Google felhasználóval belépve a sablon szerkeszthetővé válik.
-    \item A sablonhoz tartozó \textit{placeholder} opciók kell támogassák: szám (minimum és maximum értékekkel), azonosítószám, e-mail cím, webhely link, dátum.
-  }
-\end{requirementstable}
-
-\pagebreak
 
 \subsection{Nem funkcionális követelmények}
 
-\begin{requirementstable}
-  \caption{Külső követelmények (\textit{external requirements})} \\
-
-  \requirementtitle{Etikai és legális} &
-  \requirementslist {
-    \item Mivel az alkalmazás a szerződések kezelésének és aláírásának koncepciója körül forog, biztosítanunk kell, hogy a felhasználó által létrehozott összes szerződést ellenőrizzük, digitális tanúsítvánnyal aláírjuk és biztonságosan tároljuk a felhőben.
-    \item Az alkalmazásnak biztosítania kell a felhasználó által megadott adatok helyességének ellenőrzését. Ez az AVDH rendszeren keresztül történik.
-    \item Az alkalmazást a GDPR törvényei köré kell építsük, ezért a weboldal első meglátogatásakor engedélyt kell kérnie a felhasználótól a sütik (\textit{cookies}) tárolására a számítógépén.
-    \item Ha az adminisztrátorokat törlési kéréssel keresik meg, akkor eleget kell tenniük a kérésnek egy rövid ellenőrzési folyamat után.
-    \item A rendszer összes komponense használható kell legyen szigorú kormányzati törvények alatt. Ha az adatok tárolását például csak az Európai Unióban engedélyezi a felhasználási környezet, akkor az összes komponensnek ebben a korlátozott módban kell működnie.
-  }
-\end{requirementstable}
-
-\pagebreak
+Külső követelményekkel olyan feltételeket határozunk meg, amelyeknek a Zebrafish rendszernek meg kell felelnie, hogy illeszkedjen a szélesebb technológiai, jogi és társadalmi környezetbe.
 
 \begin{requirementstable}
-  \caption{Termékkövetelmények (\textit{product requirements})} \\
+  \caption{Külső követelmények (external requirements)} \\
 
-  \requirementtitle{Használhatóság} &
-  \requirementslist {
-    \item A felhasználóknak képesnek kell lenniük bármely művelet elvégzésére a platformon segítség nélkül.
-    \item Ha egy felhasználónak segítségre van szüksége, képesnek kell lennie arra, hogy az alkalmazás által biztosított dokumentációra hivatkozzon.
-    \item A felhasználói felületnek elég intuitívnak kell lennie ahhoz, hogy a mezei felhasználók is kényelmesen tudják használni.
-    \item A felhasználói felület nem tartalmazhat olyan gombokat, szöveget vagy piktogramokat, amelyek túlságosan homályosak ahhoz, hogy megértsék őket a felhasználók.
+  \requirementtitlewordwrap{Szabványok és kompatibilitás} &
+  \requirementslist{
+    \item A rendszernek teljes mértékben kompatibilisnek kell lennie az OCI (Open Container Initiative) szabványaival
+    \item A Compose fájloknak követniük kell a Docker Compose V2 specifikációt
+    \item A container image formátumoknak támogatniuk kell az iparági szabványokat (Docker, OCI)
   } \\
 
-  \requirementtitle{Tárolás} &
-  \requirementslist {
-    \item A rendszer soha nem tárolhat blobokat relációs adatbázisban. Az ilyen fajta tárolást \textit{object storage} rendszer segítségével kell végrehajtani.
-    \item A rendszer összes komponense használható kell legyen szigorú kormányzati törvények alatt. Ha az adatok tárolását például csak az Európai Unióban engedélyezi a felhasználási környezet, akkor az összes komponensnek ebben a korlátozott módban kell működnie.
+  \requirementtitlewordwrap{Jogi megfelelőség} &
+  \requirementslist{
+    \item Minden szállított szoftverkomponens licensze kompatibilis kell legyen a rendszer nyílt forráskódú licenszével
+    \item A rendszernek követnie kell az országok közti szoftverátadási törvényeket
   } \\
 
-  \requirementtitle{Tervezés} &
-  \requirementslist { 
-  
-    \item A rendszernek kerülni kell a szoros kapcsolódásokat (\textit{tight coupling}-ot). Csak olyan alkatrészeket használjon, amelyek szoros csatlakozás nélkül bármikor cserélhetők.
-  } \\
-
-  \requirementtitle{Teljesítmény} &
-  \requirementslist {
-    \item Az alkalmazásnak válaszolnia kell minden felhasználói interakcióra.
-    \item Ha egy művelet elvégzéséhez több időre van szükség, a felhasználónak vizuálisan jeleznie kell a rendszernek a haladását.
+  \requirementtitlewordwrap{Interoperabilitás} &
+  \requirementslist{
+    \item A rendszernek képesnek kell lennie szabványos CI/CD rendszerekkel való integrációra
+    \item Támogatnia kell a szabványos monitorozó rendszerekkel való integrációt (Prometheus, Grafana)
+    \item Támogatnia kell a konténerfuttató platformokkal való együttműködést (containerd)
   }
 \end{requirementstable}
 
 \begin{requirementstable}
-  \caption{Szervezési követelmények (\textit{organizational requirements})} \\
+  \caption{Termékkövetelmények (product requirements)} \\
 
-  \requirementtitle{Környezet} &
-  \requirementslist {
-    \item A GitHub-ot használjuk, mint verzió követő rendszer.
-    \item A verzió követő rendszeren tárolt kód privát kell legyen. Azokban az esetekben, amikor ez a döntés nem a mi hatáskörünkbe tartozik, a platform forráskódját ideiglenesen nyilvánossá tehetjük.
-    \item Fejlesztéshez a Visual Studio Code környezetet használjuk. Szükség esetén alkalmazhatóak a felhő alapú környezetek is, mint például a GitHub Codespaces.
+  \requirementtitlewordwrap{Hatékonyság} &
+  \requirementslist{
+    \item A lemezhasználat nem haladhatja meg a 256 MB-ot az alaprendszer esetében
+    \item Az alap memóriahasználat nem haladhatja meg a 512MB-ot alapkonfigurációban
+    \item A lokális hálózati névfeloldásnak 0.2 ms-nál rövidebb válaszidővel kell működnie
+    \item A hálózati teljesítmény nem degradálódhat jelentősen a projektek számának növekedésével
+  } \\
+
+  \requirementtitlewordwrap{Gyorsaság} &
+  \requirementslist{
+    \item Az image-ek letöltése a lehető leggyorsabb kell legyen, kihasználva teljesen a hálózatot
+    \item Megfelelően gyors hálózati kapcsolat esetén (1 Gbit) a rendszernek képesnek kell lennie 20 konténerkép frissítésére kevesebb mint egy perc alatt.
+  } \\
+
+  \requirementtitlewordwrap{Megbízhatóság} &
+  \requirementslist{
+    \item A rendszernek támogatnia kell legalább 30 egyidejűleg futó konténert
+    \item A rendszernek képesnek kell lennie a konténerek automatikus újraindítására hiba esetén
+    \item A rendszertől le kell lehessen kérni a futó konténerek állapotát és naplóit
+    \item A frissítések után a rendszernek konzisztens és stabil állapotban kell maradnia
+  }
+\end{requirementstable}
+
+\begin{requirementstable}
+  \caption{Szervezési követelmények (organizational requirements)} \\
+
+  \requirementtitlewordwrap{Integrációs követelmények} & 
+  \requirementslist{
+    \item A Zebrafish automatikusan integrálódik a meglévő ZFS storage rendszerekkel
+    \item A Zebrafish-nek a meglévő eszközökkel, a Prometheusszal és a Grafanával nyomon követhetőnek kell maradnia
+    \item A Zebrafish-nek képesnek kell lennie a meglévő CI/CD rendszerekkel való együttműködésre, mint például GitHub Actions
+    \item A rendszer integrálható kell legyen SSH kapcsolatok révén (parancsok futtatásávl)
+  } \\
+
+  \requirementtitlewordwrap{Fejlesztési követelmények} &
+  \requirementslist{
+    \item A forráskód nyilvánosan elérhető GitHub repository-ban
+    \item Folyamatos integráció (CI) minden commit után
+    \item Dokumentáció szükséges a rendszer telepíŧéséről
   }
 \end{requirementstable}
