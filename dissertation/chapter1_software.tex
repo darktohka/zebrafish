@@ -129,7 +129,7 @@ külön licenszelemeket tartalmaznak. \cite{dockerproducts}
 A FreeBSD-ből származó BSD Jail mechanizmus egy könnyű, operációs rendszer
 szintű virtualizációs technológia, amely megelőzte a Dockerhez hasonló
 konténerek széles körű elterjedését. A jail ugyan nem egy teljes értékű
-virtuális gép, de biztonságos, elszigetelt környezeteket ("jail") hoz létre
+virtuális gép, de biztonságos, elszigetelt környezeteket (``jail'') hoz létre
 egyetlen FreeBSD operációs rendszeren belül. Minden jail saját hostnévvel,
 IP-címmel és külön fájlrendszerfával rendelkezik, így a benne futó folyamatok
 számára önálló rendszernek tűnik.
@@ -228,7 +228,7 @@ konténer-futtatót használják, amely a Kubernetes számára optimalizált fut
         \label{firecracker}
 \end{figure}
 
-A Firecracker a konténer ökoszisztéma legújabb tagja. A Firecracker célja, hogy a konténerek gyors indítási idejét és alacsony erőforrás-felhasználását a virtuális gépek (VM-ek) által biztosított erős elszigeteltséggel kombinálja. Ehhez a KVM ökoszisztémáját használja, amely segítségével pehelysúlyú virtuális gépeket, úgynevezett microVM-eket hoz létre, amelyek minimális többletköltséggel futtathatók egy gazdaszámítógépen.
+A Firecracker (\ref{firecracker}. ábra) a konténer ökoszisztéma legújabb tagja. A Firecracker célja, hogy a konténerek gyors indítási idejét és alacsony erőforrás-felhasználását a virtuális gépek (VM-ek) által biztosított erős elszigeteltséggel kombinálja. Ehhez a KVM ökoszisztémáját használja, amely segítségével pehelysúlyú virtuális gépeket, úgynevezett microVM-eket hoz létre, amelyek minimális többletköltséggel futtathatók egy gazdaszámítógépen.
 
 Egyetlen fizikai gépen több száz mikroVM futhat párhuzamosan, mindegyik saját kernel-lel és minimális rendszerrel. Ezek a mikroVM-ek gyorsan, akár 125 ms alatt elindíthatók, és mindössze néhány megabájt memóriát igényelnek \cite{agache2020firecracker}. A Firecracker minimalista megközelítése révén csak a legszükségesebb eszközöket és interfészeket tartalmazza, csökkentve a támadási felületet és növelve a biztonságot. Mivel Rust nyelven íródott, a Rust memóriabiztonsági garanciáit is kihasználja, ami megelőzi a biztonsági réshez vezető gyakori programozási hibákat.
 
