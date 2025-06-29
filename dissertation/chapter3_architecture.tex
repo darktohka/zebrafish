@@ -114,6 +114,46 @@ Ezek közül a komponensek közül leginkább a konténerek futtatásához eleng
 
 \pagebreak
 
+\section{Konténerek a containerd világában}
+
+\figure{!h}
+        \centering
+        \includegraphics[scale=0.3]{images/software/containerd-architecture.png}
+        \caption{A containerd architektúrája \cite{containerdhomepage}}
+        \label{containerdarch}
+\end{figure}
+
+A konténerek forradalmasították a modern szoftverfejlesztést. De mi is történik valójában a háttérben, amikor egy konténert indítunk? A válasz megértéséhez betekintést kell nyernünk a \texttt{containerd} világába, amely a Docker és a Kubernetes alapjaként szolgált hosszú ideig.
+
+A \texttt{containerd} egy magas szintű konténer futtatókörnyezet, amely az OpenContainers Runtime (OCR) specifikáció szerint működik. Ez a specifikáció határozza meg, hogyan kell a konténereket létrehozni, kezelni és futtatni a különböző platformokon. A containerd nem egyszerűen egy démonfolyamat, hanem egy teljes ökoszisztéma megtestesítője, amely gondoskodik a konténerek teljes életciklusáról, a letöltéstől a futtatásig.
+
+Látni fogjuk, hogy a containerd valójában a konténer ökoszisztéma szíve, amely egységes felületet biztosít a konténerek kezeléséhez, azonban nem olyan magas szintű, mint egy konténer-orchestrációs platform. Nem biztosít például olyan funkciókat, mint a skálázás, a terheléselosztás vagy a szolgáltatásfelfedezés (\textit{service discovery}). Ezeket a funkciókat jellemzően a magasabb szintű orchestrációs platformok nyújtják, mint például a Kubernetes, vagy saját fejlesztésű platformokon a Docker Engine démon.
+
+Az \ref{containerdarch}. ábrán látható a containerd architektúrája, és annak helye a szoftver-ökoszisztémában.
+
+\section{Projektek összeállítása}
+
+% example of docker-compose file, services, networks, etc.
+
+\section{Miben különböznek a Multi-Compose projektek?}
+
+% example of two interconnected compose files
+
+\section{Image-ek frissítési folyamata (sequence diagram)}
+
+\section{Hálózatok összeállítása hagyományos Dockerben}
+
+\section{Hálózatok összeállítása Zebrafishben}
+
+% example of network file : /etc/cni.d
+
+\section{A konténerek közötti függőségek kiszámítása}
+
+% hard dependencie
+% soft dependencies
+
+\section{Felhasználói use case-ek (use case diagram + table - pulling images)}
+
 \section{Kliens-szerver architektúra}
 
 \begin{figure}[!h]
