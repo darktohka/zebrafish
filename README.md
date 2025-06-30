@@ -1,10 +1,14 @@
 <h1 align=center>Zebrafish</h1>
 
 <div align="center">
- <img src="./images/zebrafish.svg" alt="Zebrafish logo" height="200px" />
+ <img src="./images/zebrafish.svg" alt="Zebrafish logo" style="height: 200px;" height="200px" />
 </div>
 <p align="center">
   An immutable OCI container runtime operating system.
+</p>
+
+<p align="center">
+   Visit our website: <a href="https://zebrafish.cloud">Zebrafish</a>
 </p>
 
 ---
