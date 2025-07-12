@@ -7,7 +7,7 @@ mkdir -p "$TARGET_DIR"/srv
 mkdir -p "$TARGET_DIR"/vol
 
 # Create symlinks for oci tools
-for tool in containerd; do
+for tool in containerd docker; do
     rm -f "$TARGET_DIR"/var/lib/"$tool"
     ln -s /oci/"$tool" "$TARGET_DIR"/var/lib/"$tool"
 done
