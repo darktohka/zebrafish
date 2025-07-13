@@ -121,6 +121,10 @@ create_zebrafish_datasets() {
         echo "$vault_hash" | zfs create "$ZEBRAFISH_ZPOOL_VAULT_PERSISTENT" || fail "Cannot create vault dataset"
     fi
 
+    if [[ $datasets != *"$ZEBRAFISH_ZPOOL_OCI_PERSISTENT"* ]]; then
+        zfs create "$ZEBRAFISH_ZPOOL_OCI_PERSISTENT" || fail "Cannot create oci persistent dataset"
+    fi
+
     if [[ $datasets != *"$ZEBRAFISH_ZPOOL_OCI"* ]]; then
         zfs create -o compression=zstd -o sync=always "$ZEBRAFISH_ZPOOL_OCI" || fail "Cannot create oci dataset"
     fi
