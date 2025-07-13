@@ -17,7 +17,6 @@
 ::sysinit:/bin/chmod 4755 /usr/bin/doas
 ::sysinit:/bin/mount -t proc proc /proc
 ::sysinit:/bin/mount -t sysfs sysfs /sys
-::sysinit:/bin/mount -t cgroup2 none /sys/fs/cgroup
 ::sysinit:/bin/mount /run
 ::sysinit:/bin/mount -o remount,rw /
 ::sysinit:/bin/mkdir -p /dev/pts /dev/shm

@@ -70,6 +70,12 @@ do_start() {
 	create_symlink_safely /var/lib/docker /oci/docker
 	create_symlink_safely /oci/docker/volumes /volumes
 
+	# Ensure that cgroup2 is mounted
+	if ! mount | grep -q "/sys/fs/cgroup type cgroup2"; then
+		mkdir -p /sys/fs/cgroup
+		mount -t cgroup2 none /sys/fs/cgroup
+	fi
+
     echo -n "Starting $NAME: "
 	start-stop-daemon --start --quiet --background \
 		--make-pidfile --pidfile "$PIDFILE" \
