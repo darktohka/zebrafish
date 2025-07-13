@@ -106,11 +106,16 @@ jobs:
           chmod +x test.sh
           ./test.sh \
             "${{ github.workspace }}/artifacts"
-      - name: Upload artifacts
+      - name: Upload containerd artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: zebrafish-${{ matrix.architecture }}
-          path: ${{ github.workspace }}/artifacts/upload/zebrafish-${{ matrix.architecture }}.tar
+          name: zebrafish-${{ matrix.architecture }}-containerd
+          path: ${{ github.workspace }}/artifacts/upload/zebrafish-${{ matrix.architecture }}-containerd.tar
+      - name: Upload Docker artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zebrafish-${{ matrix.architecture }}-docker
+          path: ${{ github.workspace }}/artifacts/upload/zebrafish-${{ matrix.architecture }}-docker.tar
       - name: Deploy to CDN
         if: github.ref == 'refs/heads/master'
         run: |

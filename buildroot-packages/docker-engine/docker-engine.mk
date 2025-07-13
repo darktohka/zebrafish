@@ -7,14 +7,8 @@
 DOCKER_ENGINE_VERSION = origin/master
 DOCKER_ENGINE_SITE = $(call github,moby,moby,master)
 
-DOCKER_ENGINE_LICENSE = Apache-2.0
-DOCKER_ENGINE_LICENSE_FILES = LICENSE
-
 DOCKER_ENGINE_DEPENDENCIES = host-pkgconf libseccomp
 DOCKER_ENGINE_GOMOD = github.com/docker/docker
-
-DOCKER_ENGINE_CPE_ID_VENDOR = docker
-DOCKER_ENGINE_CPE_ID_PRODUCT = docker
 
 DOCKER_ENGINE_LDFLAGS = \
 	-X $(DOCKER_ENGINE_GOMOD)/dockerversion.BuildTime="" \
@@ -71,20 +65,6 @@ endef
 DOCKER_ENGINE_POST_EXTRACT_HOOKS += DOCKER_ENGINE_FIX_VENDORING
 
 DOCKER_ENGINE_INSTALL_BINS = $(notdir $(DOCKER_ENGINE_BUILD_TARGETS))
-
-define DOCKER_ENGINE_INSTALL_INIT_SYSTEMD
-	$(INSTALL) -D -m 0644 $(@D)/contrib/init/systemd/docker.service \
-		$(TARGET_DIR)/usr/lib/systemd/system/docker.service
-	$(INSTALL) -D -m 0644 $(@D)/contrib/init/systemd/docker.socket \
-		$(TARGET_DIR)/usr/lib/systemd/system/docker.socket
-endef
-
-define DOCKER_ENGINE_INSTALL_INIT_SYSV
-	$(INSTALL) -D -m 755 package/docker-engine/S60dockerd \
-		$(TARGET_DIR)/etc/init.d/S60dockerd
-	$(INSTALL) -D -m 755 package/docker-engine/dockerd-syslog-wrapper.sh \
-		$(TARGET_DIR)/usr/libexec/dockerd-syslog-wrapper.sh
-endef
 
 define DOCKER_ENGINE_USERS
 	- - docker -1 * - - - Docker Application Container Framework

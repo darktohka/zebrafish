@@ -2,6 +2,15 @@
 set -e
 set -u
 
+# Read the OS release file
+if [[ -f /etc/os-release ]]; then
+    source /etc/os-release
+    ZEBRAFISH_VARIANT="${ZEBRAFISH_VARIANT:-containerd}"
+else
+    echo "/etc/os-release not found!"
+    exit 1
+fi
+
 CDN_HOSTNAME="https://cdn.zebrafish.tohka.us"
 
 # Check permissions
@@ -61,10 +70,10 @@ if [[ -z "$ACTUAL_DIR" ]]; then
 fi
 
 # Read the manifest
-EFI_RELEASE="$ACTUAL_DIR/$ZF_ARCH"
+EFI_RELEASE="$ACTUAL_DIR/$ZF_ARCH-$ZEBRAFISH_VARIANT"
 EFI_MANIFEST="$EFI_RELEASE.json"
 
-CDN_RELEASE="$CDN_HOSTNAME/$ZF_ARCH"
+CDN_RELEASE="$CDN_HOSTNAME/$ZF_ARCH-$ZEBRAFISH_VARIANT"
 CDN_MANIFEST="$CDN_RELEASE.json"
 CDN_ARCHIVE="$CDN_RELEASE.tar"
 

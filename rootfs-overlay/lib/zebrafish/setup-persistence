@@ -19,6 +19,7 @@ ZEBRAFISH_ZPOOL_VAULT="$ZEBRAFISH_ZPOOL/vault"
 ZEBRAFISH_ZPOOL_VAULT_PERSISTENT="$ZEBRAFISH_ZPOOL_VAULT/persistent"
 ZEBRAFISH_ZPOOL_OCI="$ZEBRAFISH_ZPOOL_VAULT/oci"
 ZEBRAFISH_ZPOOL_CONTAINERD="$ZEBRAFISH_ZPOOL_OCI/containerd"
+ZEBRAFISH_ZPOOL_DOCKER="$ZEBRAFISH_ZPOOL_OCI/docker"
 
 ZEBRAFISH_ZPOOL_COMPOSE="$ZEBRAFISH_ZPOOL_VAULT_PERSISTENT/compose"
 ZEBRAFISH_ZPOOL_DATA="$ZEBRAFISH_ZPOOL_VAULT_PERSISTENT/data"
@@ -34,6 +35,7 @@ ZEBRAFISH_LOG_DIR="/logs"
 ZEBRAFISH_OVERLAY_DIR="/overlay"
 ZEBRAFISH_OCI_DIR="/oci"
 ZEBRAFISH_CONTAINERD_DATA_DIR="$ZEBRAFISH_OCI_DIR/containerd"
+ZEBRAFISH_DOCKER_DATA_DIR="$ZEBRAFISH_OCI_DIR/docker"
 
 ZEBRAFISH_PERSISTENCE_MAGIC_HEADER="zebrafish-please-format-me"
 ZEBRAFISH_BIND_OVERLAY_MOUNT_DIR="/run/zebrafish/overlay"
@@ -120,6 +122,10 @@ create_zebrafish_datasets() {
 
     if [[ $datasets != *"$ZEBRAFISH_ZPOOL_CONTAINERD"* ]]; then
         zfs create -o compression=zstd -o mountpoint="$ZEBRAFISH_CONTAINERD_DATA_DIR" "$ZEBRAFISH_ZPOOL_CONTAINERD" || fail "Cannot create containerd dataset"
+    fi
+
+    if [[ $datasets != *"$ZEBRAFISH_ZPOOL_DOCKER"* ]]; then
+        zfs create -o compression=zstd -o mountpoint="$ZEBRAFISH_DOCKER_DATA_DIR" "$ZEBRAFISH_ZPOOL_DOCKER" || fail "Cannot create docker dataset"
     fi
 
     if [[ $datasets != *"$ZEBRAFISH_ZPOOL_COMPOSE"* ]]; then
@@ -253,6 +259,7 @@ overlay_zebrafish_data_dirs () {
 
 create_missing_directories() {
     mkdir -p "$ZEBRAFISH_CONTAINERD_DATA_DIR/io.containerd.snapshotter.v1.zfs" || fail "Failed to make containerd snapshotter directory"
+    mkdir -p "$ZEBRAFISH_DOCKER_DATA_DIR" || fail "Failed to make docker data directory"
     mkdir -p /logs/system || fail "Failed to make log directory"
 }
 

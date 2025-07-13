@@ -78,6 +78,10 @@ rm -fr "$TARGET_DIR"/etc/zfs
 rm -fr "$TARGET_DIR"/usr/share/initramfs-tools
 rm -fr "$TARGET_DIR"/usr/share/glib-2.0
 rm -fr "$TARGET_DIR"/usr/src
+rm -frv "$TARGET_DIR"/lib/*.a
+rm -frv "$TARGET_DIR"/lib/*.la
+rm -frv "$TARGET_DIR"/lib/*.o
+rm -frv "$TARGET_DIR"/lib/*.spec
 
 for sudo in bin/cvtsudoers bin/sudoreplay bin/sudoedit sbin/sudo_logsrvd sbin/sudo_sendlog; do
     rm -frv "$TARGET_DIR"/usr/$sudo

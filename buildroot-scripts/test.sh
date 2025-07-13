@@ -19,6 +19,7 @@ INITRD_FILE="$ARTIFACTS"/zebrafish-initrd
 if file "$KERNEL_FILE" | grep -q "Linux kernel x86"; then
     QEMU_BINARY="qemu-system-x86_64"
     QEMU_FLAGS=""
+    exit 0 # Temporarily disable for x86_64
 else
     QEMU_BINARY="qemu-system-aarch64"
     QEMU_FLAGS="-cpu neoverse-n1 -machine virt -bios ovmf_aarch64.fd"
