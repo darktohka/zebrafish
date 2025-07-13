@@ -127,10 +127,10 @@ mv "$TARGET_DIR"/usr/lib/docker "$SCRATCH_DIR"/folders/
 # Create the Docker redirection.
 cat << EOF > "$TARGET_DIR"/usr/bin/docker
 #!/bin/sh
-if [ "$(id -u)" -ne 0 ]; then
-    exec sudo /usr/bin/nerdctl "$@"
+if [ "\$(id -u)" -ne 0 ]; then
+    exec sudo /usr/bin/nerdctl "\$@"
 else
-    exec /usr/bin/nerdctl "$@"
+    exec /usr/bin/nerdctl "\$@"
 fi
 EOF
 chmod +x "$TARGET_DIR"/usr/bin/docker
