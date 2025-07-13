@@ -17,9 +17,11 @@ vault_hash=$(echo -n "$machine" | openssl shake256 -xoflen 32 | cut -d ' ' -f 2)
 ZEBRAFISH_ZPOOL="zebrafish"
 ZEBRAFISH_ZPOOL_VAULT="$ZEBRAFISH_ZPOOL/vault"
 ZEBRAFISH_ZPOOL_VAULT_PERSISTENT="$ZEBRAFISH_ZPOOL_VAULT/persistent"
+ZEBRAFISH_ZPOOL_OCI_PERSISTENT="$ZEBRAFISH_ZPOOL_VAULT_PERSISTENT/oci"
 ZEBRAFISH_ZPOOL_OCI="$ZEBRAFISH_ZPOOL_VAULT/oci"
 ZEBRAFISH_ZPOOL_CONTAINERD="$ZEBRAFISH_ZPOOL_OCI/containerd"
 ZEBRAFISH_ZPOOL_DOCKER="$ZEBRAFISH_ZPOOL_OCI/docker"
+ZEBRAFISH_ZPOOL_COOLIFY="$ZEBRAFISH_ZPOOL_OCI_PERSISTENT/coolify"
 
 ZEBRAFISH_ZPOOL_COMPOSE="$ZEBRAFISH_ZPOOL_VAULT_PERSISTENT/compose"
 ZEBRAFISH_ZPOOL_DATA="$ZEBRAFISH_ZPOOL_VAULT_PERSISTENT/data"
@@ -38,6 +40,7 @@ ZEBRAFISH_OCI_DIR="/oci"
 ZEBRAFISH_VOLUMES_DIR="/volumes"
 ZEBRAFISH_CONTAINERD_DATA_DIR="$ZEBRAFISH_OCI_DIR/containerd"
 ZEBRAFISH_DOCKER_DATA_DIR="$ZEBRAFISH_OCI_DIR/docker"
+ZEBRAFISH_COOLIFY_DATA_DIR="$ZEBRAFISH_OCI_DIR/coolify"
 
 ZEBRAFISH_PERSISTENCE_MAGIC_HEADER="zebrafish-please-format-me"
 ZEBRAFISH_BIND_OVERLAY_MOUNT_DIR="/run/zebrafish/overlay"
@@ -128,6 +131,10 @@ create_zebrafish_datasets() {
 
     if [[ $datasets != *"$ZEBRAFISH_ZPOOL_DOCKER"* ]]; then
         zfs create -o compression=zstd -o sync=always -o mountpoint="$ZEBRAFISH_DOCKER_DATA_DIR" "$ZEBRAFISH_ZPOOL_DOCKER" || fail "Cannot create docker dataset"
+    fi
+
+    if [[ $datasets != *"$ZEBRAFISH_ZPOOL_COOLIFY"* ]]; then
+        zfs create -o compression=zstd -o sync=always -o mountpoint="$ZEBRAFISH_COOLIFY_DATA_DIR" "$ZEBRAFISH_ZPOOL_COOLIFY" || fail "Cannot create coolify dataset"
     fi
 
     if [[ $datasets != *"$ZEBRAFISH_ZPOOL_COMPOSE"* ]]; then

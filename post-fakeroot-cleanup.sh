@@ -5,6 +5,10 @@ echo "Hi, I'm $(basename $0)!"
 # Create missing folders
 mkdir -p "$TARGET_DIR"/srv
 mkdir -p "$TARGET_DIR"/vol
+mkdir -p "$TARGET_DIR"/data
+
+# Create symlinks for Coolify
+ln -s /oci/coolify "$TARGET_DIR"/data/coolify
 
 # Create symlinks for oci tools
 for tool in containerd docker; do
