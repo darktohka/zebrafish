@@ -105,7 +105,7 @@ if ! [[ -f "$TARGET_DIR"/usr/bin/qemu-x86_64 ]] && ! [[ -f "$TARGET_DIR"/usr/bin
         SOURCE_FILE="$qemu_directory"/usr/bin/"$binary"
         TARGET_FILE="$TARGET_DIR"/usr/bin/"$binary"
         cp "$SOURCE_FILE" "$TARGET_FILE"
-        llvm-strip "$TARGET_FILE" || strip "$TARGET_FILE"
+        llvm-strip "$TARGET_FILE" || strip "$TARGET_FILE" || echo "Failed to strip $TARGET_FILE"
         chmod +x "$TARGET_FILE"
     done
 

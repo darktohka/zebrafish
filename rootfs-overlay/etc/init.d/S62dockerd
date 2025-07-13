@@ -1,4 +1,5 @@
 #!/bin/sh
+set -u
 
 . /lib/zebrafish/functions
 
@@ -11,7 +12,64 @@ DAEMON_ARGS="--data-root /oci/docker"
 
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME $1
 
+create_symlink_safely() {
+	source="$1"
+	target="$2"
+
+	if [ -L "$source" ]; then
+		# If this is a symlink...
+		if [ "$(readlink -f "$source")" != "$target" ]; then
+			# And the symlink points to a different target...
+			# then remove the symlink and create a new one.
+			echo "Updating symlink: $source -> $target"
+			rm -f "$source"
+			ln -sf "$target" "$source"
+		else
+			# If the symlink already points to the correct target, do nothing.
+			return
+		fi
+	elif [ -d "$source" ]; then
+		# If this is a directory...
+		if [ "$(ls -A "$source")" ]; then
+			# And it is not empty...
+			# then we cannot create a symlink.
+			echo "Error: $source is a non-empty directory."
+			exit 1
+		else
+			# If it is empty, remove it and create a symlink.
+			echo "Removing empty directory: $source"
+			echo "Creating symlink: $source -> $target"
+			rm -rf "$source"
+			ln -sf "$target" "$source"
+		fi
+	elif [ -f "$source" ]; then
+		# If this is a file...
+		# Remove the file and create a symlink.
+		echo "Removing file: $source"
+		echo "Creating symlink: $source -> $target"
+		rm -f "$source"
+		ln -sf "$target" "$source"
+	else
+		# If it does not exist, create a symlink.
+		# First, ensure the parent directory exists.
+		parent_dir=$(dirname "$source")
+
+		if [ ! -d "$parent_dir" ]; then
+			echo "Creating parent directory: $parent_dir"
+			mkdir -p "$parent_dir"
+		fi
+
+		# Then create the symlink.
+		echo "Creating symlink: $source -> $target"
+		ln -sf "$target" "$source"
+	fi
+}
+
 do_start() {
+	# Ensure symlinks
+	create_symlink_safely /var/lib/docker /oci/docker
+	create_symlink_safely /oci/docker/volumes /volumes
+
     echo -n "Starting $NAME: "
 	start-stop-daemon --start --quiet --background \
 		--make-pidfile --pidfile "$PIDFILE" \
