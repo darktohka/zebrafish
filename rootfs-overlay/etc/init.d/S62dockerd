@@ -75,6 +75,19 @@ do_start() {
 		--make-pidfile --pidfile "$PIDFILE" \
 		--startas /bin/sh -- -c "exec stdbuf -oL -eL $DAEMON $DAEMON_ARGS >> $LOGFILE 2>&1" \
         && echo "OK" || echo "FAIL"
+
+	if [ -S /var/run/docker.sock ]; then
+		echo "Setting ACL for signalizer on existing docker.sock"
+		setfacl -m u:signalizer:rw /var/run/docker.sock
+	else
+		echo "Waiting for docker.sock to be created..."
+		timeout 5s inotifywait -q -e create /var/run && {
+			if [ -S /var/run/docker.sock ]; then
+				echo "Setting ACL for signalizer on newly created docker.sock"
+				setfacl -m u:signalizer:rw /var/run/docker.sock
+			fi
+		}
+	fi
 }
 
 do_stop() {

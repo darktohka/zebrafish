@@ -275,8 +275,13 @@ overlay_zebrafish_data_dirs () {
 }
 
 create_missing_directories() {
-    mkdir -p "$ZEBRAFISH_CONTAINERD_DATA_DIR/io.containerd.snapshotter.v1.zfs" || fail "Failed to make containerd snapshotter directory"
     mkdir -p /logs/system || fail "Failed to make log directory"
+}
+
+cleanup_directories() {
+    # Remove old Docker directories if they exist
+    # This will result in every restart of the system to have a fresh Docker environment
+    rm -rf /oci/docker/containers /oci/docker/containerd /oci/docker/buildit /oci/docker/network
 }
 
 info "Zebrafish Persistence"
@@ -343,4 +348,5 @@ if [ -n "$mounted_zebrafish_persistence_dir" ]; then
 fi
 
 create_missing_directories
+setup_acls
 echo "Have a nice disk!"
