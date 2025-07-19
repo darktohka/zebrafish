@@ -1,0 +1,70 @@
+#!/bin/sh
+set -u
+
+. /lib/zebrafish/functions
+
+NAME=coolify
+DAEMON=/usr/bin/$NAME
+SOURCE_DIR=/data/coolify/source
+
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME $1
+
+wait_for_docker() {
+	while ! sudo docker info >/dev/null 2>&1; do
+		echo "Waiting for Docker to be available..."
+		sleep 0.2
+	done
+}
+
+do_start() {
+	if [ ! -d "$SOURCE_DIR" ]; then
+		echo "Coolify directory $SOURCE_DIR does not exist."
+		exit 1
+	fi
+
+	wait_for_docker
+
+	echo -n "Creating $NAME network: "
+	# Create the Docker network if it does not exist
+	sudo docker network create --attachable coolify || {
+		if ! sudo docker network inspect coolify >/dev/null 2>&1; then
+			echo "Failed to create Docker network coolify."
+			exit 1
+		fi
+	}
+
+	echo "OK"
+
+	# Start Coolify using Docker Compose
+	echo -n "Starting $NAME: "
+	coolify up -d
+}
+
+do_stop() {
+	if [ ! -d "$SOURCE_DIR" ]; then
+		echo "Coolify directory $SOURCE_DIR does not exist."
+		exit 1
+	fi
+
+	wait_for_docker
+	echo -n "Stopping $NAME: "
+	coolify down
+	echo "OK"
+}
+
+case "$1" in
+	start)
+		do_start
+		;;
+	stop)
+		do_stop
+		;;
+	restart)
+		do_stop
+		sleep 1
+		do_start
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+esac

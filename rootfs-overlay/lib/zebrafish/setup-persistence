@@ -278,12 +278,6 @@ create_missing_directories() {
     mkdir -p /logs/system || fail "Failed to make log directory"
 }
 
-cleanup_directories() {
-    # Remove old Docker directories if they exist
-    # This will result in every restart of the system to have a fresh Docker environment
-    rm -rf /oci/docker/containers /oci/docker/containerd /oci/docker/buildit /oci/docker/network
-}
-
 info "Zebrafish Persistence"
 
 # Some preliminary sanity checks to ensure this script can run with at least some degree of safely.
