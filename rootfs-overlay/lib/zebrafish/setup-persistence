@@ -342,5 +342,4 @@ if [ -n "$mounted_zebrafish_persistence_dir" ]; then
 fi
 
 create_missing_directories
-setup_acls
 echo "Have a nice disk!"
