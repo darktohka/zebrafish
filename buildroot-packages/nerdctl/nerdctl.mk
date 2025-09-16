@@ -12,13 +12,9 @@ NERDCTL_LICENSE_FILES = LICENSE
 
 NERDCTL_GOMOD = github.com/containerd/nerdctl/v2
 
+NERDCTL_LDFLAGS = \
+	-X $(NERDCTL_GOMOD)/pkg/version.Version=$(NERDCTL_VERSION)
+
 NERDCTL_BUILD_TARGETS = cmd/nerdctl
-NERDCTL_INSTALL_BINS = nerdctl
-
-define NERDCTL_REMOVE_GO_SUM
-	rm -f $(@D)/go.sum
-endef
-
-NERDCTL_POST_EXTRACT_HOOKS += NERDCTL_REMOVE_GO_SUM
 
 $(eval $(golang-package))

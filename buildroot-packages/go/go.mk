@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-GO_VERSION = 1.24.5
+GO_VERSION = 1.25.0
 
 HOST_GO_GOPATH = $(HOST_DIR)/share/go-path
 HOST_GO_HOST_CACHE = $(HOST_DIR)/share/host-go-cache
@@ -14,7 +14,7 @@ HOST_GO_TARGET_CACHE = $(HOST_DIR)/share/go-cache
 # We pass an empty GOBIN, otherwise "go install: cannot install
 # cross-compiled binaries when GOBIN is set"
 HOST_GO_COMMON_ENV = \
-	GO111MODULE=on \
+	GO111MODULE=auto \
 	GOFLAGS=-mod=vendor \
 	GOROOT="$(HOST_GO_ROOT)" \
 	GOPATH="$(HOST_GO_GOPATH)" \

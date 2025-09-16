@@ -12,8 +12,13 @@ MOBY_BUILDKIT_LICENSE_FILES = LICENSE
 MOBY_BUILDKIT_GOMOD = github.com/moby/buildkit
 
 MOBY_BUILDKIT_TAGS = cgo
-MOBY_BUILDKIT_BUILD_TARGETS = cmd/buildkitd cmd/buildctl
+MOBY_BUILDKIT_BUILD_TARGETS = cmd/buildctl cmd/buildkitd
 
-MOBY_BUILDKIT_INSTALL_BINS = $(notdir $(MOBY_BUILDKIT_BUILD_TARGETS))
+MOBY_BUILDKIT_LDFLAGS = \
+	-X $(MOBY_BUILDKIT_GOMOD)/version.Version="$(MOBY_BUILDKIT_VERSION)"
+
+HOST_MOBY_BUILDKIT_TAGS = cgo
+HOST_MOBY_BUILDKIT_BUILD_TARGETS = cmd/buildctl cmd/buildkitd
 
 $(eval $(golang-package))
+$(eval $(host-golang-package))
