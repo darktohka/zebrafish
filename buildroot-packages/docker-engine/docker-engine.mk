@@ -61,8 +61,6 @@ else
 DOCKER_ENGINE_TAGS += exclude_graphdriver_vfs
 endif
 
-DOCKER_ENGINE_GO_FLAGS = -mod=mod
-
 define DOCKER_ENGINE_USERS
 	- - docker -1 * - - - Docker Application Container Framework
 endef
