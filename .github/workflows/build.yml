@@ -133,6 +133,7 @@ jobs:
           rm ./rclone.conf
       - name: Prepare Buildroot cache
         shell: bash
+        if: always()
         run: |
           cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
           chmod +x prepare-cache.sh
@@ -140,6 +141,7 @@ jobs:
             "${{ github.workspace }}/buildroot"
       - name: Save Buildroot cache
         uses: actions/cache/save@v4
+        if: always()
         with:
           key: zebrafish-cache-${{ matrix.architecture }}
           path: ${{ github.workspace }}/buildroot/output
