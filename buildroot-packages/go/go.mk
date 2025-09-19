@@ -15,7 +15,7 @@ HOST_GO_TARGET_CACHE = $(HOST_DIR)/share/go-cache
 # cross-compiled binaries when GOBIN is set"
 HOST_GO_COMMON_ENV = \
 	GO111MODULE=auto \
-	GOFLAGS=-mod=vendor \
+	GOFLAGS=-mod=mod \
 	GOROOT="$(HOST_GO_ROOT)" \
 	GOPATH="$(HOST_GO_GOPATH)" \
 	GOCACHE="$(HOST_GO_TARGET_CACHE)" \
