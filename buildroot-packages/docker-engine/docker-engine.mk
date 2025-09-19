@@ -61,12 +61,7 @@ else
 DOCKER_ENGINE_TAGS += exclude_graphdriver_vfs
 endif
 
-# remove the conflicting vendor/modules.txt
-# https://github.com/moby/moby/issues/44618#issuecomment-1343565705
-define DOCKER_ENGINE_FIX_VENDORING
-	rm -f $(@D)/vendor/modules.txt
-endef
-DOCKER_ENGINE_POST_EXTRACT_HOOKS += DOCKER_ENGINE_FIX_VENDORING
+DOCKER_ENGINE_GO_FLAGS = -mod=mod
 
 define DOCKER_ENGINE_USERS
 	- - docker -1 * - - - Docker Application Container Framework
