@@ -20,6 +20,7 @@ HOST_GO_COMMON_ENV = \
 	GOPATH="$(HOST_GO_GOPATH)" \
 	GOCACHE="$(HOST_GO_TARGET_CACHE)" \
 	GOMODCACHE="$(HOST_GO_GOPATH)/pkg/mod" \
+	GOPROXY=https://proxy.golang.org,direct \
 	GOTOOLCHAIN=local \
 	PATH=$(BR_PATH) \
 	GOBIN= \
