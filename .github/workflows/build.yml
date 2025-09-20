@@ -60,6 +60,24 @@ jobs:
         with:
           key: zebrafish-cache-${{ matrix.architecture }}
           path: ${{ github.workspace }}/buildroot/output
+      - name: Cleanup empty dl folders
+        shell: bash
+        run: |
+          DL_DIR="${{ github.workspace }}/buildroot/dl"
+          if [ -d "$DL_DIR" ]; then
+            echo "Scanning for empty folders in $DL_DIR..."
+            removed=$(find "$DL_DIR" -type d -empty)
+            if [ -n "$removed" ]; then
+              echo "Removing empty folders:"
+              echo "$removed"
+              # Delete them
+              find "$DL_DIR" -type d -empty -delete
+            else
+              echo "No empty folders found."
+            fi
+          else
+            echo "dl directory not found."
+          fi
       - name: Configure Buildroot
         shell: bash
         run: |
