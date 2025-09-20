@@ -80,7 +80,10 @@ jobs:
           fi
       - name: Force Buildroot to redownload files
         run: |
-          find "${{ github.workspace }}/buildroot/output/build" -type f -name ".stamp_downloaded" -exec rm -f {} +
+          BUILD_DIR="${{ github.workspace }}/buildroot/output/build"
+          if [ -d "$BUILD_DIR" ]; then
+            find "$BUILD_DIR" -type f -name ".stamp_downloaded" -exec rm -f {} +
+          fi
       - name: Configure Buildroot
         shell: bash
         run: |
