@@ -78,6 +78,9 @@ jobs:
           else
             echo "dl directory not found."
           fi
+      - name: Force Buildroot to redownload files
+        run: |
+          find "${{ github.workspace }}/buildroot/output/build" -type f \( -name ".stamp_downloaded" -o -name ".stamp_extracted" -o -name ".stamp_patched" \) -exec rm -f {} +
       - name: Configure Buildroot
         shell: bash
         run: |
