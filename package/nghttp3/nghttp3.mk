@@ -19,7 +19,6 @@ define NGHTTP3_REMOVE_EXAMPLES
 	rm -rf $(@D)/tests
 	mkdir -p $(@D)/tests
 	touch $(@D)/tests/CMakeLists.txt
-	sed -Ei 's/project\(([^ ]+)/project(\1 LANGUAGES C/' $(@D)/CMakeLists.txt
 endef
 
 NGHTTP3_PRE_CONFIGURE_HOOKS += NGHTTP3_REMOVE_EXAMPLES
