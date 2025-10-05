@@ -8,10 +8,11 @@ config BR2_PACKAGE_DOCKER_ENGINE
 	depends on BR2_USE_MMU # containerd
 	depends on !BR2_PACKAGE_CGROUPFS_MOUNT
 	depends on BR2_PACKAGE_LIBSECCOMP_ARCH_SUPPORTS # libseccomp
-	select BR2_PACKAGE_CGROUPFS_V2_MOUNT if !BR2_PACKAGE_SYSTEMD # runtime dependency
+	select BR2_PACKAGE_CGROUPFS_V2_MOUNT # runtime dependency
 	select BR2_PACKAGE_CONTAINERD # runtime dependency
 	select BR2_PACKAGE_HOST_GO
-	select BR2_PACKAGE_IPTABLES # runtime dependency
+	select BR2_PACKAGE_IPTABLES
+	select BR2_PACKAGE_NFTABLES
 	select BR2_PACKAGE_LIBSECCOMP
 	help
 	  Docker is a platform to build, ship,

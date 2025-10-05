@@ -10,7 +10,7 @@ DOCKER_ENGINE_SITE = $(call github,moby,moby,master)
 DOCKER_ENGINE_LICENSE = Apache-2.0
 DOCKER_ENGINE_LICENSE_FILES = LICENSE
 
-DOCKER_ENGINE_DEPENDENCIES = host-pkgconf libseccomp
+DOCKER_ENGINE_DEPENDENCIES = host-pkgconf libseccomp nftables
 DOCKER_ENGINE_GOMOD = github.com/moby/moby/v2
 
 DOCKER_ENGINE_CPE_ID_VENDOR = docker
