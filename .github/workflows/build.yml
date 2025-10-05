@@ -42,7 +42,7 @@ jobs:
           sudo apt-get install -y sed make binutils build-essential diffutils bash patch \
             gzip bzip2 perl tar cpio unzip rsync file bc findutils wget python3 git libelf-dev jq \
             curl libdigest-sha3-perl gettext autopoint autoconf autotools-dev libtool-bin g++-14 gcc-14 \
-            qemu-system
+            qemu-system erofs-utils
           sudo rm -f /usr/bin/gcc /usr/bin/g++
           sudo ln -s /usr/bin/gcc-14 /usr/bin/gcc
           sudo ln -s /usr/bin/g++-14 /usr/bin/g++
