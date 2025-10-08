@@ -150,19 +150,18 @@ cd "$TARGET_DIR"
 
 # change to -n on prod
 if [[ -n "${CI:-}" ]]; then
-    echo "Running in CI environment, compressing binaries with level 19..."
-    "$HOST_DIR"/bin/mkfs.erofs \
-        -zzstd,19 \
-        -T 0 -U 00000000-0000-0000-0000-000000000000 \
-        -Ededupe -Efragments \
-        "$BINARIES_DIR"/initrd-containerd "$TARGET_DIR"
+    echo "Running in CI environment, compressing binaries..."
+    find . \
+        | LC_ALL=C sort \
+        | cpio --reproducible --quiet -o -H newc \
+        | zstd -T0 -19 \
+        > "$BINARIES_DIR"/initrd-containerd
 else
-    echo "Not running in CI environment, compressing binaries with level 1..."
-    "$HOST_DIR"/bin/mkfs.erofs \
-        -zzstd,1 \
-        -T 0 -U 00000000-0000-0000-0000-000000000000 \
-        -Ededupe -Efragments \
-        "$BINARIES_DIR"/initrd-containerd "$TARGET_DIR"
+    echo "Not running in CI environment, skipping compression..."
+    find . \
+        | LC_ALL=C sort \
+        | cpio --reproducible --quiet -o -H newc \
+        > "$BINARIES_DIR"/initrd-containerd
 fi
 
 rm "$TARGET_DIR"/usr/bin/docker
@@ -192,19 +191,18 @@ cd "$TARGET_DIR"
 
 # change to -n on prod
 if [[ -n "${CI:-}" ]]; then
-    echo "Running in CI environment, compressing binaries with level 19..."
-    "$HOST_DIR"/bin/mkfs.erofs \
-        -zzstd,19 \
-        -T 0 -U 00000000-0000-0000-0000-000000000000 \
-        -Ededupe -Efragments \
-        "$BINARIES_DIR"/initrd-docker "$TARGET_DIR"
+    echo "Running in CI environment, compressing binaries..."
+    find . \
+        | LC_ALL=C sort \
+        | cpio --reproducible --quiet -o -H newc \
+        | zstd -T0 -19 \
+        > "$BINARIES_DIR"/initrd-docker
 else
-    echo "Not running in CI environment, compressing binaries with level 1..."
-    "$HOST_DIR"/bin/mkfs.erofs \
-        -zzstd,1 \
-        -T 0 -U 00000000-0000-0000-0000-000000000000 \
-        -Ededupe -Efragments \
-        "$BINARIES_DIR"/initrd-docker "$TARGET_DIR"
+    echo "Not running in CI environment, skipping compression..."
+    find . \
+        | LC_ALL=C sort \
+        | cpio --reproducible --quiet -o -H newc \
+        > "$BINARIES_DIR"/initrd-docker
 fi
 
 mv "$SCRATCH_DIR"/buildkitd "$TARGET_DIR"/usr/bin/
