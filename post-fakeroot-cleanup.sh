@@ -32,8 +32,9 @@ rm -f "$TARGET_DIR"/usr/bin/unzip
 ln -s /usr/bin/bsdunzip "$TARGET_DIR"/usr/bin/unzip
 
 # Use nftables backend for iptables
-rm -f "$TARGET_DIR"/usr/sbin/iptables
+rm -f "$TARGET_DIR"/usr/sbin/iptables "$TARGET_DIR"/usr/sbin/ip6tables
 ln -s xtables-nft-multi "$TARGET_DIR"/usr/sbin/iptables
+ln -s xtables-nft-multi "$TARGET_DIR"/usr/sbin/ip6tables
 
 # Set doas permissions
 if [ "$EUID" -ne 0 ]; then
