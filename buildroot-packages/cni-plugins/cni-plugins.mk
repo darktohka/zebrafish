@@ -11,6 +11,9 @@ CNI_PLUGINS_LICENSE_FILES = LICENSE
 
 CNI_PLUGINS_BUILD_TARGETS = \
 	plugins/main/bridge \
+	plugins/main/ipvlan \
+	plugins/main/macvlan \
+	plugins/main/vlan \
 	plugins/meta/firewall \
 	plugins/ipam/host-local \
 	plugins/meta/portmap \
