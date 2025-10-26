@@ -51,7 +51,9 @@ define DROPBEAR_CONFIG
 	echo '#define DROPBEAR_DH_GROUP16 0'            >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_CURVE25519 0'            >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_SNTRUP761 1'             >> $(@D)/localoptions.h
-	echo '#define DROPBEAR_MLKEM768 1'              >> $(@D)/localoptions.h
+	echo '#define DROPBEAR_MLKEM768 1'				>> $(@D)/localoptions.h
+	echo '#define DROPBEAR_PQHYBRID 1'				>> $(@D)/localoptions.h
+	echo '#define DROPBEAR_CURVE25519_DEP 1'		>> $(@D)/localoptions.h
 	echo '#define DROPBEAR_ECDH 0'                  >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_DH_GROUP1 0'             >> $(@D)/localoptions.h
 	echo '#define DROPBEAR_SFTPSERVER 1'	        >> $(@D)/localoptions.h
