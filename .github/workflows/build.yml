@@ -56,7 +56,7 @@ jobs:
             "${{ github.workspace }}/zebrafish"
       - name: Restore Buildroot cache
         uses: actions/cache/restore@v4
-        if: ${{ github.event_name != 'schedule' }}
+        if: ${{ github.event_name != 'schedule' && github.event_name == 'never' }}
         with:
           key: zebrafish-cache-${{ matrix.architecture }}
           path: ${{ github.workspace }}/buildroot/output
