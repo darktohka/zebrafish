@@ -22,9 +22,9 @@ jobs:
           mode: create
           github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-          server_type: cax41
+          server_type: cax21
           location: fsn1
-          image: ubuntu-24.04
+          image: fedora-42
   setup:
     needs: create-runner
     runs-on: ${{ needs.create-runner.outputs.label }}
@@ -32,15 +32,13 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          sudo add-apt-repository universe
-          sudo apt-get update
-          sudo apt-get install -y sed make binutils build-essential diffutils bash patch \
-            gzip bzip2 perl tar cpio unzip rsync file bc findutils wget python3 git libelf-dev jq \
-            curl libdigest-sha3-perl gettext autopoint autoconf autotools-dev libtool-bin g++-14 gcc-14 \
-            qemu-system erofs-utils rclone
-          sudo rm -f /usr/bin/gcc /usr/bin/g++
-          sudo ln -s /usr/bin/gcc-14 /usr/bin/gcc
-          sudo ln -s /usr/bin/g++-14 /usr/bin/g++
+          sudo dnf install -y \
+            sed make binutils diffutils bash patch \
+            gzip bzip2 perl tar cpio unzip rsync file bc findutils \
+            wget python3 git elfutils-libelf-devel jq  \
+            curl perl-Digest-SHA3 gettext autopoint autoconf automake libtool \
+            gcc-c++ qemu-system-aarch64 qemu-system-x86 erofs-utils rclone \
+            cmake bison flex
       - name: Setup rclone
         if: github.ref == 'refs/heads/master'
         shell: bash
