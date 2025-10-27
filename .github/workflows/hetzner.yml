@@ -56,7 +56,7 @@ jobs:
           no_check_bucket = true
           EOF
   build:
-    needs: setup
+    needs: [create-runner, setup]
     runs-on: ${{ needs.create-runner.outputs.label }}
     strategy:
       matrix:
