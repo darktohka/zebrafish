@@ -15,4 +15,4 @@ if ! [[ -d "$ZF" ]]; then
 fi
 
 cd "$BR"
-make BR2_EXTERNAL="$ZF"
+make BR2_EXTERNAL="$ZF" -j$(nproc)
