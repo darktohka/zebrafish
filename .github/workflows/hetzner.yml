@@ -1,0 +1,156 @@
+name: Autobuild
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  push:
+  workflow_dispatch:
+  repository_dispatch:
+
+jobs:
+  create-runner:
+    name: Create Hetzner Cloud runner
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.create-hcloud-runner.outputs.label }}
+      server_id: ${{ steps.create-hcloud-runner.outputs.server_id }}
+    steps:
+      - name: Create runner
+        id: create-hcloud-runner
+        uses: Cyclenerd/hcloud-github-runner@v1
+        with:
+          mode: create
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          server_type: cx23
+          location: nbg1
+          image: ubuntu-24.04
+  setup:
+    needs: create-runner
+    runs-on: ${{ needs.create-runner.outputs.label }}
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo add-apt-repository universe
+          sudo apt-get update
+          sudo apt-get install -y sed make binutils build-essential diffutils bash patch \
+            gzip bzip2 perl tar cpio unzip rsync file bc findutils wget python3 git libelf-dev jq \
+            curl libdigest-sha3-perl gettext autopoint autoconf autotools-dev libtool-bin g++-14 gcc-14 \
+            qemu-system erofs-utils
+          sudo rm -f /usr/bin/gcc /usr/bin/g++
+          sudo ln -s /usr/bin/gcc-14 /usr/bin/gcc
+          sudo ln -s /usr/bin/g++-14 /usr/bin/g++
+  build:
+    needs: setup
+    runs-on: ${{ needs.create-runner.outputs.label }}
+    strategy:
+      matrix:
+        architecture: [x64, aarch64]
+    steps:
+      - name: Checkout Zebrafish
+        uses: actions/checkout@v4
+        with:
+          path: zebrafish
+      - name: Checkout Buildroot
+        uses: actions/checkout@v4
+        with:
+          repository: buildroot/buildroot
+          ref: master
+          path: buildroot
+      - name: Patch Buildroot
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x patch.sh
+          ./patch.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/zebrafish"
+      - name: Configure Buildroot
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x config.sh
+          ./config.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/zebrafish" \
+            "${{ matrix.architecture }}"
+      - name: Download sources for packages
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x download.sh
+          ./download.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/zebrafish"
+      - name: Build Buildroot
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x build.sh
+          ./build.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/zebrafish"
+      - name: Print SBOM
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/buildroot"
+          ls -l output/build
+      - name: Prepare artifacts
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x prepare-artifacts.sh
+          ./prepare-artifacts.sh \
+            "${{ github.workspace }}/buildroot" \
+            "${{ github.workspace }}/artifacts" \
+            "${{ matrix.architecture }}"
+      - name: Test artifacts
+        shell: bash
+        run: |
+          cd "${{ github.workspace }}/zebrafish/buildroot-scripts"
+          chmod +x test.sh
+          ./test.sh \
+            "${{ github.workspace }}/artifacts"
+      - name: Upload containerd artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zebrafish-${{ matrix.architecture }}-containerd
+          path: ${{ github.workspace }}/artifacts/upload/zebrafish-${{ matrix.architecture }}-containerd.tar
+      - name: Upload Docker artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zebrafish-${{ matrix.architecture }}-docker
+          path: ${{ github.workspace }}/artifacts/upload/zebrafish-${{ matrix.architecture }}-docker.tar
+      - name: Deploy to CDN
+        if: github.ref == 'refs/heads/master'
+        run: |
+          cat <<EOF > ./rclone.conf
+          [s3]
+          type = s3
+          provider = Cloudflare
+          access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          endpoint = ${{ secrets.AWS_ENDPOINT_URL }}
+          acl = public-read
+          no_check_bucket = true
+          EOF
+          docker run -v ./rclone.conf:/config/rclone/rclone.conf -v "${{ github.workspace }}/artifacts/upload:/artifacts" rclone/rclone:latest -vv copy /artifacts/ s3:${{ secrets.AWS_BUCKET }}/
+          rm ./rclone.conf
+  delete-runner:
+    name: Delete Hetzner Cloud runner
+    needs:
+      - create-runner
+      - setup
+      - build
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - name: Delete runner
+        uses: Cyclenerd/hcloud-github-runner@v1
+        with:
+          mode: delete
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          name: ${{ needs.create-runner.outputs.label }}
+          server_id: ${{ needs.create-runner.outputs.server_id }}
