@@ -37,10 +37,24 @@ jobs:
           sudo apt-get install -y sed make binutils build-essential diffutils bash patch \
             gzip bzip2 perl tar cpio unzip rsync file bc findutils wget python3 git libelf-dev jq \
             curl libdigest-sha3-perl gettext autopoint autoconf autotools-dev libtool-bin g++-14 gcc-14 \
-            qemu-system erofs-utils
+            qemu-system erofs-utils rclone
           sudo rm -f /usr/bin/gcc /usr/bin/g++
           sudo ln -s /usr/bin/gcc-14 /usr/bin/gcc
           sudo ln -s /usr/bin/g++-14 /usr/bin/g++
+      - name: Setup rclone
+        if: github.ref == 'refs/heads/master'
+        shell: bash
+        run: |
+          cat <<EOF > /rclone.conf
+          [s3]
+          type = s3
+          provider = Cloudflare
+          access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          endpoint = ${{ secrets.AWS_ENDPOINT_URL }}
+          acl = public-read
+          no_check_bucket = true
+          EOF
   build:
     needs: setup
     runs-on: ${{ needs.create-runner.outputs.label }}
@@ -125,23 +139,10 @@ jobs:
       - name: Deploy to CDN
         if: github.ref == 'refs/heads/master'
         run: |
-          cat <<EOF > ./rclone.conf
-          [s3]
-          type = s3
-          provider = Cloudflare
-          access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
-          secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          endpoint = ${{ secrets.AWS_ENDPOINT_URL }}
-          acl = public-read
-          no_check_bucket = true
-          EOF
-          docker run -v ./rclone.conf:/config/rclone/rclone.conf -v "${{ github.workspace }}/artifacts/upload:/artifacts" rclone/rclone:latest -vv copy /artifacts/ s3:${{ secrets.AWS_BUCKET }}/
-          rm ./rclone.conf
+          rclone --config /rclone.conf -vv copy artifacts/upload/ s3:${{ secrets.AWS_BUCKET }}/
   delete-runner:
     name: Delete Hetzner Cloud runner
-    needs:
-      - create-runner
-      - build
+    needs: [create-runner, setup, build]
     runs-on: ubuntu-latest
     if: ${{ always() }}
     steps:
