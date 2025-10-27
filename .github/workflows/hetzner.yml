@@ -22,7 +22,7 @@ jobs:
           mode: create
           github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-          server_type: cx23
+          server_type: cx53
           location: nbg1
           image: ubuntu-24.04
   setup:
