@@ -5,7 +5,7 @@
 ################################################################################
 
 NGHTTP2_VERSION = origin/master
-NGHTTP2_SITE = https://github.com/nghttp2/nghttp2
+NGHTTP2_SITE = https://github.com/darktohka/nghttp2
 NGHTTP2_SITE_METHOD = git
 NGHTTP2_GIT_SUBMODULES = NO
 NGHTTP2_INSTALL_STAGING = YES
