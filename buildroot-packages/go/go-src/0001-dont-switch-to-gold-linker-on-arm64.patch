@@ -7,39 +7,39 @@ Subject: [PATCH] Don't switch to gold linker on ARM64
  1 file changed, 21 deletions(-)
 
 diff --git a/src/cmd/go/internal/modfetch/fetch.go b/src/cmd/go/internal/modfetch/fetch.go
-index 0a84aec..6e3dd33 100644
+index 87f6915..d359208 100644
 --- a/src/cmd/go/internal/modfetch/fetch.go
 +++ b/src/cmd/go/internal/modfetch/fetch.go
-@@ -799,32 +799,16 @@ func checkModSum(mod module.Version, h string) error {
+@@ -807,32 +807,16 @@ func checkModSum(f *Fetcher, mod module.Version, h string) error {
  // If it finds a conflicting pair instead, it calls base.Fatalf.
  // goSum.mu must be locked.
- func haveModSumLocked(mod module.Version, h string) bool {
+ func haveModSumLocked(f *Fetcher, mod module.Version, h string) bool {
 -	sumFileName := "go.sum"
--	if strings.HasSuffix(ModuleFetchState.GoSumFile, "go.work.sum") {
+-	if strings.HasSuffix(f.goSumFile, "go.work.sum") {
 -		sumFileName = "go.work.sum"
 -	}
--	for _, vh := range goSum.m[mod] {
+-	for _, vh := range f.sumState.m[mod] {
 -		if h == vh {
 -			return true
 -		}
 -		if strings.HasPrefix(vh, "h1:") {
 -			base.Fatalf("verifying %s@%s: checksum mismatch\n\tdownloaded: %v\n\t%s:     %v"+goSumMismatch, mod.Path, mod.Version, h, sumFileName, vh)
 -		}
-+	if _, ok := goSum.m[mod]; ok {
++	if _, ok := f.sumState.m[mod]; ok {
 +		return true
  	}
  	// Also check workspace sums.
 -	foundMatch := false
 -	// Check sums from all files in case there are conflicts between
 -	// the files.
--	for goSumFile, goSums := range goSum.w {
+-	for goSumFile, goSums := range f.sumState.w {
 -		for _, vh := range goSums[mod] {
 -			if h == vh {
 -				foundMatch = true
 -			} else if strings.HasPrefix(vh, "h1:") {
 -				base.Fatalf("verifying %s@%s: checksum mismatch\n\tdownloaded: %v\n\t%s:     %v"+goSumMismatch, mod.Path, mod.Version, h, goSumFile, vh)
 -			}
-+	for _, goSums := range goSum.w {
++	for _, goSums := range f.sumState.w {
 +		if _, ok := goSums[mod]; ok {
 +			return true
  		}
@@ -49,7 +49,7 @@ index 0a84aec..6e3dd33 100644
  }
  
  // addModSumLocked adds the pair mod,h to go.sum.
-@@ -841,29 +825,7 @@ func addModSumLocked(mod module.Version, h string) {
+@@ -849,29 +833,7 @@ func addModSumLocked(f *Fetcher, mod module.Version, h string) {
  
  // checkSumDB checks the mod, h pair against the Go checksum database.
  // It calls base.Fatalf if the hash is to be rejected.
