@@ -1,0 +1,39 @@
+comment "iomemory-vsl4 needs a Linux kernel and is only available on x86_64"
+	depends on !BR2_LINUX_KERNEL || !BR2_x86_64
+
+config BR2_PACKAGE_IOMEMORY_VSL4
+	bool "iomemory-vsl4"
+	depends on BR2_LINUX_KERNEL
+	depends on BR2_x86_64
+	select BR2_LINUX_NEEDS_MODULES
+	select BR2_PACKAGE_KMOD
+	help
+	  SanDisk/Fusion-io iomemory-vsl4 driver and utilities for
+	  ioMemory PCIe flash storage devices.
+
+	  This package provides:
+	  - The iomemory-vsl4 kernel module (built-in)
+	  - Firmware files for Fusion-io devices
+	  - fio-util command-line utilities
+
+	  Note: This package is only available on x86_64 architecture.
+
+	  https://github.com/RemixVSL/iomemory-vsl4
+
+if BR2_PACKAGE_IOMEMORY_VSL4
+
+config BR2_PACKAGE_IOMEMORY_VSL4_FIRMWARE
+	bool "Install firmware files"
+	default y
+	help
+	  Install Fusion-io firmware files to /lib/firmware/fio.
+
+config BR2_PACKAGE_IOMEMORY_VSL4_UTILS
+	bool "Install fio-util utilities"
+	default y
+	help
+	  Install fio-util command-line utilities including:
+	  fio-attach, fio-beacon, fio-bugreport, fio-control,
+	  fio-detach, fio-format, fio-status, and more.
+
+endif

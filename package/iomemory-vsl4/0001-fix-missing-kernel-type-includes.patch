@@ -1,0 +1,29 @@
+From: Buildroot <buildroot@buildroot.org>
+Date: Sun, 5 Jan 2026 00:00:00 +0000
+Subject: [PATCH] Fix missing kernel type includes for size_t and bool
+
+The iomemory-vsl4 driver uses size_t and bool types but doesn't include
+the proper kernel headers. Add linux/types.h includes and define size_t
+and bool types in stdint.h to fix compilation with newer kernels.
+
+Signed-off-by: Buildroot <buildroot@buildroot.org>
+---
+ root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h | 13 +++++++++++++
+ root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h                |  1 +
+ root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/six_lock.h            |  1 +
+ root/usr/src/iomemory-vsl4-4.3.7/six_lock.c                             |  1 +
+ 4 files changed, 16 insertions(+)
+
+--- a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h
++++ b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h
+@@ -35,6 +35,11 @@
+  * @{
+  */
+ #ifndef _LINUX_TYPES_H
++
++/* Add size_t and bool definitions */
++typedef unsigned long size_t;  // size_t is typically unsigned long in the kernel
++typedef int bool;               // bool is usually an int type in the kernel
++typedef unsigned long uintptr_t;
+
+ /* Exact integral types.  */

@@ -22,4 +22,8 @@ menu "zfs"
 	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/zrepl/Config.in"
 endmenu
 
+menu "iomemory-vsl4"
+	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/iomemory-vsl4/Config.in"
+endmenu
+
 endmenu
