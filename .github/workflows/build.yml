@@ -23,11 +23,11 @@ jobs:
           remove-codeql: 'true'
           remove-docker-images: 'true'
       - name: Checkout Zebrafish
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: zebrafish
       - name: Checkout Buildroot
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: buildroot/buildroot
           ref: master
@@ -53,7 +53,7 @@ jobs:
             "${{ github.workspace }}/buildroot" \
             "${{ github.workspace }}/zebrafish"
       - name: Restore Buildroot cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         if: ${{ github.event_name != 'schedule' && github.event_name == 'never' }}
         with:
           key: zebrafish-cache-${{ matrix.architecture }}
@@ -162,7 +162,7 @@ jobs:
           ./prepare-cache.sh \
             "${{ github.workspace }}/buildroot"
       - name: Save Buildroot cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           key: zebrafish-cache-${{ matrix.architecture }}
