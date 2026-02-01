@@ -22,8 +22,6 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
-          root-reserve-mb: '8192'
-          temp-reserve-mb: '8192'
       - name: Checkout Zebrafish
         uses: actions/checkout@v4
         with:
@@ -169,3 +167,11 @@ jobs:
         with:
           key: zebrafish-cache-${{ matrix.architecture }}
           path: ${{ github.workspace }}/buildroot/output
+  keepalive:
+    name: Keep workflow alive
+    runs-on: ubuntu-slim
+    permissions:
+      actions: write
+    steps:
+      - name: Keep workflow alive
+        uses: darktohka/keepalive-workflow@v1
