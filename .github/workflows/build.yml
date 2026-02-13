@@ -15,7 +15,7 @@ jobs:
         architecture: [x64, aarch64]
     steps:
       - name: Maximize build space
-        uses: easimon/maximize-build-space@master
+        uses: darktohka/maximize-build-space@master
         with:
           remove-dotnet: 'true'
           remove-android: 'true'
@@ -23,7 +23,6 @@ jobs:
           remove-codeql: 'true'
           remove-docker-images: 'true'
           root-reserve-mb: '8192'
-          temp-reserve-mb: '8192'
       - name: Checkout Zebrafish
         uses: actions/checkout@v6
         with:
