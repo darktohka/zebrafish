@@ -22,6 +22,8 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
+          root-reserve-mb: '8192'
+          temp-reserve-mb: '8192'
       - name: Checkout Zebrafish
         uses: actions/checkout@v6
         with:
