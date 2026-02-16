@@ -8,7 +8,7 @@ source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/knockrs/Config.in"
 source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/nodeexporter/Config.in"
 source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/zfsexporter/Config.in"
 source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/ugrep/Config.in"
-source "$BR2_EXTERNAL_ZEBRAFISH_PATH/buildroot-packages/bfs/Config.in"
+source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/bfs/Config.in"
 
 menu "doas"
 	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/opendoas/Config.in"
