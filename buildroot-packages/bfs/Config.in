@@ -1,0 +1,10 @@
+config BR2_PACKAGE_BFS
+	bool "bfs"
+	help
+	  bfs is a breadth-first variant of the UNIX find command.
+
+	  Optional support for acl, libcap, libselinux, liburing and
+	  oniguruma is enabled automatically when those packages are
+	  selected globally.
+
+	  https://github.com/tavianator/bfs
