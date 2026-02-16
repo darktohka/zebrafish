@@ -19,7 +19,7 @@ config BR2_PACKAGE_RIPGREP_PCRE2
 	bool "enable PCRE2 regex engine"
 	select BR2_PACKAGE_PCRE2
 	help
-	  Enable ripgrep's optional PCRE2-based regex engine
+	  Enable ripgrep optional PCRE2-based regex engine
 	  (equivalent to cargo feature: pcre2).
 
 endif
