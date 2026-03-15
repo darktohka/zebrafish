@@ -1,16 +1,18 @@
+From 7ca56b82042305ce0382f86f4aab4caf0c47f576 Mon Sep 17 00:00:00 2001
 From: Disyer <daniel@tohka.us>
-Date: Sat, 23 Nov 2025 12:15:11 +0200
+Date: Sun, 15 Mar 2026 11:33:16 +0200
 Subject: [PATCH] Don't switch to gold linker on ARM64
 
 ---
- src/cmd/link/internal/ld/lib.go | 21 ---------------------
- 1 file changed, 21 deletions(-)
+ src/cmd/go/internal/modfetch/fetch.go | 52 ++++-----------------------
+ src/cmd/link/internal/ld/lib.go       | 47 ------------------------
+ 2 files changed, 7 insertions(+), 92 deletions(-)
 
 diff --git a/src/cmd/go/internal/modfetch/fetch.go b/src/cmd/go/internal/modfetch/fetch.go
-index 87f6915..d359208 100644
+index 7c9280f1..21054856 100644
 --- a/src/cmd/go/internal/modfetch/fetch.go
 +++ b/src/cmd/go/internal/modfetch/fetch.go
-@@ -807,32 +807,16 @@ func checkModSum(f *Fetcher, mod module.Version, h string) error {
+@@ -805,32 +805,16 @@ func checkModSum(f *Fetcher, mod module.Version, h string) error {
  // If it finds a conflicting pair instead, it calls base.Fatalf.
  // goSum.mu must be locked.
  func haveModSumLocked(f *Fetcher, mod module.Version, h string) bool {
@@ -49,7 +51,7 @@ index 87f6915..d359208 100644
  }
  
  // addModSumLocked adds the pair mod,h to go.sum.
-@@ -849,29 +833,7 @@ func addModSumLocked(f *Fetcher, mod module.Version, h string) {
+@@ -847,29 +831,7 @@ func addModSumLocked(f *Fetcher, mod module.Version, h string) {
  
  // checkSumDB checks the mod, h pair against the Go checksum database.
  // It calls base.Fatalf if the hash is to be rejected.
@@ -81,38 +83,63 @@ index 87f6915..d359208 100644
  }
  
 diff --git a/src/cmd/link/internal/ld/lib.go b/src/cmd/link/internal/ld/lib.go
-index 2c86112..7da5783 100644
+index 64fd4cc8..a712dd69 100644
 --- a/src/cmd/link/internal/ld/lib.go
 +++ b/src/cmd/link/internal/ld/lib.go
-@@ -1698,27 +1698,6 @@ func (ctxt *Link) hostlink() {
+@@ -1698,53 +1698,6 @@ func (ctxt *Link) hostlink() {
  			// Use lld to avoid errors from default linker (issue #38838)
  			altLinker = "lld"
  		}
 -
 -		if ctxt.Arch.InFamily(sys.ARM64) && buildcfg.GOOS == "linux" {
--			// On ARM64, the GNU linker will fail with
--			// -znocopyreloc if it thinks a COPY relocation is
--			// required. Switch to gold.
+-			// On ARM64, the GNU linker had issues with -znocopyreloc
+-			// and COPY relocations. This was fixed in GNU ld 2.36+.
 -			// https://sourceware.org/bugzilla/show_bug.cgi?id=19962
 -			// https://go.dev/issue/22040
--			altLinker = "gold"
+-			// And newer gold is deprecated, may lack new features/flags, or even missing
 -
--			// If gold is not installed, gcc will silently switch
--			// back to ld.bfd. So we parse the version information
--			// and provide a useful error if gold is missing.
+-			// If the default linker is GNU ld 2.35 or older, use gold
+-			useGold := false
 -			name, args := flagExtld[0], flagExtld[1:]
--			args = append(args, "-fuse-ld=gold", "-Wl,--version")
+-			args = append(args, "-Wl,--version")
 -			cmd := exec.Command(name, args...)
 -			if out, err := cmd.CombinedOutput(); err == nil {
--				if !bytes.Contains(out, []byte("GNU gold")) {
--					log.Fatalf("ARM64 external linker must be gold (issue #15696, 22040), but is not: %s", out)
+-				// Parse version from output like "GNU ld (GNU Binutils for Distro) 2.36.1"
+-				for line := range strings.Lines(string(out)) {
+-					if !strings.HasPrefix(line, "GNU ld ") {
+-						continue
+-					}
+-					fields := strings.Fields(line[len("GNU ld "):])
+-					var major, minor int
+-					if ret, err := fmt.Sscanf(fields[len(fields)-1], "%d.%d", &major, &minor); ret == 2 && err == nil {
+-						if major == 2 && minor <= 35 {
+-							useGold = true
+-						}
+-						break
+-					}
+-				}
+-			}
+-
+-			if useGold {
+-				// Use gold for older linkers
+-				altLinker = "gold"
+-
+-				// If gold is not installed, gcc will silently switch
+-				// back to ld.bfd. So we parse the version information
+-				// and provide a useful error if gold is missing.
+-				args = flagExtld[1:]
+-				args = append(args, "-fuse-ld=gold", "-Wl,--version")
+-				cmd = exec.Command(name, args...)
+-				if out, err := cmd.CombinedOutput(); err == nil {
+-					if !bytes.Contains(out, []byte("GNU gold")) {
+-						log.Fatalf("ARM64 external linker must be ld>=2.36 or gold (issue #15696, 22040), but is not: %s", out)
+-					}
 -				}
 -			}
 -		}
  	}
  	if ctxt.Arch.Family == sys.ARM64 && buildcfg.GOOS == "freebsd" {
  		// Switch to ld.bfd on freebsd/arm64.
-
---
-2.47.0
+-- 
+2.53.0
 
