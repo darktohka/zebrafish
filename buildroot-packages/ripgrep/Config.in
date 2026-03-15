@@ -12,14 +12,3 @@ config BR2_PACKAGE_RIPGREP
 	  The Silver Searcher, ack and grep.
 
 	  https://github.com/BurntSushi/ripgrep
-
-if BR2_PACKAGE_RIPGREP
-
-config BR2_PACKAGE_RIPGREP_PCRE2
-	bool "enable PCRE2 regex engine"
-	select BR2_PACKAGE_PCRE2
-	help
-	  Enable ripgrep optional PCRE2-based regex engine
-	  (equivalent to cargo feature: pcre2).
-
-endif
