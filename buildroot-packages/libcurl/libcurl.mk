@@ -10,6 +10,12 @@ LIBCURL_DEPENDENCIES = $(if $(BR2_PACKAGE_ZLIB),zlib) \
 	$(if $(BR2_PACKAGE_RTMPDUMP),rtmpdump) \
 	$(if $(BR2_PACKAGE_LIBPSL),libpsl) \
 	host-pkgconf \
+	host-wolfssl \
+	host-zstd \
+	host-nghttp2 \
+	host-ngtcp2 \
+	host-nghttp3 \
+	host-libidn2 \
 	wolfssl \
 	zstd \
 	nghttp2 \
