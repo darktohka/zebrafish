@@ -1,10 +1,11 @@
 #!/bin/sh
 
-NAME=unbound
+NAME=zebrafish-dns
 PIDFILE=/var/run/$NAME.pid
 LOGFILE=/logs/system/$NAME.log
+CONFIG=/etc/zebrafish-dns/zebrafish-dns.toml
 
-DAEMON_ARGS="-d -p"
+DAEMON_ARGS="$CONFIG"
 
 [ -r "/etc/default/$NAME" ] && . "/etc/default/$NAME"
 

@@ -1,0 +1,13 @@
+config BR2_PACKAGE_ZEBRAFISH_DNS
+	bool "zebrafish-dns"
+	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+	select BR2_PACKAGE_HOST_RUSTC
+	help
+	  DNS over HTTPS proxy server for Zebrafish.
+
+	  Listens on localhost port 53 for standard DNS queries and
+	  proxies them to a configurable DoH upstream (Cloudflare,
+	  Google, Quad9, or custom). Includes in-process caching
+	  and an NSS module for system resolver integration.
+
+	  Built with Rust using the hickory-dns library.
