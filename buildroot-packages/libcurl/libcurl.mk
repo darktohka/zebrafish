@@ -13,13 +13,9 @@ LIBCURL_DEPENDENCIES = $(if $(BR2_PACKAGE_ZLIB),zlib) \
 	host-wolfssl \
 	host-zstd \
 	host-nghttp2 \
-	host-ngtcp2 \
-	host-nghttp3 \
 	wolfssl \
 	zstd \
-	nghttp2 \
-	ngtcp2 \
-	nghttp3
+	nghttp2
 
 LIBCURL_INSTALL_STAGING = YES
 LIBCURL_AUTORECONF = YES
@@ -58,8 +54,8 @@ LIBCURL_CONF_OPTS = \
 	-DCURL_ZSTD=ON \
 	-DCURL_BROTLI=OFF \
 	-DUSE_NGHTTP2=ON \
-	-DUSE_NGTCP2=ON \
-	-DUSE_NGHTTP3=ON \
+	-DUSE_NGTCP2=OFF \
+	-DUSE_NGHTTP3=OFF \
 	-DCURL_USE_LIBPSL=ON \
 	-DCURL_USE_LIBSSH2=OFF \
 	-DCURL_USE_LIBSSH=OFF \
