@@ -14,7 +14,7 @@ define ZEBRAFISH_DNS_STRIP_BINARY
 endef
 
 define ZEBRAFISH_DNS_INSTALL_NSS
-	$(INSTALL) -D -m 0755 $(@D)/target/$(RUSTC_TARGET_NAME)/release/libzebrafish_dns_nss.so \
+	$(INSTALL) -D -m 0755 $(@D)/target/$(RUSTC_TARGET_NAME)/release/libzebrafish_dns.so \
 		$(TARGET_DIR)/lib/libnss_zebrafish.so.2
 endef
 
