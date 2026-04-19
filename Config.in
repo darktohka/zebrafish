@@ -11,10 +11,6 @@ source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/zfsexporter/Config.in"
 source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/ugrep/Config.in"
 source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/bfs/Config.in"
 
-menu "doas"
-	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/opendoas/Config.in"
-endmenu
-
 menu "dive"
 	source "$BR2_EXTERNAL_ZEBRAFISH_PATH/package/dive/Config.in"
 endmenu

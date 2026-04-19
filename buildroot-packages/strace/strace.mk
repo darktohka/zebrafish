@@ -4,9 +4,8 @@
 #
 ################################################################################
 
-STRACE_VERSION = 6.19
-STRACE_SOURCE = strace-$(STRACE_VERSION).tar.xz
-STRACE_SITE = https://github.com/strace/strace/releases/download/v$(STRACE_VERSION)
+STRACE_VERSION = master
+STRACE_SITE = $(call github,strace,strace,master)
 STRACE_LICENSE = LGPL-2.1+
 STRACE_LICENSE_FILES = COPYING LGPL-2.1-or-later
 STRACE_CPE_ID_VALID = YES
