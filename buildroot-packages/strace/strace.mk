@@ -4,12 +4,18 @@
 #
 ################################################################################
 
-STRACE_VERSION = master
-STRACE_SITE = $(call github,strace,strace,master)
+STRACE_VERSION = origin/master
+STRACE_SITE = https://github.com/strace/strace
+STRACE_SITE_METHOD = git
 STRACE_LICENSE = LGPL-2.1+
 STRACE_LICENSE_FILES = COPYING LGPL-2.1-or-later
 STRACE_CPE_ID_VALID = YES
 STRACE_CONF_OPTS = --enable-mpers=no
+
+define STRACE_RUN_BOOTSTRAP
+	cd $(@D) && PATH=$(BR_PATH) ./bootstrap
+endef
+STRACE_PRE_CONFIGURE_HOOKS += STRACE_RUN_BOOTSTRAP
 
 ifeq ($(BR2_PACKAGE_LIBUNWIND),y)
 STRACE_DEPENDENCIES += libunwind
