@@ -6,6 +6,7 @@ use tracing_subscriber::EnvFilter;
 use zebrafish_dns::cache::DnsCache;
 use zebrafish_dns::config::Config;
 use zebrafish_dns::doh::DohClient;
+use zebrafish_dns::query_log::QueryLogger;
 use zebrafish_dns::server::DnsServer;
 
 const DEFAULT_CONFIG_PATH: &str = "/etc/zebrafish-dns/zebrafish-dns.toml";
@@ -29,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    // Initialize logging
+    // Initialize tracing for debug/error logging
     let filter = EnvFilter::try_new(&config.logging.level)
         .unwrap_or_else(|_| EnvFilter::new("info"));
     tracing_subscriber::fmt()
@@ -43,6 +44,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         listen = %format!("{}:{}", config.server.listen_address, config.server.listen_port),
         "Starting zebrafish-dns"
     );
+
+    // Initialize JSON query logger
+    let query_logger = if config.query_log.enabled {
+        match QueryLogger::new(config.query_log.output.clone()) {
+            Ok(logger) => {
+                info!("JSON query logging enabled");
+                Some(Arc::new(logger))
+            }
+            Err(e) => {
+                eprintln!("Warning: could not open query log output: {e}, query logging disabled");
+                None
+            }
+        }
+    } else {
+        None
+    };
 
     let workers = if config.server.workers == 0 {
         std::thread::available_parallelism()
@@ -71,6 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             config.server.listen_address.clone(),
             config.server.listen_address_v6.clone(),
             config.server.listen_port,
+            query_logger,
         ));
 
         server.run().await

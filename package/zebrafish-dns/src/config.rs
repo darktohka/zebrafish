@@ -8,6 +8,8 @@ pub struct Config {
     pub upstream: UpstreamConfig,
     pub cache: CacheConfig,
     pub logging: LoggingConfig,
+    #[serde(default)]
+    pub query_log: QueryLogConfig,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -68,6 +70,22 @@ pub struct LoggingConfig {
 
 fn default_log_level() -> String {
     "info".to_string()
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct QueryLogConfig {
+    #[serde(default)]
+    pub enabled: bool,
+    pub output: Option<String>,
+}
+
+impl Default for QueryLogConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            output: None,
+        }
+    }
 }
 
 impl Config {
@@ -142,6 +160,7 @@ impl Default for Config {
             logging: LoggingConfig {
                 level: "info".to_string(),
             },
+            query_log: QueryLogConfig::default(),
         }
     }
 }
@@ -160,6 +179,8 @@ mod tests {
         assert_eq!(config.cache.min_ttl, 60);
         assert_eq!(config.cache.max_ttl, 86400);
         assert_eq!(config.logging.level, "info");
+        assert!(!config.query_log.enabled);
+        assert_eq!(config.query_log.output, None);
     }
 
     #[test]
@@ -231,6 +252,10 @@ max_ttl = 3600
 
 [logging]
 level = "debug"
+
+[query_log]
+enabled = true
+output = "/logs/system/zebrafish-dns-queries.json"
 "#;
         let config: Config = toml::from_str(toml_str).unwrap();
         assert_eq!(config.server.listen_address, "127.0.0.1");
@@ -241,6 +266,11 @@ level = "debug"
         assert_eq!(config.cache.min_ttl, 30);
         assert_eq!(config.cache.max_ttl, 3600);
         assert_eq!(config.logging.level, "debug");
+        assert!(config.query_log.enabled);
+        assert_eq!(
+            config.query_log.output,
+            Some("/var/log/zebrafish-dns/queries.json".to_string())
+        );
         assert_eq!(config.doh_url(), "https://dns.google/dns-query");
     }
 

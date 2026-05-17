@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use std::time::Instant;
 
 use bytes::Bytes;
 use hickory_proto::op::Message;
@@ -69,6 +70,13 @@ pub struct DohClient {
     cache: Arc<DnsCache>,
 }
 
+pub struct DnsResult {
+    pub response: Vec<u8>,
+    pub cached: bool,
+    pub upstream_status: Option<u16>,
+    pub upstream_latency_ms: Option<u64>,
+}
+
 impl DohClient {
     pub fn new(config: &Config, cache: Arc<DnsCache>) -> Self {
         let tls = rustls::ClientConfig::builder()
@@ -125,8 +133,11 @@ impl DohClient {
     }
 
     /// Resolve a DNS query by forwarding to the DoH upstream.
-    /// Returns the raw DNS wire-format response.
-    pub async fn resolve(&self, query_bytes: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
+    /// Returns the raw DNS wire-format response with metadata.
+    pub async fn resolve(
+        &self,
+        query_bytes: &[u8],
+    ) -> Result<DnsResult, Box<dyn std::error::Error + Send + Sync>> {
         // Parse the query for cache lookup
         let query_msg = Message::from_vec(query_bytes)?;
         let query_id = query_msg.id();
@@ -148,7 +159,12 @@ impl DohClient {
                 response[1] = (query_id & 0xff) as u8;
             }
             debug!("Cache hit");
-            return Ok(response);
+            return Ok(DnsResult {
+                response,
+                cached: true,
+                upstream_status: None,
+                upstream_latency_ms: None,
+            });
         }
 
         debug!("Cache miss, forwarding to upstream");
@@ -161,10 +177,12 @@ impl DohClient {
             .header("accept", "application/dns-message")
             .body(Full::new(Bytes::copy_from_slice(query_bytes)))?;
 
+        let upstream_start = Instant::now();
         let resp = self.client.request(req).await?;
+        let upstream_latency_ms = upstream_start.elapsed().as_millis() as u64;
+        let status = resp.status();
 
-        if !resp.status().is_success() {
-            let status = resp.status();
+        if !status.is_success() {
             error!(status = %status, "DoH upstream returned error");
             return Err(format!("DoH upstream error: {}", status).into());
         }
@@ -182,6 +200,11 @@ impl DohClient {
             result[1] = (query_id & 0xff) as u8;
         }
 
-        Ok(result)
+        Ok(DnsResult {
+            response: result,
+            cached: false,
+            upstream_status: Some(status.as_u16()),
+            upstream_latency_ms: Some(upstream_latency_ms),
+        })
     }
 }

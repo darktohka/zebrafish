@@ -1,26 +1,36 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Instant;
 
 use hickory_proto::op::{Header, Message, MessageType, OpCode, ResponseCode};
 use tokio::net::{TcpListener, UdpSocket};
 use tracing::{debug, error, info, warn};
 
 use crate::doh::DohClient;
+use crate::query_log::QueryLogger;
 
 pub struct DnsServer {
     client: Arc<DohClient>,
     listen_addr_v4: String,
     listen_addr_v6: String,
     listen_port: u16,
+    logger: Option<Arc<QueryLogger>>,
 }
 
 impl DnsServer {
-    pub fn new(client: Arc<DohClient>, listen_addr_v4: String, listen_addr_v6: String, listen_port: u16) -> Self {
+    pub fn new(
+        client: Arc<DohClient>,
+        listen_addr_v4: String,
+        listen_addr_v6: String,
+        listen_port: u16,
+        logger: Option<Arc<QueryLogger>>,
+    ) -> Self {
         Self {
             client,
             listen_addr_v4,
             listen_addr_v6,
             listen_port,
+            logger,
         }
     }
 
@@ -121,17 +131,47 @@ impl DnsServer {
                     let query = buf[..len].to_vec();
                     let client = self.client.clone();
                     let sock = socket.clone();
+                    let logger = self.logger.clone();
 
                     tokio::spawn(async move {
+                        let start = Instant::now();
                         match client.resolve(&query).await {
-                            Ok(response) => {
-                                if let Err(e) = sock.send_to(&response, src).await {
+                            Ok(result) => {
+                                let total_ms = start.elapsed().as_millis() as u64;
+                                if let Some(ref logger) = logger {
+                                    logger.log(
+                                        &src.ip().to_string(),
+                                        src.port(),
+                                        "UDP",
+                                        &query,
+                                        &result.response,
+                                        result.cached,
+                                        result.upstream_status,
+                                        result.upstream_latency_ms,
+                                        total_ms,
+                                    );
+                                }
+                                if let Err(e) = sock.send_to(&result.response, src).await {
                                     error!(error = %e, "Failed to send UDP response");
                                 }
                             }
                             Err(e) => {
                                 error!(error = %e, "Failed to resolve query");
+                                let total_ms = start.elapsed().as_millis() as u64;
                                 if let Some(servfail) = Self::build_servfail(&query) {
+                                    if let Some(ref logger) = logger {
+                                        logger.log(
+                                            &src.ip().to_string(),
+                                            src.port(),
+                                            "UDP",
+                                            &query,
+                                            &servfail,
+                                            false,
+                                            None,
+                                            None,
+                                            total_ms,
+                                        );
+                                    }
                                     let _ = sock.send_to(&servfail, src).await;
                                 }
                             }
@@ -150,8 +190,11 @@ impl DnsServer {
             match listener.accept().await {
                 Ok((stream, src)) => {
                     let client = self.client.clone();
+                    let logger = self.logger.clone();
                     tokio::spawn(async move {
-                        if let Err(e) = Self::handle_tcp_connection(stream, client).await {
+                        if let Err(e) =
+                            Self::handle_tcp_connection(stream, client, logger, src).await
+                        {
                             debug!(src = %src, error = %e, "TCP connection error");
                         }
                     });
@@ -166,6 +209,8 @@ impl DnsServer {
     async fn handle_tcp_connection(
         mut stream: tokio::net::TcpStream,
         client: Arc<DohClient>,
+        logger: Option<Arc<QueryLogger>>,
+        src: SocketAddr,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
@@ -185,12 +230,46 @@ impl DnsServer {
             let mut query = vec![0u8; msg_len];
             stream.read_exact(&mut query).await?;
 
-            let response = match client.resolve(&query).await {
-                Ok(r) => r,
+            let start = Instant::now();
+            let dns_result = client.resolve(&query).await;
+            let total_ms = start.elapsed().as_millis() as u64;
+
+            let response = match dns_result {
+                Ok(r) => {
+                    if let Some(ref logger) = logger {
+                        logger.log(
+                            &src.ip().to_string(),
+                            src.port(),
+                            "TCP",
+                            &query,
+                            &r.response,
+                            r.cached,
+                            r.upstream_status,
+                            r.upstream_latency_ms,
+                            total_ms,
+                        );
+                    }
+                    r.response
+                }
                 Err(e) => {
                     error!(error = %e, "Failed to resolve TCP query");
                     match Self::build_servfail(&query) {
-                        Some(r) => r,
+                        Some(ref servfail) => {
+                            if let Some(ref logger) = logger {
+                                logger.log(
+                                    &src.ip().to_string(),
+                                    src.port(),
+                                    "TCP",
+                                    &query,
+                                    servfail,
+                                    false,
+                                    None,
+                                    None,
+                                    total_ms,
+                                );
+                            }
+                            servfail.clone()
+                        }
                         None => break,
                     }
                 }

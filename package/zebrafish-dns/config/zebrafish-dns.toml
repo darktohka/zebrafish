@@ -45,3 +45,10 @@ max_ttl = 86400
 [logging]
 # Log level: "error", "warn", "info", "debug", "trace"
 level = "info"
+
+[query_log]
+# Set to true to enable per-query JSON access logging (similar to Caddy access logs)
+enabled = true
+
+# File path for query logs. Leave empty or omit to write to stdout.
+output = "/logs/system/zebrafish-dns-queries.log"
