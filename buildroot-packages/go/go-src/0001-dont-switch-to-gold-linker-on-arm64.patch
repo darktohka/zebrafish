@@ -1,15 +1,5 @@
-From 7ca56b82042305ce0382f86f4aab4caf0c47f576 Mon Sep 17 00:00:00 2001
-From: Disyer <daniel@tohka.us>
-Date: Sun, 15 Mar 2026 11:33:16 +0200
-Subject: [PATCH] Don't switch to gold linker on ARM64
-
----
- src/cmd/go/internal/modfetch/fetch.go | 52 ++++-----------------------
- src/cmd/link/internal/ld/lib.go       | 47 ------------------------
- 2 files changed, 7 insertions(+), 92 deletions(-)
-
 diff --git a/src/cmd/go/internal/modfetch/fetch.go b/src/cmd/go/internal/modfetch/fetch.go
-index 7c9280f1..21054856 100644
+index 28cc879..394f022 100644
 --- a/src/cmd/go/internal/modfetch/fetch.go
 +++ b/src/cmd/go/internal/modfetch/fetch.go
 @@ -805,32 +805,16 @@ func checkModSum(f *Fetcher, mod module.Version, h string) error {
@@ -51,7 +41,7 @@ index 7c9280f1..21054856 100644
  }
  
  // addModSumLocked adds the pair mod,h to go.sum.
-@@ -847,29 +831,7 @@ func addModSumLocked(f *Fetcher, mod module.Version, h string) {
+@@ -847,30 +831,8 @@ func addModSumLocked(f *Fetcher, mod module.Version, h string) {
  
  // checkSumDB checks the mod, h pair against the Go checksum database.
  // It calls base.Fatalf if the hash is to be rejected.
@@ -78,19 +68,20 @@ index 7c9280f1..21054856 100644
 -			return module.VersionError(modWithoutSuffix, fmt.Errorf("verifying %s: checksum mismatch\n\tdownloaded: %v\n\t%s: %v"+sumdbMismatch, noun, h, db, line[len(prefix)-len("h1:"):]))
 -		}
 -	}
+-	return module.VersionError(modWithoutSuffix, fmt.Errorf("verifying %s: checksum missing from sumdb response"+sumdbAbsent, noun))
 +func checkSumDB(_ module.Version, _ string) error {
- 	return nil
++	return nil
  }
  
+ // Sum returns the checksum for the downloaded copy of the given module,
 diff --git a/src/cmd/link/internal/ld/lib.go b/src/cmd/link/internal/ld/lib.go
-index 64fd4cc8..a712dd69 100644
+index 9cbc129..78b039f 100644
 --- a/src/cmd/link/internal/ld/lib.go
 +++ b/src/cmd/link/internal/ld/lib.go
-@@ -1698,53 +1698,6 @@ func (ctxt *Link) hostlink() {
- 			// Use lld to avoid errors from default linker (issue #38838)
+@@ -1719,52 +1719,6 @@ func (ctxt *Link) hostlink() {
  			altLinker = "lld"
  		}
--
+ 
 -		if ctxt.Arch.InFamily(sys.ARM64) && buildcfg.GOOS == "linux" {
 -			// On ARM64, the GNU linker had issues with -znocopyreloc
 -			// and COPY relocations. This was fixed in GNU ld 2.36+.
@@ -140,6 +131,3 @@ index 64fd4cc8..a712dd69 100644
  	}
  	if ctxt.Arch.Family == sys.ARM64 && buildcfg.GOOS == "freebsd" {
  		// Switch to ld.bfd on freebsd/arm64.
--- 
-2.53.0
-
