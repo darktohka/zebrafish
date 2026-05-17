@@ -53,4 +53,14 @@ define CRUN_ADD_VERSION
 endef
 CRUN_PRE_CONFIGURE_HOOKS += CRUN_ADD_VERSION
 
+# When building with shared libraries (Buildroot default), libcrun.so is built
+# with a version script (libcrun.lds) that hides json_gen_* symbols from
+# libocispec. Since crun's oci_features.c calls these directly, add
+# libocispec/libocispec.la to crun_LDADD so the symbols are available.
+define CRUN_FIX_LIBOCISPEC_LINK
+	$(SED) -i '/^crun_LDADD = libcrun\.la/ s/libcrun\.la/& libocispec\/libocispec.la/' \
+		$(@D)/Makefile.am
+endef
+CRUN_PRE_CONFIGURE_HOOKS += CRUN_FIX_LIBOCISPEC_LINK
+
 $(eval $(autotools-package))
