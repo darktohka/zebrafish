@@ -8,7 +8,7 @@ CRUN_VERSION = origin/main
 CRUN_SITE = https://github.com/containers/crun
 CRUN_SITE_METHOD = git
 CRUN_GIT_SUBMODULES = YES
-CRUN_DEPENDENCIES += yajl
+CRUN_DEPENDENCIES += json-c
 
 CRUN_LICENSE = GPL-2.0+ (crun binary), LGPL-2.1+ (libcrun)
 CRUN_LICENSE_FILES = COPYING COPYING.libcrun
@@ -24,10 +24,6 @@ CRUN_DEPENDENCIES += libcap
 CRUN_CONF_OPTS += --enable-caps
 else
 CRUN_CONF_OPTS += --disable-caps
-endif
-
-ifeq ($(BR2_PACKAGE_LIBGCRYPT),y)
-CRUN_DEPENDENCIES += libgcrypt
 endif
 
 ifeq ($(BR2_PACKAGE_LIBSECCOMP),y)
