@@ -58,7 +58,7 @@ CRUN_PRE_CONFIGURE_HOOKS += CRUN_ADD_VERSION
 # libocispec. Since crun's oci_features.c calls these directly, add
 # libocispec/libocispec.la to crun_LDADD so the symbols are available.
 define CRUN_FIX_LIBOCISPEC_LINK
-	$(SED) -i '/^crun_LDADD = libcrun\.la/ s/libcrun\.la/& libocispec\/libocispec.la/' \
+	$(SED) '/^crun_LDADD = libcrun\.la/ s/libcrun\.la/& libocispec\/libocispec.la/' \
 		$(@D)/Makefile.am
 endef
 CRUN_PRE_CONFIGURE_HOOKS += CRUN_FIX_LIBOCISPEC_LINK
