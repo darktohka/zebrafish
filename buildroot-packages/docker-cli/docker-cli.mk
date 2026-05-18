@@ -45,10 +45,15 @@ define DOCKER_CLI_FIX_VENDORING
 endef
 DOCKER_CLI_POST_EXTRACT_HOOKS += DOCKER_CLI_FIX_VENDORING
 
-#DOCKER_CLI_GO_ENV += \
-#	GOFLAGS=-mod=mod \
-#	GO111MODULE=on \
-#	GOPROXY=https://proxy.golang.org,direct \
-#	GOSUMDB=sum.golang.org
-#
+# Regenerate vendor directory from go.mod to ensure vendored deps
+# match the versions declared in vendor.mod/vendor.sum (go.mod/go.sum).
+# This avoids mismatches like grpc referencing http2.TrailerPrefix
+# while the vendored golang.org/x/net is too old to define it.
+define DOCKER_CLI_REGEN_VENDOR
+	cd $(@D) && \
+	rm -rf vendor && \
+	$(HOST_GO_TARGET_ENV) GOFLAGS='' $(HOST_DIR)/bin/go mod vendor
+endef
+DOCKER_CLI_PRE_BUILD_HOOKS += DOCKER_CLI_REGEN_VENDOR
+
 $(eval $(golang-package))
