@@ -49,10 +49,13 @@ DOCKER_CLI_POST_EXTRACT_HOOKS += DOCKER_CLI_FIX_VENDORING
 # match the versions declared in vendor.mod/vendor.sum (go.mod/go.sum).
 # This avoids mismatches like grpc referencing http2.TrailerPrefix
 # while the vendored golang.org/x/net is too old to define it.
+# GOPROXY is overridden because go mod vendor needs to download modules
+# not present in the local cache (unique to docker-cli vs buildx).
 define DOCKER_CLI_REGEN_VENDOR
 	cd $(@D) && \
 	rm -rf vendor && \
-	$(HOST_GO_TARGET_ENV) GOFLAGS='' $(HOST_DIR)/bin/go mod vendor
+	$(HOST_GO_TARGET_ENV) GOFLAGS='' GOPROXY='https://proxy.golang.org,direct' \
+		$(HOST_DIR)/bin/go mod vendor
 endef
 DOCKER_CLI_PRE_BUILD_HOOKS += DOCKER_CLI_REGEN_VENDOR
 
