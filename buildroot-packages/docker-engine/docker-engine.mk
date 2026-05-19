@@ -45,10 +45,14 @@ endef
 DOCKER_ENGINE_POST_INSTALL_TARGET_HOOKS += DOCKER_ENGINE_INIT
 endif
 
-# define DOCKER_ENGINE_POST_EXTRACT_HOOK
-# 	echo 'replace github.com/docker/docker/internal => ./internal' >> $(@D)/go.mod
-# endef
-# DOCKER_ENGINE_POST_EXTRACT_HOOKS += DOCKER_ENGINE_POST_EXTRACT_HOOK
+# Some vendored grpc code references http2.TrailerPrefix which was
+# removed in newer golang.org/x/net. Replace it with the literal "Trailer:".
+define DOCKER_ENGINE_FIX_TRAILER_PREFIX
+	cd $(@D) && \
+	find vendor -name '*.go' -exec \
+		sed -i 's/http2\.TrailerPrefix/"Trailer:"/g' {} +
+endef
+DOCKER_ENGINE_POST_EXTRACT_HOOKS += DOCKER_ENGINE_FIX_TRAILER_PREFIX
 
 ifneq ($(BR2_PACKAGE_DOCKER_ENGINE_DRIVER_BTRFS),y)
 DOCKER_ENGINE_TAGS += exclude_graphdriver_btrfs
