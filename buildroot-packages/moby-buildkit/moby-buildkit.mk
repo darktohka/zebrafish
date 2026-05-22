@@ -20,5 +20,14 @@ MOBY_BUILDKIT_LDFLAGS = \
 HOST_MOBY_BUILDKIT_TAGS = cgo
 HOST_MOBY_BUILDKIT_BUILD_TARGETS = cmd/buildctl cmd/buildkitd
 
+# Some vendored grpc code references http2.TrailerPrefix which was
+# removed in newer golang.org/x/net. Replace it with the literal "Trailer:".
+define MOBY_BUILDKIT_FIX_TRAILER_PREFIX
+	cd $(@D) && \
+	find vendor -name '*.go' -exec \
+		sed -i 's/http2\.TrailerPrefix/"Trailer:"/g' {} +
+endef
+MOBY_BUILDKIT_POST_EXTRACT_HOOKS += MOBY_BUILDKIT_FIX_TRAILER_PREFIX
+
 $(eval $(golang-package))
 $(eval $(host-golang-package))

@@ -42,4 +42,13 @@ define CNI_PLUGINS_INSTALL_TARGET_CMDS
 	)
 endef
 
+# Some vendored grpc code references http2.TrailerPrefix which was
+# removed in newer golang.org/x/net. Replace it with the literal "Trailer:".
+define CNI_PLUGINS_FIX_TRAILER_PREFIX
+	cd $(@D) && \
+	find vendor -name '*.go' -exec \
+		sed -i 's/http2\.TrailerPrefix/"Trailer:"/g' {} +
+endef
+CNI_PLUGINS_POST_EXTRACT_HOOKS += CNI_PLUGINS_FIX_TRAILER_PREFIX
+
 $(eval $(golang-package))

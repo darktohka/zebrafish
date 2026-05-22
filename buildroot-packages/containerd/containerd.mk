@@ -60,4 +60,13 @@ define CONTAINERD_INSTALL_INIT_SYSTEMD
 	$(SED) 's,/usr/local/bin,/usr/bin,g' $(TARGET_DIR)/usr/lib/systemd/system/containerd.service
 endef
 
+# Some vendored grpc code references http2.TrailerPrefix which was
+# removed in newer golang.org/x/net. Replace it with the literal "Trailer:".
+define CONTAINERD_FIX_TRAILER_PREFIX
+	cd $(@D) && \
+	find vendor -name '*.go' -exec \
+		sed -i 's/http2\.TrailerPrefix/"Trailer:"/g' {} +
+endef
+CONTAINERD_POST_EXTRACT_HOOKS += CONTAINERD_FIX_TRAILER_PREFIX
+
 $(eval $(golang-package))
