@@ -11,7 +11,7 @@ GIT_GIT_SUBMODULES = YES
 GIT_LICENSE = GPL-2.0, LGPL-2.1+
 GIT_LICENSE_FILES = COPYING LGPL-2.1
 GIT_SELINUX_MODULES = apache git xdg
-GIT_DEPENDENCIES = zlib $(TARGET_NLS_DEPENDENCIES)
+GIT_DEPENDENCIES = host-rustc zlib $(TARGET_NLS_DEPENDENCIES)
 GIT_AUTORECONF = YES
 
 GIT_CONF_OPTS += --without-openssl
@@ -64,6 +64,10 @@ endif
 ifeq ($(BR2_SYSTEM_ENABLE_NLS),)
 GIT_MAKE_OPTS += NO_GETTEXT=1
 endif
+
+# Cargo puts cross-built static libraries under target/<triple>/release.
+GIT_MAKE_ENV += $(PKG_CARGO_ENV)
+GIT_MAKE_OPTS += RUST_TARGET_DIR=target/$(RUSTC_TARGET_NAME)/release
 
 GIT_CFLAGS = $(TARGET_CFLAGS)
 

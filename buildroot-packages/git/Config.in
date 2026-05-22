@@ -1,6 +1,8 @@
 config BR2_PACKAGE_GIT
 	bool "git"
+	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
 	depends on BR2_USE_MMU # uses fork()
+	select BR2_PACKAGE_HOST_RUSTC
 	select BR2_PACKAGE_ZLIB
 	select BR2_PACKAGE_LIBICONV if !BR2_ENABLE_LOCALE
 	help
