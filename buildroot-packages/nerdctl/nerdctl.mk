@@ -17,4 +17,13 @@ NERDCTL_LDFLAGS = \
 
 NERDCTL_BUILD_TARGETS = cmd/nerdctl
 
+# Some vendored grpc code references http2.TrailerPrefix which was
+# removed in newer golang.org/x/net. Replace it with the literal "Trailer:".
+define NERDCTL_FIX_TRAILER_PREFIX
+	cd $(@D) && \
+	find vendor -name '*.go' -exec \
+		sed -i 's/http2\.TrailerPrefix/"Trailer:"/g' {} +
+endef
+NERDCTL_POST_EXTRACT_HOOKS += NERDCTL_FIX_TRAILER_PREFIX
+
 $(eval $(golang-package))
