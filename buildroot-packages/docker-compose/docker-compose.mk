@@ -19,13 +19,4 @@ define DOCKER_COMPOSE_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/usr/lib/docker/cli-plugins/docker-compose
 endef
 
-# Some vendored grpc code references http2.TrailerPrefix which was
-# removed in newer golang.org/x/net. Replace it with the literal "Trailer:".
-define DOCKER_COMPOSE_FIX_TRAILER_PREFIX
-	cd $(@D) && \
-	find vendor -name '*.go' -exec \
-		sed -i 's/http2\.TrailerPrefix/"Trailer:"/g' {} +
-endef
-DOCKER_COMPOSE_POST_EXTRACT_HOOKS += DOCKER_COMPOSE_FIX_TRAILER_PREFIX
-
 $(eval $(golang-package))
