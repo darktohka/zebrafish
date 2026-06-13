@@ -44,6 +44,7 @@ Zebrafish is designed to be lightweight, shipping only the necessary libraries a
 
 ### Configuration Management
 
+- **TOML-based configuration:** Zebrafish reads its configuration from two TOML files (`<EFI>/zebrafish.toml` and `/etc/zebrafish.toml`). The on-target CLI tool `zebrafish-config` provides `get`, `set`, `list`, `add`, `remove`, `edit`, `path`, and `validate` subcommands; shell scripts use the thin helpers `zf_get`, `zf_has`, and `zfs_get_machine_id` from `/lib/zebrafish/functions`.
 - **Centralized Updates:** All updates can be tested centrally before being deployed to production, ensuring that your systems are always up-to-date and secure.
 - **Overlay File System:** Configuration changes can be made through an overlay file system, which stores only the modified files. This makes it easy to manage and track changes to the system.
 
@@ -140,18 +141,20 @@ If you prefer to download a pre-built version of Zebrafish, you can find the lat
      bios="ovmf_x64.fd"
    fi
 
-   "$target" $accel \
-     -drive file=disk.img -m 2G \
-     -device virtio-rng-pci \
-     -net nic,model=virtio \
-     -net user,hostfwd=tcp::10022-:22,hostfwd=tcp::10080-:80 \
-     -kernel zebrafish-kernel -initrd zebrafish-initrd \
-     -display gtk \
-     -device virtio-gpu-pci \
-     -append "console=tty0 ipv4=10.0.2.15 ipv4gateway=10.0.2.2" \
-     -device virtio-keyboard-pci \
-     -bios "$bios"
-   ```
+    "$target" $accel \
+      -drive file=disk.img -m 2G \
+      -device virtio-rng-pci \
+      -net nic,model=virtio \
+      -net user,hostfwd=tcp::10022-:22,hostfwd=tcp::10080-:80 \
+      -kernel zebrafish-kernel -initrd zebrafish-initrd \
+      -display gtk \
+      -device virtio-gpu-pci \
+      -append "console=tty0" \
+      -device virtio-keyboard-pci \
+      -bios "$bios"
+    ```
+
+    Network and other system configuration is read from `<EFI>/zebrafish.toml` and `/etc/zebrafish.toml` on the disk image. For local testing, populate those files with a `zebrafish.toml` next to the kernel on a separate EFI partition, or via `/etc/zebrafish.toml` once the persistence layer is up.
 
 ## Installation on a real machine
 

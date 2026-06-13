@@ -6,16 +6,18 @@ assert_root $this
 
 set -u
 
-if has_kernel_parameter "rescue"; then
-	echo "---"
-	echo
-	echo "Dropping to early rescue shell ..."
-	echo "Exit shell when ready to resume Zebrafish initialization."
-	echo
-	/bin/sh
-	echo "---"
-	echo
-	echo "Resuming Zebrafish initialization ..."
+if zf_has_present rescue.enabled; then
+	if [ "$(zf_has rescue.enabled)" = "true" ]; then
+		echo "---"
+		echo
+		echo "Dropping to early rescue shell ..."
+		echo "Exit shell when ready to resume Zebrafish initialization."
+		echo
+		/bin/sh
+		echo "---"
+		echo
+		echo "Resuming Zebrafish initialization ..."
+	fi
 fi
 
 exit 0

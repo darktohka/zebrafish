@@ -12,22 +12,18 @@ esac
 
 set -u
 
-
-
-keymap=$(get_kernel_parameter "keymap")
-font=$(get_kernel_parameter "font")
+keymap=$(zf_get console.keymap)
+font=$(zf_get console.font)
 
 KEYMAP=
 FONT=
 [ -f /etc/default/console ] && . /etc/default/console
 
 
-
 # Kernel options override persisted options.
 # Kernel options and persisted options can be mixed.
 keymap=${keymap:-$KEYMAP}
 font=${font:-$FONT}
-
 
 
 if [ -n "$keymap" ]; then

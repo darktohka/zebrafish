@@ -5,28 +5,34 @@ this=S46mounts
 assert_root $this
 
 do_start() {
-  zfskeys=$(get_kernel_parameter "zfskeys")
-  zfsmount=$(get_kernel_parameter "zfsmount")
+  local mount_count=0
+  local key_count=0
 
-  if [[ -n "$zfsmount" ]]; then
-    IFS=',' read -ra pools <<< "$zfsmount"
+  if zf_has_present zfs-mount; then
+    eval "$(zebrafish-config --quiet list zfs-mount --format shell)"
+    mount_count=${ZFS_MOUNT_COUNT:-0}
+  fi
 
-    for pool in "${pools[@]}"; do
-      echo -n "Importing ZFS pool $pool: "
-      zpool import "$pool" && echo "OK" || echo "FAIL"
+  if zf_has_present zfs-key; then
+    eval "$(zebrafish-config --quiet list zfs-key --format shell)"
+    key_count=${ZFS_KEY_COUNT:-0}
+  fi
+
+  if [[ "$mount_count" -gt 0 ]]; then
+    for ((i = 0; i < mount_count; i++)); do
+      local pool="ZFS_MOUNT_${i}_NAME"
+      echo -n "Importing ZFS pool ${!pool}: "
+      zpool import "${!pool}" && echo "OK" || echo "FAIL"
     done
   fi
 
-  if [[ -n "$zfskeys" ]]; then
-    IFS=';' read -ra keypairs <<< "$zfskeys"
+  if [[ "$key_count" -gt 0 ]]; then
+    for ((i = 0; i < key_count; i++)); do
+      local dataset="ZFS_KEY_${i}_DATASET"
+      local key="ZFS_KEY_${i}_KEY"
 
-    for keypair in "${keypairs[@]}"; do
-      IFS=, read -ra params <<< "$keypair"
-      local pool="${params[0]}"
-      local key="${params[1]}"
-
-      echo -n "Importing ZFS key for $pool: "
-      echo "$key" | zfs load-key -L prompt "$pool" && echo "OK" || echo "FAIL"
+      echo -n "Importing ZFS key for ${!dataset}: "
+      echo "${!key}" | zfs load-key -L prompt "${!dataset}" && echo "OK" || echo "FAIL"
     done
   fi
 
@@ -42,14 +48,13 @@ do_stop() {
     zfs unmount "$zfsmount" && echo "OK" || echo "FAIL"
   done
 
-  zfsmount=$(get_kernel_parameter "zfsmount")
-
-  if [[ -n "$zfsmount" ]]; then
-    IFS=',' read -ra pools <<< "$zfsmount"
-
-    for pool in "${pools[@]}"; do
-      echo -n "Detaching ZFS pool $pool: "
-      zpool export "$pool" && echo "OK" || echo "FAIL"
+  if zf_has_present zfs-mount; then
+    eval "$(zebrafish-config --quiet list zfs-mount --format shell)"
+    local mount_count=${ZFS_MOUNT_COUNT:-0}
+    for ((i = 0; i < mount_count; i++)); do
+      local pool="ZFS_MOUNT_${i}_NAME"
+      echo -n "Detaching ZFS pool ${!pool}: "
+      zpool export "${!pool}" && echo "OK" || echo "FAIL"
     done
   fi
 

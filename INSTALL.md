@@ -105,85 +105,54 @@ Write a placeholder string to the data partition. Zebrafish will detect this on 
 echo "zebrafish-please-format-me" | dd conv=notrunc of="$DATA_PART"
 ```
 
-### Step 7: Setup the Kernel Command Line
+### Step 7: Write the Zebrafish configuration
 
-The kernel command line is a crucial part of the Zebrafish boot process. It passes a series of arguments to the kernel to configure the system, network, storage, and other services before the main operating system takes over. Below is a detailed breakdown of the available parameters.
+Zebrafish reads its configuration from two TOML files, both named `zebrafish.toml`:
 
-An example command line might look like this:
+- **`<EFI>/zebrafish.toml`** — placed next to the `zebrafish-kernel` image on the EFI system partition. Holds the `[machine]` section only, because that section is the only one needed before `/etc` is writable (it is the ZFS vault passphrase).
+- **`/etc/zebrafish.toml`** — the system-wide configuration file. Available after `setup-persistence` finishes.
 
+The kernel command line is no longer used for configuration. It only carries Linux kernel parameters (such as `initrd=` and `console=`), which you can ignore for the purposes of Zebrafish configuration.
+
+Write a minimal `<EFI>/zebrafish.toml` with a fresh machine ID:
+
+```bash
+MACHINE_ID=$(uuidgen | tr -d -)
+cat <<EOS > /mnt/zebrafish.toml
+[machine]
+id = "$MACHINE_ID"
+EOS
 ```
-initrd=/zebrafish-initrd console=tty0 hostname=my-server machine=a71d0f9a4b491ee1db858bd5ae3f3c6f ipv4=10.0.0.140 ipv4gateway=10.0.0.1 sshkey="ssh-ed25519 AAA..."
+
+(Replace `uuidgen` with `cat /proc/sys/kernel/random/uuid` if the live image does not provide `uuidgen`.)
+
+Then write `/etc/zebrafish.toml` with whatever system-wide configuration you want. A common starting point is:
+
+```toml
+# /mnt/etc/zebrafish.toml
+
+[hostname]
+name = "my-server"
+
+[ipv4]
+address = "10.0.0.140"
+broadcast = "10.0.0.255"
+subnet = "255.255.255.0"
+gateway = "10.0.0.1"
+dns = ["1.1.1.1", "8.8.8.8"]
+
+[ssh]
+port = 22
+keys = [
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... user@laptop",
+]
 ```
 
-### Kernel Command Line Parameters
-
-| Parameter       | Description                                                                           | Example                                         | Required/Optional |
-| :-------------- | :------------------------------------------------------------------------------------ | :---------------------------------------------- | :---------------- |
-| `initrd`        | Specifies the path to the initial RAM disk image.                                     | `/zebrafish-initrd`                             | **Required**      |
-| `console`       | Sets the system console for kernel messages.                                          | `tty0`                                          | **Required**      |
-| `hostname`      | Defines the hostname of the machine.                                                  | `triton-srv`                                    | **Required**      |
-| `machine`       | A unique machine identifier, typically a UUID or a hash.                              | `a71d0f9a4b491ee1db858bd5ae3f3c6f...`           | **Required**      |
-| `ipv4`          | Assigns a static IPv4 address to the primary network interface.                       | `10.0.0.140`                                    | Optional          |
-| `ipv4dns`       | Specifies one or more DNS servers for IPv4 networking, separated by commas.           | `8.8.8.8,8.8.4.4`                               | Optional          |
-| `ipv4broadcast` | Sets the broadcast address for the IPv4 network interface.                            | `10.0.0.255`                                    | Optional          |
-| `ipv4subnet`    | Defines the subnet mask for the IPv4 network interface.                               | `255.255.255.0`                                 | Optional          |
-| `ipv4gateway`   | Sets the default gateway for the IPv4 network.                                        | `10.0.0.1`                                      | Optional          |
-| `ipv6`          | Assigns a static IPv6 address.                                                        | `2603:c020:800d::14`                            | Optional          |
-| `ipv6dns`       | Specifies one or more DNS servers for IPv6 networking, separated by commas.           | `2001:4860:4860::8888,2001:4860:4860::8844`     | Optional          |
-| `ipv6netmask`   | Defines the subnet mask or prefix length for the IPv6 network interface.              | `64`                                            | Optional          |
-| `ipv6gateway`   | Sets the default gateway for the IPv6 network.                                        | `2603:c020:800d::1`                             | Optional          |
-| `sshport`       | Specifies the port for the SSH server to listen on.                                   | `12488`                                         | Optional          |
-| `sshkey`        | Provides a public SSH key for remote authentication.                                  | `"ssh-ed25519 AAA..."`                          | Optional          |
-| `wg0`           | Configures a WireGuard interface. Format: `private_key,address/cidr,listen_port`.     | `"WEPJ...s1E=,10.0.3.2/24,49427"`               | Optional          |
-| `wg0peer`       | Configures a WireGuard peer. Format: `public_key,endpoint_ip:port,allowed_ips/cidr`.  | `"dJG2...5Bw=,88.99.163.115:49427,10.0.3.1/32"` | Optional          |
-| `nbdclient`     | Configures a Network Block Device (NBD) client. Format: `server_ip,port,/dev/nbd0`.   | `"10.0.3.1,4284,/dev/nbd0"`                     | Optional          |
-| `zfskeys`       | Provides keys to unlock encrypted ZFS datasets. Format: `dataset,key`.                | `"archangel/vault,1d42...ff58"`                 | Optional          |
-| `zfsmount`      | Specifies the ZFS dataset to mount as the root filesystem.                            | `archangel`                                     | Optional          |
-| `dockerlogin`   | Provides credentials for a Docker registry. Format: `registry.example.com,user,pass`. | `"registry.tohka.us,triton,a94d...7cb"`         | Optional          |
-
-#### Encryption
-
-The **machine** parameter is particularly important as it encrypts the ZFS root dataset and is used to identify the machine in the network. It should be unique for each installation.
-
-#### Network Configuration
-
-The **ipv4** and **ipv6** parameters are required for network configuration. If not specified, Zebrafish will disable the relevant network interface.
-
-#### SSH
-
-The **sshport** and **sshkey** parameters are used to configure the SSH server. The `sshport` parameter specifies the port on which the SSH server will listen, while the `sshkey` parameter provides public SSH keys for secure access.
-
-#### WireGuard
-
-The **wg0** and **wg0peer** parameters are used to configure a WireGuard interface and its peer. This is useful for secure point-to-point connections.
-
-If you do not need WireGuard, you can omit these parameters.
-
-If you have more than one WireGuard interface, you can add additional parameters like `wg1`, `wg1peer`, etc. It's possible to configure multiple WireGuard peers using the `;` delimiter.
-
-#### NBD Client
-
-The **nbdclient** parameter allows Zebrafish to connect to a remote disk using the Network Block Device (NBD) protocol. This is useful for accessing remote storage from another server, akin to NFS.
-
-#### ZFS Keys
-
-The **zfskeys** parameter is used to provide keys for unlocking encrypted ZFS datasets. This is particularly useful if you have multiple encrypted datasets that need to be unlocked at boot time, perhaps mounted from a remote server.
-
-#### Docker Login
-
-The **dockerlogin** parameter allows Zebrafish to authenticate with a Docker registry. This is useful for pulling container images from a private registry.
-
-1. Write the command line to the `/mnt/cmdline.txt` file.
-
-   ````bash
-   cat <<EOS > /mnt/cmdline.txt
-   initrd=/zebrafish-initrd console=tty0 hostname=my-server machine=a71d0f9a4b491ee1db858bd5ae3f3c6f ipv4=...
-   EOS```
-   ````
+The full schema is documented in `package/zebrafish-config/README.md` and includes sections for `console`, `headless`, `rescue`, `wg` (WireGuard interfaces), `nbd-client`, `nbd-server`, `zfs-key`, `zfs-mount`, and `docker-registry`. Each array-style section (`wg`, `nbd-client`, etc.) can be repeated to declare multiple instances.
 
 ### Step 8: Install the Bootloader
 
-This step depends on whether your system uses UEFI or legacy BIOS firmware.
+This step depends on whether your system uses UEFI or legacy BIOS firmware. The kernel command line below contains only Linux kernel parameters — Zebrafish does not read it for configuration.
 
 #### For UEFI Systems
 
@@ -193,11 +162,10 @@ This step depends on whether your system uses UEFI or legacy BIOS firmware.
     apk add efibootmgr
     ```
 
-2.  Create a boot entry in your firmware. This tells the system how to boot Zebrafish.
+2.  Create a boot entry in your firmware. This tells the system how to boot Zebrafish. The command line here is purely Linux kernel parameters (where to find the initrd and which console to use); Zebrafish ignores it for configuration.
 
     ```bash
-    # Read the required kernel command line arguments from the extracted file
-    command_line="$(cat /mnt/cmdline.txt)"
+    command_line="initrd=/zebrafish-initrd console=tty0"
 
     efibootmgr -c -d "$DISK" --part 1 --loader /zebrafish-kernel --label "Zebrafish" -u "$command_line"
     ```
@@ -231,9 +199,6 @@ This step depends on whether your system uses UEFI or legacy BIOS firmware.
 5.  Create the syslinux configuration file.
 
     ```bash
-    # Read the required kernel command line arguments from the extracted file
-    command_line="$(cat /mnt/cmdline.txt)"
-
     cat <<EOS > /mnt/syslinux/syslinux.cfg
     PROMPT 0
     TIMEOUT 10 # Timeout in tenths of a second
@@ -241,7 +206,7 @@ This step depends on whether your system uses UEFI or legacy BIOS firmware.
 
     LABEL zebrafish
       LINUX /zebrafish-kernel
-      APPEND $command_line
+      APPEND initrd=/zebrafish-initrd console=tty0
     EOS
     ```
 

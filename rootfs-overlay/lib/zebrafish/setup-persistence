@@ -5,10 +5,10 @@ set -u
 this=setup-persistence
 . /lib/zebrafish/functions
 
-machine=$(get_kernel_parameter "machine")
+machine=$(zfs_get_machine_id)
 
 if [[ -z "$machine" ]]; then
-    echo "No machine parameter found; cannot continue."
+    echo "No [machine].id found in <EFI>/zebrafish.toml; cannot continue."
     exit 1
 fi
 

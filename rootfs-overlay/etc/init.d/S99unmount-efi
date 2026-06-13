@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Unmount the EFI partition once the init scripts have run.
+#
+# The EFI partition is mounted very early in boot (by `mount-efi` from
+# inittab) so that `setup-persistence` can read `[machine].id` before
+# any ZFS dataset is mounted. By the time the S* scripts finish, no
+# further consumer needs the EFI mount, so we drop it here.
+#
+# Later scripts (or `upgrade`) that need the EFI file can call
+# `zfs_efi_dir` again, which is idempotent and will re-mount as a side
+# effect.
+
+this=S99unmount-efi
+. /lib/zebrafish/functions
+assert_root $this
+
+case $1 in
+	start) ;;
+	stop)  exit 0 ;;
+	*)     fail "Usage: $this {start|stop}" ;;
+esac
+
+zfs_efi_unmount
+exit 0

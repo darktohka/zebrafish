@@ -17,73 +17,75 @@ ARGS_CLIENT="-p"
 ARGS_SERVER="-n"
 
 do_start() {
-  nbdclient=$(get_kernel_parameter "nbdclient")
-  nbdserver=$(get_kernel_parameter "nbdserver")
+  local client_count=0
+  local server_count=0
 
-  if [[ -n "$nbdclient" ]]; then
-    IFS=';' read -ra clients <<< "$nbdclient"
+  if zf_has_present nbd-client; then
+    eval "$(zebrafish-config --quiet list nbd-client --format shell)"
+    client_count=${NBD_CLIENT_COUNT:-0}
+  fi
 
-    for client in "${clients[@]}"; do
-      IFS=, read -ra params <<< "$client"
-      local address="${params[0]}"
-      local port="${params[1]}"
-      local disk="${params[2]}"
+  if zf_has_present nbd-server; then
+    eval "$(zebrafish-config --quiet list nbd-server --format shell)"
+    server_count=${NBD_SERVER_COUNT:-0}
+  fi
 
-      echo -n "Starting $NAME_CLIENT for $disk: "
-      stdbuf -oL -eL $NAME_CLIENT $ARGS_CLIENT "$address" "$port" "$disk" >> $LOGFILE_CLIENT 2>&1
+  if [[ "$client_count" -gt 0 ]]; then
+    for ((i = 0; i < client_count; i++)); do
+      local address="NBD_CLIENT_${i}_ADDRESS"
+      local port="NBD_CLIENT_${i}_PORT"
+      local disk="NBD_CLIENT_${i}_DEVICE"
+
+      echo -n "Starting $NAME_CLIENT for ${!disk}: "
+      stdbuf -oL -eL $NAME_CLIENT $ARGS_CLIENT "${!address}" "${!port}" "${!disk}" >> $LOGFILE_CLIENT 2>&1
     done
 
     # Wait for all disks to appear
-    for client in "${clients[@]}"; do
-      IFS=, read -ra params <<< "$client"
-      local disk="${params[2]}"
+    for ((i = 0; i < client_count; i++)); do
+      local disk="NBD_CLIENT_${i}_DEVICE"
 
       local counter=0
       local max_attempts=10
 
       while [[ $counter -lt $max_attempts ]]; do
-        if fdisk -l "$disk" >/dev/null 2>&1; then
-          echo "$disk is available."
+        if fdisk -l "${!disk}" >/dev/null 2>&1; then
+          echo "${!disk} is available."
           break
         fi
 
-        echo "Waiting for $disk..."
+        echo "Waiting for ${!disk}..."
         sleep 0.5
         ((counter++))
       done
     done
   fi
 
-  if [[ -n "$nbdserver" ]]; then
-    IFS=, read -ra params <<< "$nbdserver"
-    local address="${params[0]}"
-    local disk="${params[1]}"
+  if [[ "$server_count" -gt 0 ]]; then
+    for ((i = 0; i < server_count; i++)); do
+      local address="NBD_SERVER_${i}_ADDRESS"
+      local disk="NBD_SERVER_${i}_DEVICE"
 
-    echo -n "Starting $NAME_SERVER: "
-    start-stop-daemon --start --quiet --background \
-      --make-pidfile --pidfile $PIDFILE_SERVER \
-      --startas /bin/sh -- -c "exec stdbuf -oL -eL $NAME_SERVER $ARGS_SERVER "$address" "$disk" >> $LOGFILE_SERVER 2>&1" \
-      && echo "OK" || echo "FAIL"
+      echo -n "Starting $NAME_SERVER on ${!disk}: "
+      start-stop-daemon --start --quiet --background \
+        --make-pidfile --pidfile $PIDFILE_SERVER \
+        --startas /bin/sh -- -c "exec stdbuf -oL -eL $NAME_SERVER $ARGS_SERVER ${!address} ${!disk} >> $LOGFILE_SERVER 2>&1" \
+        && echo "OK" || echo "FAIL"
+    done
   fi
 }
 
 do_stop() {
-  nbdclient=$(get_kernel_parameter "nbdclient")
-  nbdserver=$(get_kernel_parameter "nbdserver")
-
-  if [[ -n "$nbdclient" ]]; then
-    IFS=';' read -ra clients <<< "$nbdclient"
-
-    for client in "${clients[@]}"; do
-      IFS=',' read -ra params <<< "$client"
-      local disk="${params[2]}"
-
-      echo -n "Detaching $disk: "
-      nbd-client -d "$disk" && echo "OK" || echo "FAIL"
+  if zf_has_present nbd-client; then
+    eval "$(zebrafish-config --quiet list nbd-client --format shell)"
+    local client_count=${NBD_CLIENT_COUNT:-0}
+    for ((i = 0; i < client_count; i++)); do
+      local disk="NBD_CLIENT_${i}_DEVICE"
+      echo -n "Detaching ${!disk}: "
+      nbd-client -d "${!disk}" && echo "OK" || echo "FAIL"
     done
   fi
 
-  if [[ -n "$nbdserver" ]]; then
+  if zf_has_present nbd-server; then
     echo -n "Stopping $NAME_SERVER: "
     start-stop-daemon --stop --quiet --pidfile $PIDFILE_SERVER \
       && echo "OK" || echo "FAIL"

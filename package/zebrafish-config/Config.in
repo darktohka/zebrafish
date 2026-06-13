@@ -1,0 +1,12 @@
+config BR2_PACKAGE_ZEBRAFISH_CONFIG
+	bool "zebrafish-config"
+	depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+	select BR2_PACKAGE_HOST_RUSTC
+	help
+	  Configuration management tool for Zebrafish.
+
+	  Parses /etc/zebrafish.toml and the EFI-resident zebrafish.toml,
+	  exposes their contents via ergonomic subcommands
+	  (get/set/list/add/remove/edit) and is used by every
+	  /etc/init.d/S* script and helper under /lib/zebrafish/ to
+	  replace the legacy kernel-command-line interface.

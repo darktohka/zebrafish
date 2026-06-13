@@ -19,82 +19,82 @@ network_file="auto lo
 iface lo inet loopback
 "
 
-ipv4=$(get_kernel_parameter "ipv4")
-ipv6=$(get_kernel_parameter "ipv6")
-
-if [[ -n "$ipv4" ]] || [[ -n "$ipv6" ]]; then
+# Use the new helpers to peek at each section's presence.
+if zf_has_present ipv4.address; then
     network_file+="
 auto eth0"
 fi
 
-if [[ -n "$ipv4" ]]; then
-    ipv4_dns=$(get_kernel_parameter "ipv4dns")
-    ipv4_broadcast=$(get_kernel_parameter "ipv4broadcast")
-    ipv4_subnet=$(get_kernel_parameter "ipv4subnet")
-    ipv4_gateway=$(get_kernel_parameter "ipv4gateway")
+if zf_has_present ipv4.address; then
+    ipv4_address=$(zf_get ipv4.address)
+    ipv4_broadcast=$(zf_get_default ipv4.broadcast "$ipv4_address")
+    ipv4_subnet=$(zf_get_default ipv4.subnet "255.255.255.255")
+    ipv4_gateway=$(zf_get_default ipv4.gateway "172.31.1.1")
 
-    if [[ -z "$ipv4_broadcast" ]]; then
-        ipv4_broadcast="$ipv4"
-    fi
+    echo -n "IPv4 address $ipv4_address; subnet $ipv4_subnet; gateway $ipv4_gateway; "
 
-    if [[ -z "$ipv4_subnet" ]]; then
-        ipv4_subnet="255.255.255.255"
-    fi
-
-    if [[ -z "$ipv4_gateway" ]]; then
-        ipv4_gateway="172.31.1.1"
-    fi
-
-    echo -n "IPv4 address $ipv4; subnet $ipv4_subnet; gateway $ipv4_gateway; "
-
-    if [[ -z "$ipv4_dns" ]]; then
-        echo -n "nameservers Cloudflare; "
-        ipv4_dns="127.0.0.1"
+    if zf_has_present ipv4.dns; then
+        ipv4_dns=$(zebrafish-config --quiet list ipv4 --format shell)
+        eval "$ipv4_dns"
+        # After eval, $IPV4_DNS_COUNT and $IPV4_DNS_0, $IPV4_DNS_1, ...
+        nameservers=""
+        for ((i = 0; i < IPV4_DNS_COUNT; i++)); do
+            v="IPV4_DNS_$i"
+            if [ -z "$nameservers" ]; then
+                nameservers="${!v}"
+            else
+                nameservers="$nameservers ${!v}"
+            fi
+        done
+        echo -n "nameservers $nameservers; "
     else
-        echo -n "nameservers $ipv4_dns; "
+        echo -n "nameservers Cloudflare; "
+        nameservers="127.0.0.1"
     fi
 
     network_file+="
 iface eth0 inet static
-    address $ipv4
+    address $ipv4_address
     broadcast $ipv4_broadcast
     netmask $ipv4_subnet
     gateway $ipv4_gateway
     pointopoint $ipv4_gateway
-    dns-nameservers $ipv4_dns"
+    dns-nameservers $nameservers"
 
     echo "OK"
 else
     echo -n "No IPv4; "
 fi
 
-if [[ -n "$ipv6" ]]; then
-    ipv6_dns=$(get_kernel_parameter "ipv6dns")
-    ipv6_netmask=$(get_kernel_parameter "ipv6netmask")
-    ipv6_gateway=$(get_kernel_parameter "ipv6gateway")
+if zf_has_present ipv6.address; then
+    ipv6_address=$(zf_get ipv6.address)
+    ipv6_netmask=$(zf_get_default ipv6.netmask "64")
+    ipv6_gateway=$(zf_get_default ipv6.gateway "fe80::1")
 
-    if [[ -z "$ipv6_netmask" ]]; then
-        ipv6_netmask="64"
-    fi
+    echo -n "IPv6 address $ipv6_address/$ipv6_netmask; gateway $ipv6_gateway; "
 
-    if [[ -z "$ipv6_gateway" ]]; then
-        ipv6_gateway="fe80::1"
-    fi
-
-    echo -n "IPv6 address $ipv6/$ipv6_netmask; gateway $ipv6_gateway; "
-
-    if [[ -z "$ipv6_dns" ]]; then
-        echo -n "nameservers Cloudflare; "
-        ipv6_dns="::1"
+    if zf_has_present ipv6.dns; then
+        eval "$(zebrafish-config --quiet list ipv6 --format shell)"
+        nameservers=""
+        for ((i = 0; i < IPV6_DNS_COUNT; i++)); do
+            v="IPV6_DNS_$i"
+            if [ -z "$nameservers" ]; then
+                nameservers="${!v}"
+            else
+                nameservers="$nameservers ${!v}"
+            fi
+        done
+        echo -n "nameservers $nameservers; "
     else
-        echo -n "nameservers $ipv6_dns; "
+        echo -n "nameservers Cloudflare; "
+        nameservers="::1"
     fi
 
     network_file+="
 iface eth0 inet6 static
-    address $ipv6
+    address $ipv6_address
     netmask $ipv6_netmask
-    dns-nameservers $ipv6_dns
+    dns-nameservers $nameservers
     gateway $ipv6_gateway"
 else
     echo -n "No IPv6; "

@@ -42,7 +42,8 @@ name = "integration"
 path = "tests/integration.rs"
 
 [profile.release]
-opt-level = "z"
-lto = true
+opt-level = 3
+lto = "fat"
 codegen-units = 1
 strip = true
+panic = "abort"

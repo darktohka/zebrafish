@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Idempotently mount the EFI partition so that `setup-persistence` can
+# read `[machine].id` from `<EFI>/zebrafish.toml`. Wired in from
+# /etc/inittab very early (before setup-persistence).
+#
+# Exits 0 silently on success. Exits 0 silently on failure too — the
+# downstream consumers (setup-persistence, mainly) check for missing
+# values themselves and fall back to their own error messages.
+
+. /lib/zebrafish/functions
+zfs_efi_dir >/dev/null 2>&1
+exit 0

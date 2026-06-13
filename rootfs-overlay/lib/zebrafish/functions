@@ -1,3 +1,47 @@
+# /lib/zebrafish/functions — shared shell helpers for Zebrafish.
+#
+# Configuration model
+# -------------------
+# All Zebrafish configuration lives in TOML files read by the
+# `zebrafish-config` binary (a Rust CLI). Two files exist:
+#
+#   * `<EFI>/zebrafish.toml` — next to the `zebrafish-kernel` image on
+#     the EFI system partition. Contains only the `[machine]` section,
+#     which is needed before `/etc` is available.
+#   * `/etc/zebrafish.toml` — system-wide configuration, mounted
+#     writable after `setup-persistence` runs.
+#
+# There is **no** kernel command line fallback. If a value is missing,
+# the helpers simply return an empty value / `false` and the calling
+# script applies its own defaults.
+#
+# Key shell helpers
+# -----------------
+# * `zfs_efi_dir`      — find the directory on the EFI partition that
+#                        contains `zebrafish-kernel`. Mounts the EFI
+#                        partition read-only as a side effect. Idempotent.
+# * `zfs_efi_unmount`  — unmount the EFI partition (used by `upgrade`
+#                        and shutdown).
+# * `zfs_get_machine_id` — read `[machine].id` from the EFI TOML. The
+#                        only configuration read that does not touch
+#                        `/etc/zebrafish.toml`.
+# * `zf_get <key>`     — read a value from the merged configuration
+#                        (EFI + system) via `zebrafish-config get`.
+# * `zf_has <key>`     — check a boolean value via
+#                        `zebrafish-config get --bool`.
+#
+# Convenience paths
+# -----------------
+# * `ZEBRAFISH_CONFIG_BIN`         — absolute path to the CLI.
+# * `ZEBRAFISH_CONFIG_SYSTEM_FILE` — absolute path to the system file.
+# * `ZEBRAFISH_CONFIG_EFI_FILE`    — absolute path to the machine file
+#                                    (only valid after `zfs_efi_dir`).
+
+ZEBRAFISH_CONFIG_BIN=/usr/bin/zebrafish-config
+ZEBRAFISH_CONFIG_SYSTEM_FILE=/etc/zebrafish.toml
+ZEBRAFISH_CONFIG_EFI_MOUNT=/run/zebrafish/efi
+ZEBRAFISH_CONFIG_EFI_FILE=
+
 fail () {
 	local msg="$@"
 	[ -n "@msg" ] || msg="FAILED"
@@ -7,10 +51,6 @@ fail () {
 
 info () {
 	>&2 echo "$@"
-}
-
-has_kernel_parameter () {
-	xargs -n1 -a /proc/cmdline 2>/dev/null | grep -q -e ^$1
 }
 
 wait_for_internet () {
@@ -50,16 +90,116 @@ wait_for_containerd () {
 	return 1
 }
 
-# Returns "" if not present
-get_kernel_parameter () {
-	xargs -n1 -a /proc/cmdline | grep -e ^$1= | tail -n 1 | cut -d= -f2-  # tail: Last occurence on cmdline wins
+# ---------------------------------------------------------------------------
+# EFI partition discovery
+# ---------------------------------------------------------------------------
+
+# Print the directory on the EFI partition that contains
+# `zebrafish-kernel`. Mounts the EFI partition read-only as a side
+# effect; idempotent.
+#
+# Exits non-zero (and prints nothing) if the EFI partition cannot be
+# located, e.g. when running in a chroot with no block devices.
+zfs_efi_dir () {
+	# Already discovered in this shell.
+	if [ -n "$ZEBRAFISH_CONFIG_EFI_FILE" ] && [ -d "${ZEBRAFISH_CONFIG_EFI_FILE%/*}" ]; then
+		echo "${ZEBRAFISH_CONFIG_EFI_FILE%/*}"
+		return 0
+	fi
+
+	local partition
+	partition=$(lsblk -nr -o NAME,FSTYPE,PARTFLAGS 2>/dev/null \
+		| awk '$2=="vfat" && $3=="0x4" { print $1; exit }')
+
+	if [ -z "$partition" ]; then
+		return 1
+	fi
+
+	mkdir -p "$ZEBRAFISH_CONFIG_EFI_MOUNT" 2>/dev/null || return 1
+
+	# Skip mount if already mounted.
+	if ! grep -q " $ZEBRAFISH_CONFIG_EFI_MOUNT " /proc/mounts 2>/dev/null; then
+		mount -r -t vfat "/dev/$partition" "$ZEBRAFISH_CONFIG_EFI_MOUNT" 2>/dev/null \
+			|| return 1
+	fi
+
+	# Find the directory that contains zebrafish-kernel.
+	local dir
+	dir=$(find "$ZEBRAFISH_CONFIG_EFI_MOUNT" -type f -name zebrafish-kernel \
+		-exec dirname {} \; 2>/dev/null | head -n 1)
+
+	if [ -z "$dir" ]; then
+		return 1
+	fi
+
+	ZEBRAFISH_CONFIG_EFI_FILE="$dir/zebrafish.toml"
+	echo "$dir"
 }
 
-
-is_headless () {
-	has_kernel_parameter headless
+# Unmount the EFI partition (used during `upgrade` and shutdown).
+zfs_efi_unmount () {
+	if grep -q " $ZEBRAFISH_CONFIG_EFI_MOUNT " /proc/mounts 2>/dev/null; then
+		umount -q "$ZEBRAFISH_CONFIG_EFI_MOUNT" 2>/dev/null || true
+	fi
+	ZEBRAFISH_CONFIG_EFI_FILE=
 }
 
+# ---------------------------------------------------------------------------
+# TOML configuration accessors
+# ---------------------------------------------------------------------------
+
+# Read the machine ID from `<EFI>/zebrafish.toml`. This is the only
+# configuration value that has to be available before `/etc` is mounted,
+# so it is read from the EFI partition directly.
+#
+# Exits non-zero if the value is missing.
+zfs_get_machine_id () {
+	local dir
+	dir=$(zfs_efi_dir) || return 1
+
+	[ -r "$dir/zebrafish.toml" ] || return 1
+
+	"$ZEBRAFISH_CONFIG_BIN" \
+		--machine-only --quiet \
+		--efi-dir "$dir" \
+		get machine.id
+}
+
+# Read a configuration value at the given dotted key path, e.g.
+# `zf_get ipv4.address`. Prints the value to stdout. Exits non-zero
+# (and prints nothing) if the key is missing.
+zf_get () {
+	local key="$1"
+	"$ZEBRAFISH_CONFIG_BIN" --quiet get "$key"
+}
+
+# Like `zf_get` but always falls back to the given default value.
+zf_get_default () {
+	local key="$1"
+	local default="$2"
+	"$ZEBRAFISH_CONFIG_BIN" --quiet get --default "$default" "$key"
+}
+
+# Read a boolean configuration value. Prints `true` or `false` and
+# always exits 0 (use `zf_has_present` if you need to distinguish
+# missing from explicitly false).
+zf_has () {
+	local key="$1"
+	local v
+	v=$("$ZEBRAFISH_CONFIG_BIN" --quiet get --bool "$key" 2>/dev/null) || v=false
+	echo "$v"
+}
+
+# Like `zf_has` but returns non-zero if the key is not present in the
+# configuration. Useful for "is this flag set?" checks.
+zf_has_present () {
+	local key="$1"
+	"$ZEBRAFISH_CONFIG_BIN" --quiet get --bool "$key" >/dev/null 2>&1
+}
+
+# ---------------------------------------------------------------------------
+# Misc helpers
+# ---------------------------------------------------------------------------
 
 assert_root () {
 	[ $(id -u) -eq 0 ] || fail "$1: Permission denied, script requires root."

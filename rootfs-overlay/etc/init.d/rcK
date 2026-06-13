@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# /etc/init.d/rcK — run by busybox init on shutdown.
+#
+# Hooked in from /etc/inittab as `::shutdown:/etc/init.d/rcK`. The
+# `umount -a` that follows this script in inittab will catch the EFI
+# partition too, but we explicitly drop the in-process mount-tracking
+# state here so a later `zfs_efi_dir` invocation (e.g. from `upgrade`
+# before a reboot) starts from a clean slate.
+
+. /lib/zebrafish/functions
+
+zfs_efi_unmount
+exit 0

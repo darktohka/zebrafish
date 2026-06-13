@@ -2,6 +2,8 @@
 set -e
 set -u
 
+. /lib/zebrafish/functions
+
 # Read the OS release file
 if [[ -f /etc/os-release ]]; then
     source /etc/os-release
@@ -57,6 +59,7 @@ mount -t vfat "$EFI_PARTITION" "$EFI_DIR"
 unmount_efi() {
     umount -q "$EFI_PARTITION" || true
     rmdir "$EFI_DIR"
+    zfs_efi_unmount
 }
 
 trap unmount_efi EXIT

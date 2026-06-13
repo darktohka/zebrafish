@@ -16,62 +16,80 @@ create_wg_config() {
 }
 
 create_wg_configs() {
-  local num=0
+  local wg_count
+  wg_count=$(zebrafish-config --quiet list wg --format shell >/dev/null; \
+    zebrafish-config --quiet list wg --format shell | grep -c '^WG_COUNT=' || true)
+  wg_count=${wg_count:-0}
+  if [[ "$wg_count" -eq 0 ]]; then
+    # Try the other way: read the actual value.
+    eval "$(zebrafish-config --quiet list wg --format shell)"
+    wg_count=${WG_COUNT:-0}
+  fi
 
-  while true; do
-    # Get the wg parameters
-    local param="$(get_kernel_parameter "wg${num}")"
-    local param_peer="$(get_kernel_parameter "wg${num}peer")"
+  if [[ "$wg_count" -eq 0 ]]; then
+    return 0
+  fi
 
-    if [[ -z "$param" ]] || [[ -z "$param_peer" ]]; then
-      break
-    fi
+  for ((idx = 0; idx < wg_count; idx++)); do
+    # Re-evaluate to populate the indexed variables.
+    eval "$(zebrafish-config --quiet list wg --format shell)"
 
-    IFS=, read -ra params <<< "$param"
-    local interface="wg${num}"
-    local private_key="${params[0]}"
-    local int_address="${params[1]}"
-    local int_port="${params[2]}"
+    local interface_var="WG_${idx}_NAME"
+    local pk_var="WG_${idx}_PRIVATE_KEY"
+    local addr_var="WG_${idx}_ADDRESS"
+    local port_var="WG_${idx}_LISTEN_PORT"
+
+    local interface="${!interface_var:-wg${idx}}"
+    local private_key="${!pk_var}"
+    local int_address="${!addr_var}"
+    local int_port="${!port_var}"
 
     echo -n "Configuring WireGuard: interface $interface; internal address $int_address:$int_port; "
 
-    # Process corresponding peer information
+    # Build peer info
+    local peers_var="WG_${idx}_PEERS_COUNT"
+    local peer_count="${!peers_var:-0}"
     local peer_info=""
-    IFS=';' read -ra peers <<< "$param_peer"
 
-    for peer in "${peers[@]}"; do
-      IFS=, read -ra peer_info_params <<< "$peer"
-      local public_key="${peer_info_params[0]}"
+    for ((p = 0; p < peer_count; p++)); do
+      local pname="WG_${idx}_PEERS_${p}"
+      local p_pk="${pname}_PUBLIC_KEY"
+      local p_endpoint="${pname}_ENDPOINT"
+      local p_allowed="${pname}_ALLOWED_IPS_COUNT"
+      local p_keepalive="${pname}_PERSISTENT_KEEPALIVE"
 
-      if [[ "${#peer_info_params[@]}" -ne 3 ]]; then
-        local endpoint=""
-        local allowed_ips="${peer_info_params[1]}"
-      else
-        local endpoint="${peer_info_params[1]}"
-        local allowed_ips="${peer_info_params[2]}"
-      fi
+      local public_key="${!p_pk}"
 
-      if [[ -n "$peer_info" ]]; then
+      if [ -n "$peer_info" ]; then
         peer_info+="\n\n"
       fi
 
-      peer_info+="[Peer]\nPublicKey = ${public_key}\nAllowedIPs = ${allowed_ips}\nPersistentKeepalive = 25"
+      peer_info+="[Peer]\nPublicKey = ${public_key}\n"
+
+      # Allowed IPs
+      local allowed_ips=""
+      local allowed_count="${!p_allowed:-0}"
+      for ((a = 0; a < allowed_count; a++)); do
+        local av="${pname}_ALLOWED_IPS_${a}"
+        if [ -z "$allowed_ips" ]; then
+          allowed_ips="${!av}"
+        else
+          allowed_ips="$allowed_ips,${!av}"
+        fi
+      done
+      peer_info+="AllowedIPs = ${allowed_ips}\nPersistentKeepalive = 25"
       echo -n "peer"
 
-      if [[ -n "$endpoint" ]]; then
-        peer_info+="\nEndpoint = ${endpoint}"
-        echo -n " at $endpoint"
+      if [ -n "${!p_endpoint:-}" ]; then
+        peer_info+="\nEndpoint = ${!p_endpoint}"
+        echo -n " at ${!p_endpoint}"
       fi
 
       echo -n " (allowed IPs: $allowed_ips); "
     done
 
-    # Create WireGuard configuration file
     create_wg_config "$interface" "$private_key" "$int_address" "$int_port" "$peer_info"
     echo "OK"
-
-    # Increment the counter
-    ((num++)) || true
   done
 }
 

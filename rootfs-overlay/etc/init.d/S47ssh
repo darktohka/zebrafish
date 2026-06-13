@@ -6,17 +6,25 @@ assert_root $this
 
 set -u
 
-ssh_key=$(get_kernel_parameter "sshkey")
+ssh_keys=()
+# Read all configured SSH public keys via `zebrafish-config list`.
+eval "$(zebrafish-config --quiet list ssh --format shell)"
+# After eval, $SSH_KEYS_COUNT is set; $SSH_KEYS_0, $SSH_KEYS_1, ...
 
-if [[ -n "$ssh_key" ]]; then
+if [[ -n "$SSH_KEYS_COUNT" ]] && [[ "$SSH_KEYS_COUNT" -gt 0 ]]; then
     user=signalizer
     ssh_folder=/home/$user/.ssh
     authorized_keys="$ssh_folder"/authorized_keys
 
-    echo -n "Installing SSH key: "
+    echo -n "Installing $SSH_KEYS_COUNT SSH key(s): "
     rm -f "$authorized_keys"
     mkdir -p "$ssh_folder" || exit 2
-    echo -e "$ssh_key" > "$authorized_keys" || exit 3
+
+    for ((i = 0; i < SSH_KEYS_COUNT; i++)); do
+        key_var="SSH_KEYS_$i"
+        echo -e "${!key_var}" >> "$authorized_keys" || exit 3
+    done
+
     chown -R $user:$user "$ssh_folder" || exit 4
     echo "OK"
 fi

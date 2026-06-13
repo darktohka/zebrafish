@@ -6,7 +6,7 @@ NAME=dropbear
 PIDFILE=/var/run/$NAME.pid
 LOGFILE=/logs/system/$NAME.log
 
-ssh_port=$(get_kernel_parameter "sshport")
+ssh_port=$(zf_get_default ssh.port 22)
 
 if [[ -z "$ssh_port" ]]; then
     ssh_port="22"
