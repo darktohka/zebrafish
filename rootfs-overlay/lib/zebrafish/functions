@@ -44,7 +44,7 @@ ZEBRAFISH_CONFIG_EFI_FILE=
 
 fail () {
 	local msg="$@"
-	[ -n "@msg" ] || msg="FAILED"
+	[ -n "$msg" ] || msg="FAILED"
 	echo "$msg" >&2
 	exit 1
 }
@@ -194,7 +194,7 @@ zf_has () {
 # configuration. Useful for "is this flag set?" checks.
 zf_has_present () {
 	local key="$1"
-	"$ZEBRAFISH_CONFIG_BIN" --quiet get --bool "$key" >/dev/null 2>&1
+	"$ZEBRAFISH_CONFIG_BIN" --quiet get "$key" >/dev/null 2>&1
 }
 
 # ---------------------------------------------------------------------------
