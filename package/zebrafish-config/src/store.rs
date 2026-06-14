@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use toml_edit::DocumentMut;
 
 use crate::efi;
@@ -11,11 +11,14 @@ use crate::efi;
 /// target.
 ///
 /// Returns the resolved path. `[machine]` is always written to the EFI
-/// file; everything else is written to `/etc/zebrafish.toml`.
+/// file; everything else is written to `/etc/zebrafish.toml`.  The `efi`
+/// flag controls whether auto-discovery of the EFI partition is
+/// attempted when no explicit `--efi-dir` is given.
 pub fn target_path(
     section: &str,
     efi_dir_override: Option<&Path>,
     explicit: Option<&Path>,
+    efi: bool,
 ) -> Result<PathBuf> {
     if let Some(p) = explicit {
         return Ok(p.to_path_buf());
@@ -24,7 +27,8 @@ pub fn target_path(
     if section == "machine" {
         let efi_dir = match efi_dir_override {
             Some(d) => d.to_path_buf(),
-            None => efi::discover_efi_dir()?,
+            None if efi => efi::discover_efi_dir()?,
+            None => bail!("cannot write [machine] without --efi (or --efi-dir)"),
         };
         Ok(crate::path::machine_file(&efi_dir))
     } else {

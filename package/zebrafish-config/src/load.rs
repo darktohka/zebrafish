@@ -16,9 +16,12 @@ use crate::schema::Config;
 ///
 /// `efi_dir_override` lets the caller skip the discovery step (e.g. when
 /// running inside a unit test or when the operator passes `--efi-dir`).
+/// `efi` controls whether auto-discovery (mounting the EFI partition) is
+/// attempted when no explicit override is given.
 pub fn resolve_paths(
     efi_dir_override: Option<&Path>,
     machine_only: bool,
+    efi: bool,
 ) -> Result<(Option<PathBuf>, Option<PathBuf>)> {
     let system = if machine_only {
         None
@@ -28,10 +31,11 @@ pub fn resolve_paths(
 
     let machine = match efi_dir_override {
         Some(d) => Some(crate::path::machine_file(d)),
-        None => match efi::discover_efi_dir() {
+        None if efi => match efi::discover_efi_dir() {
             Ok(d) => Some(crate::path::machine_file(&d)),
             Err(_) => None,
         },
+        None => None,
     };
 
     Ok((system, machine))
@@ -42,8 +46,8 @@ pub fn resolve_paths(
 /// The machine file is loaded first, then the system file overrides on a
 /// per-key basis (we use serde's `Deserialize` on the merged string, so
 /// later occurrences of the same key win).
-pub fn load(efi_dir_override: Option<&Path>, machine_only: bool) -> Result<Config> {
-    let (system, machine) = resolve_paths(efi_dir_override, machine_only)?;
+pub fn load(efi_dir_override: Option<&Path>, machine_only: bool, efi: bool) -> Result<Config> {
+    let (system, machine) = resolve_paths(efi_dir_override, machine_only, efi)?;
     load_from_paths(system.as_deref(), machine.as_deref())
 }
 

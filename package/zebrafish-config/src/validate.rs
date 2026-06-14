@@ -26,7 +26,7 @@ fn run_inner(ctx: Ctx, args: ValidateArgs) -> Result<ExitCode> {
     }
 
     if args.machine {
-        let cfg = load::load(ctx.efi_dir.as_deref(), true)?;
+        let cfg = load::load(ctx.efi_dir.as_deref(), true, ctx.efi)?;
         // For the machine file, only `[machine]` is allowed; require
         // `id` to be present.
         let m = cfg.machine.as_ref().ok_or_else(|| {
@@ -47,7 +47,7 @@ fn run_inner(ctx: Ctx, args: ValidateArgs) -> Result<ExitCode> {
 
     // Both files: load merged, then check the machine file's
     // requirement separately.
-    let cfg = load::load(ctx.efi_dir.as_deref(), false)?;
+    let cfg = load::load(ctx.efi_dir.as_deref(), false, ctx.efi)?;
     validate_required(&cfg)?;
     Ok(ExitCode::SUCCESS)
 }

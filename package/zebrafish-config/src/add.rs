@@ -24,7 +24,7 @@ fn add_inner(ctx: Ctx, args: &AddArgs) -> Result<()> {
         bail!("cannot `add` to [machine]; it is a single-value section");
     }
 
-    let path = store::target_path(section, ctx.efi_dir.as_deref(), ctx.file.as_deref())?;
+    let path = store::target_path(section, ctx.efi_dir.as_deref(), ctx.file.as_deref(), ctx.efi)?;
     let mut doc = store::load_document(&path)?;
 
     let item = doc

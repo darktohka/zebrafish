@@ -30,7 +30,7 @@ fn run_inner(ctx: Ctx, args: GetArgs) -> Result<ExitCode> {
             .map_err(|e| anyhow!("reading {}: {e}", f.display()))?;
         crate::schema::Config::from_toml(&text)?
     } else {
-        crate::load::load(ctx.efi_dir.as_deref(), ctx.machine_only)?
+        crate::load::load(ctx.efi_dir.as_deref(), false, ctx.efi)?
     };
 
     let value = match key.lookup(&cfg) {

@@ -21,7 +21,7 @@ fn run_inner(ctx: Ctx, args: ListArgs) -> Result<ExitCode> {
         let text = std::fs::read_to_string(f)?;
         crate::schema::Config::from_toml(&text)?
     } else {
-        crate::load::load(ctx.efi_dir.as_deref(), ctx.machine_only)?
+        crate::load::load(ctx.efi_dir.as_deref(), false, ctx.efi)?
     };
 
     let view = toml::Value::try_from(&cfg)?;

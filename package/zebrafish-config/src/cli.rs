@@ -10,6 +10,10 @@ use clap::{Args, Parser, Subcommand, ValueHint};
     long_about = None,
 )]
 pub struct Cli {
+    /// Enable EFI partition access (auto-discover and mount).
+    #[arg(long, global = true)]
+    pub efi: bool,
+
     /// Path to the EFI partition directory containing zebrafish.toml.
     /// Overrides the auto-discovered EFI directory.
     #[arg(long, global = true, value_hint = ValueHint::DirPath)]
@@ -22,10 +26,6 @@ pub struct Cli {
     /// commands pick the right file automatically.
     #[arg(long, global = true, value_hint = ValueHint::FilePath)]
     pub file: Option<PathBuf>,
-
-    /// Only consider the EFI-resident zebrafish.toml (used by setup-persistence).
-    #[arg(long, global = true)]
-    pub machine_only: bool,
 
     /// Suppress non-error output.
     #[arg(long, global = true)]
@@ -73,7 +73,7 @@ pub enum Command {
 pub struct Ctx {
     pub file: Option<PathBuf>,
     pub efi_dir: Option<PathBuf>,
-    pub machine_only: bool,
+    pub efi: bool,
 }
 
 impl Ctx {
@@ -81,7 +81,7 @@ impl Ctx {
         Self {
             file: cli.file.clone(),
             efi_dir: cli.efi_dir.clone(),
-            machine_only: cli.machine_only,
+            efi: cli.efi,
         }
     }
 }

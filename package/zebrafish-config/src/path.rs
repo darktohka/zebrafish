@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::str::FromStr;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 
 use crate::cli::PathArgs;
 use crate::efi;
@@ -188,7 +188,8 @@ fn run_inner(ctx: Ctx, args: PathArgs) -> Result<ExitCode> {
     } else {
         let efi_dir: PathBuf = match ctx.efi_dir.clone() {
             Some(d) => d,
-            None => efi::discover_efi_dir()?,
+            None if ctx.efi => efi::discover_efi_dir()?,
+            None => bail!("cannot locate machine file without --efi (or --efi-dir)"),
         };
         Some(machine_file(&efi_dir))
     };

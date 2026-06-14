@@ -154,14 +154,8 @@ zfs_efi_unmount () {
 #
 # Exits non-zero if the value is missing.
 zfs_get_machine_id () {
-	local dir
-	dir=$(zfs_efi_dir) || return 1
-
-	[ -r "$dir/zebrafish.toml" ] || return 1
-
 	"$ZEBRAFISH_CONFIG_BIN" \
-		--machine-only --quiet \
-		--efi-dir "$dir" \
+		--quiet --efi \
 		get machine.id
 }
 

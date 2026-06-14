@@ -8,7 +8,6 @@ use std::process::{Command, ExitCode};
 use anyhow::{Context, Result};
 
 use crate::cli::{Ctx, EditArgs};
-use crate::efi;
 use crate::path as pf;
 use crate::store;
 
@@ -50,7 +49,6 @@ fn run_inner(ctx: Ctx) -> Result<ExitCode> {
 
     // After editing, validate the file we just wrote.
     let _ = store::load_document(&path)?;
-    let _ = efi::discover_efi_dir().ok();
 
     Ok(ExitCode::SUCCESS)
 }

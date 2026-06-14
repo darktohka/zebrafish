@@ -36,8 +36,8 @@ Common flags:
 
 ```
 --file <path>     # override the file to operate on
+--efi             # enable EFI partition access (auto-discover and mount)
 --efi-dir <path>  # override the discovered EFI directory
---machine-only    # only consider the EFI file (used by setup-persistence)
 --quiet, --verbose
 ```
 
@@ -137,22 +137,16 @@ zebrafish-config edit
 | `zf_has <key>`               | Print `true` / `false`. Always exits 0.                                                        |
 | `zf_has_present <key>`       | Returns 0 if the key is present, non-zero otherwise. Useful for `[ -n "$(...) ]` patterns.    |
 | `zfs_get_machine_id`         | Read `[machine].id` from the EFI file. Used by `setup-persistence`.                            |
-| `zfs_efi_dir`                | Find the directory containing `zebrafish-kernel` on the EFI partition (mounts as side effect). Idempotent. |
-| `zfs_efi_unmount`            | Unmount the EFI partition and clear the in-process mount state. Used by `S99unmount-efi`, the shutdown `rcK` script, and `upgrade`. |
+| `zfs_efi_unmount`            | Unmount the EFI partition and clear the in-process mount state. Used by `setup-persistence`, the shutdown `rcK` script, and `upgrade`. |
 
 ## EFI mount lifecycle
 
-The EFI system partition is mounted at `/run/zebrafish/efi` very early
-in boot by `/lib/zebrafish/mount-efi` (wired in from `/etc/inittab`).
-The only consumer that needs the mount during boot is
-`setup-persistence`, which reads `[machine].id` to derive the ZFS
-vault passphrase.
+The EFI system partition is mounted only on demand. During boot,
+`setup-persistence` calls `zfs_get_machine_id` which uses
+`zebrafish-config --efi` to mount the partition at
+`/run/zebrafish/efi`, read `[machine].id`, and exits. The mount is
+then dropped immediately by `setup-persistence` via `zfs_efi_unmount`.
 
-Once all of `/etc/init.d/S*` has finished, the
-`/etc/init.d/S99unmount-efi` script calls `zfs_efi_unmount` to drop
-the mount. Any later script that needs the EFI file (for example a
-future `upgrade` running at runtime) just calls `zfs_efi_dir`, which
-re-mounts as a side effect.
-
-The shutdown `/etc/init.d/rcK` script also calls `zfs_efi_unmount`
-defensively, in case `S99unmount-efi` was skipped.
+Any later script that needs the EFI file (for example
+`/lib/zebrafish/upgrade`) mounts and unmounts it on its own. The
+shutdown `/etc/init.d/rcK` script calls `zfs_efi_unmount` defensively.

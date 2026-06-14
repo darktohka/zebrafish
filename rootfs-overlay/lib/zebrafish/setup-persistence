@@ -12,6 +12,9 @@ if [[ -z "$machine" ]]; then
     exit 1
 fi
 
+# EFI partition is only needed for machine.id; unmount immediately.
+zfs_efi_unmount
+
 vault_hash=$(echo -n "$machine" | openssl shake256 -xoflen 32 | cut -d ' ' -f 2)
 
 ZEBRAFISH_ZPOOL="zebrafish"

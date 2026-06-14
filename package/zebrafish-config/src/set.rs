@@ -31,7 +31,7 @@ fn run_inner(ctx: Ctx, args: SetArgs) -> Result<ExitCode> {
         bail!("`--file` cannot be used to write [machine]; it is always on the EFI partition");
     }
 
-    let path = store::target_path(section, ctx.efi_dir.as_deref(), ctx.file.as_deref())?;
+    let path = store::target_path(section, ctx.efi_dir.as_deref(), ctx.file.as_deref(), ctx.efi)?;
     let mut doc = store::load_document(&path)?;
     apply_set(&mut doc, &key, &args.value)?;
     store::write_document(&path, &doc)?;
