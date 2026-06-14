@@ -61,7 +61,7 @@ fn run_inner(ctx: Ctx, args: ListArgs) -> Result<ExitCode> {
         crate::cli::ListFormat::Shell => {
             let root = section_value.map(|(_, v)| v).unwrap_or(&view);
             let prefix: Vec<String> = match section_value {
-                Some((name, _)) => vec![name.to_uppercase()],
+                Some((name, _)) => vec![name.to_uppercase().replace('-', "_")],
                 None => vec![],
             };
             emit_shell(root, &prefix);
@@ -75,7 +75,7 @@ fn emit_shell(value: &toml::Value, prefix: &[String]) {
     if let Some(t) = value.as_table() {
         for (k, v) in t {
             let mut next = prefix.to_vec();
-            next.push(k.to_uppercase());
+            next.push(k.to_uppercase().replace('-', "_"));
             emit_shell(v, &next);
         }
     } else if let Some(a) = value.as_array() {
