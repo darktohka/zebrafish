@@ -20,7 +20,15 @@ use crate::cli::{Cli, Command, Ctx};
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
-    let ctx = Ctx::from_cli(&cli);
+    let mut ctx = Ctx::from_cli(&cli);
+
+    // Auto-populate efi_dir when --efi is given without --efi-dir, so that
+    // downstream code (load, store, path) doesn't need to re-discover.
+    if ctx.efi && ctx.efi_dir.is_none() {
+        if let Ok(dir) = efi::discover_efi_dir() {
+            ctx.efi_dir = Some(dir);
+        }
+    }
 
     match cli.command {
         Command::Get(args) => get::run(ctx, args),

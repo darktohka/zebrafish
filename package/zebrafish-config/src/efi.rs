@@ -117,19 +117,27 @@ fn is_mounted(path: &Path) -> Result<bool> {
 /// Find the directory on the EFI partition that contains [`KERNEL_IMAGE`].
 ///
 /// Requires the EFI partition to be mounted first; call [`mount_efi`] if unsure.
+///
+/// Searches recursively (mirroring the `find ... -name zebrafish-kernel` pattern
+/// used by the shell scripts in `lib/zebrafish/functions` and `lib/zebrafish/upgrade`).
 pub fn kernel_dir(efi_mount: &Path) -> Result<PathBuf> {
-    for entry in std::fs::read_dir(efi_mount)
-        .with_context(|| format!("reading {}", efi_mount.display()))?
-    {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_dir() {
-            let candidate = path.join(KERNEL_IMAGE);
-            if candidate.exists() {
-                return Ok(path);
+    let mut stack = vec![efi_mount.to_path_buf()];
+
+    while let Some(dir) = stack.pop() {
+        let candidate = dir.join(KERNEL_IMAGE);
+        if candidate.exists() {
+            return Ok(dir);
+        }
+        if let Ok(entries) = std::fs::read_dir(&dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    stack.push(path);
+                }
             }
         }
     }
+
     Err(anyhow!(
         "could not find {KERNEL_IMAGE} under {}",
         efi_mount.display()
