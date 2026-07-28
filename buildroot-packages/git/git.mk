@@ -66,8 +66,10 @@ GIT_MAKE_OPTS += NO_GETTEXT=1
 endif
 
 # Cargo puts cross-built static libraries under target/<triple>/release.
+# Pass RUST_TARGETS so git's Makefile passes --target to cargo and then
+# copies the result from target/$(RUSTC_TARGET_NAME)/release to target/release/.
 GIT_MAKE_ENV += $(PKG_CARGO_ENV)
-GIT_MAKE_OPTS += RUST_TARGET_DIR=target/$(RUSTC_TARGET_NAME)/release
+GIT_MAKE_OPTS += RUST_TARGETS=$(RUSTC_TARGET_NAME)
 
 GIT_CFLAGS = $(TARGET_CFLAGS)
 
