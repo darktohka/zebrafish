@@ -1,0 +1,99 @@
+From a03e145640b6b51e8dc774c5bc9f421859ad9f85 Mon Sep 17 00:00:00 2001
+From: Buildroot <buildroot@buildroot.org>
+Date: Sat, 22 Aug 2026 23:38:11 +0300
+Subject: [PATCH] Replace strncpy with strscpy for Linux 7.2 compatibility
+
+Linux 7.2 removed the deprecated strncpy() API from the kernel
+entirely, so the driver no longer compiles:
+
+    kcache.c:52:5: error: implicit declaration of function 'strncpy'
+
+Convert all in-kernel strncpy() call sites to strscpy(), which is the
+recommended replacement for NUL-terminated destinations:
+
+- kcache.c: copy the kmem_cache name into pcache->name (char[40]).
+  strscpy also guarantees NUL termination, fixing a latent bug where
+  strncpy(pcache->name, name, 39) could leave name[39] uninitialized
+  for names of 39+ characters.
+- kfio_common.c: reimplement the kfio_strncpy portability wrapper on
+  top of strscpy(), preserving its char* return contract.
+- kblock.c: copy bdev_name into gd->disk_name; drop the now-redundant
+  manual terminator since strscpy always NUL terminates.
+
+The userspace-only kfio_strncpy macro in ufio.h is untouched.
+
+Signed-off-by: Buildroot <buildroot@buildroot.org>
+---
+ root/usr/src/iomemory-vsl4-4.3.7/kblock.c      | 4 ++--
+ root/usr/src/iomemory-vsl4-4.3.7/kcache.c      | 3 ++-
+ root/usr/src/iomemory-vsl4-4.3.7/kfio_common.c | 4 +++-
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/root/usr/src/iomemory-vsl4-4.3.7/kblock.c b/root/usr/src/iomemory-vsl4-4.3.7/kblock.c
+index a2c7880..a7331ca 100644
+--- a/root/usr/src/iomemory-vsl4-4.3.7/kblock.c
++++ b/root/usr/src/iomemory-vsl4-4.3.7/kblock.c
+@@ -49,6 +49,7 @@
+ 
+ #include <linux/version.h>
+ #include <linux/fs.h>
++#include <linux/string.h>
+ #include <fio/port/cdev.h>
+ #include <linux/buffer_head.h>
+ #include <linux/blk-mq.h>
+@@ -775,8 +776,7 @@ static int linux_bdev_expose_disk(struct fio_bdev *bdev)
+ 
+     fio_bdev_ops.owner = THIS_MODULE;
+ 
+-    strncpy(gd->disk_name, bdev->bdev_name, sizeof(gd->disk_name)-1);
+-    gd->disk_name[sizeof(gd->disk_name)-1] = 0;
++    strscpy(gd->disk_name, bdev->bdev_name, sizeof(gd->disk_name));
+ 
+     set_capacity(gd, bdev->bdev_num_blocks * bdev->bdev_block_size / KERNEL_SECTOR_SIZE);
+ 
+diff --git a/root/usr/src/iomemory-vsl4-4.3.7/kcache.c b/root/usr/src/iomemory-vsl4-4.3.7/kcache.c
+index 1bfc189..31f2fff 100644
+--- a/root/usr/src/iomemory-vsl4-4.3.7/kcache.c
++++ b/root/usr/src/iomemory-vsl4-4.3.7/kcache.c
+@@ -32,6 +32,7 @@
+ #include "port-internal.h"
+ #include <fio/port/dbgset.h>
+ #include <fio/port/kcache.h>
++#include <linux/string.h>
+ #include <linux/hardirq.h>  // in_atomic()
+ 
+ /**
+@@ -49,7 +50,7 @@ int noinline __kfio_create_cache(fusion_mem_cache_t *pcache, char *name, uint32_
+ 
+ //    kassert(pcache->name);
+ //    kassert(name);
+-    strncpy(pcache->name, name, 39);
++    strscpy(pcache->name, name, sizeof(pcache->name));
+ 
+     pcache->p = kmem_cache_create(pcache->name, size, align, 0, NULL);
+ 
+diff --git a/root/usr/src/iomemory-vsl4-4.3.7/kfio_common.c b/root/usr/src/iomemory-vsl4-4.3.7/kfio_common.c
+index cc5d6a7..66359f0 100644
+--- a/root/usr/src/iomemory-vsl4-4.3.7/kfio_common.c
++++ b/root/usr/src/iomemory-vsl4-4.3.7/kfio_common.c
+@@ -33,6 +33,7 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/kthread.h>
++#include <linux/string.h>
+ #include <linux/uaccess.h>
+ #include <fio/port/dbgset.h>
+ 
+@@ -135,7 +136,8 @@ int kfio_strncmp(const char *s1, const char *s2, fio_size_t n)
+ 
+ char *kfio_strncpy(char *dst, const char *src, fio_size_t n)
+ {
+-    return strncpy(dst, src, n);
++    strscpy(dst, src, n);
++    return dst;
+ }
+ 
+ char *kfio_strcat(char *dst, const char *src)
+-- 
+2.55.0
+
