@@ -1,0 +1,33 @@
+From 4017ea7cad1b29af000f58631d118197391a7725 Mon Sep 17 00:00:00 2001
+From: Buildroot <buildroot@buildroot.org>
+Date: Sat, 22 Aug 2026 22:57:36 +0300
+Subject: [PATCH] Add missing linux/string.h include for strncpy in kcache.c
+
+kcache.c uses strncpy() but never includes a header declaring it.
+With GCC 14+ (-Werror=implicit-function-declaration by default) this
+breaks the kernel module build:
+
+    kcache.c:52:5: error: implicit declaration of function 'strncpy'
+
+Include <linux/string.h> to provide the strncpy() declaration.
+
+Signed-off-by: Buildroot <buildroot@buildroot.org>
+---
+ root/usr/src/iomemory-vsl4-4.3.7/kcache.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/root/usr/src/iomemory-vsl4-4.3.7/kcache.c b/root/usr/src/iomemory-vsl4-4.3.7/kcache.c
+index 1bfc189..da691ee 100644
+--- a/root/usr/src/iomemory-vsl4-4.3.7/kcache.c
++++ b/root/usr/src/iomemory-vsl4-4.3.7/kcache.c
+@@ -32,6 +32,7 @@
+ #include "port-internal.h"
+ #include <fio/port/dbgset.h>
+ #include <fio/port/kcache.h>
++#include <linux/string.h>
+ #include <linux/hardirq.h>  // in_atomic()
+ 
+ /**
+-- 
+2.55.0
+
