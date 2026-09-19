@@ -66,10 +66,16 @@ GIT_MAKE_OPTS += NO_GETTEXT=1
 endif
 
 # Cargo puts cross-built static libraries under target/<triple>/release.
-# Pass RUST_TARGETS so git's Makefile passes --target to cargo and then
-# copies the result from target/$(RUSTC_TARGET_NAME)/release to target/release/.
+# PKG_CARGO_ENV already sets CARGO_BUILD_TARGET, and git's Makefile derives
+# RUST_LIB (target/$(CARGO_BUILD_TARGET)/release/libgitcore.a) from it.
+#
+# Do NOT additionally pass RUST_TARGETS: when both RUST_TARGETS and
+# CARGO_BUILD_TARGET are set to the same triple, git's Makefile ends up with
+# two rules for target/<triple>/release/libgitcore.a. The second rule builds
+# RUST_LIB from RUST_MEMBER_LIBS, which is the very same file, so make drops
+# the self-dependency ("Circular ... dependency dropped") and runs its recipe
+# with an empty $<, producing an invalid libgitcore.a that fails to link.
 GIT_MAKE_ENV += $(PKG_CARGO_ENV)
-GIT_MAKE_OPTS += RUST_TARGETS=$(RUSTC_TARGET_NAME)
 
 GIT_CFLAGS = $(TARGET_CFLAGS)
 
