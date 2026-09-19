@@ -5,7 +5,9 @@
 ################################################################################
 
 CRUN_VERSION = origin/main
-CRUN_SITE = https://github.com/containers/crun
+# Shimless fork: adds the clone3 pidfd receiver/autokill backend used by the
+# containerd shimless engine.
+CRUN_SITE = https://github.com/darktohka/crun-shimless
 CRUN_SITE_METHOD = git
 CRUN_GIT_SUBMODULES = YES
 CRUN_DEPENDENCIES += json-c

@@ -124,6 +124,10 @@ mv "$TARGET_DIR"/usr/bin/dockerd "$SCRATCH_DIR"/
 mv "$TARGET_DIR"/etc/init.d/S62dockerd "$SCRATCH_DIR"/
 mv "$TARGET_DIR"/usr/lib/docker "$SCRATCH_DIR"/folders/
 
+# The shim is only needed by the Docker variant; keep it out of the shimless
+# containerd image.
+mv "$TARGET_DIR"/usr/bin/containerd-shim-runc-v2 "$SCRATCH_DIR"/
+
 # Create the Docker redirection.
 cat << EOF > "$TARGET_DIR"/usr/bin/docker
 #!/bin/sh
@@ -169,6 +173,7 @@ mv "$SCRATCH_DIR"/docker "$TARGET_DIR"/usr/bin/
 mv "$SCRATCH_DIR"/dockerd "$TARGET_DIR"/usr/bin/
 mv "$SCRATCH_DIR"/S62dockerd "$TARGET_DIR"/etc/init.d/
 mv "$SCRATCH_DIR"/folders/docker "$TARGET_DIR"/usr/lib/
+mv "$SCRATCH_DIR"/containerd-shim-runc-v2 "$TARGET_DIR"/usr/bin/
 
 mv "$TARGET_DIR"/usr/bin/buildkitd "$SCRATCH_DIR"/
 mv "$TARGET_DIR"/usr/bin/nerdctl "$SCRATCH_DIR"/

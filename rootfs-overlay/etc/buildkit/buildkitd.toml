@@ -15,4 +15,3 @@
 
   [worker.containerd.runtime]
     name = "io.containerd.runc.v2"
-    options = { BinaryName = "runc" }

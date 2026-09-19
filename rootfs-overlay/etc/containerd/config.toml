@@ -4,5 +4,15 @@ root = "/oci/containerd"
 [plugins."io.containerd.grpc.v1.cri".containerd]
   snapshotter = "overlayfs"
 
+# Run containers through crun directly from containerd, without a shim
+# process. The engine intercepts the conventional runtime name so nerdctl,
+# buildkitd and ctr all use it with no per-client configuration.
+[plugins."io.containerd.runtime.v2.task".shimless]
+  enabled = true
+  runtime_name = "io.containerd.runc.v2"
+  crun_path = "/usr/bin/crun"
+  cgroup_root = "/sys/fs/cgroup"
+  autokill = false
+
 [plugins."io.containerd.snapshotter.v1.zfs"]
   root = "/oci/containerd/io.containerd.snapshotter.v1.zfs"

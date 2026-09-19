@@ -5,7 +5,9 @@
 ################################################################################
 
 CONTAINERD_VERSION = main
-CONTAINERD_SITE = $(call github,containerd,containerd,$(CONTAINERD_VERSION))
+# Shimless fork: containerd runs OCI containers through crun in-process,
+# without a separate containerd-shim process.
+CONTAINERD_SITE = $(call github,darktohka,containerd-shimless,$(CONTAINERD_VERSION))
 CONTAINERD_LICENSE = Apache-2.0
 CONTAINERD_LICENSE_FILES = LICENSE
 CONTAINERD_CPE_ID_VENDOR = linuxfoundation
