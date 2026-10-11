@@ -9,7 +9,7 @@
 //!   - Ports 15353 (and possibly 15354) available on localhost
 
 use std::net::{Ipv4Addr, SocketAddr, UdpSocket};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
 use hickory_proto::op::{Message, MessageType, OpCode, Query, ResponseCode};
@@ -108,6 +108,7 @@ impl TestServer {
             config.server.listen_address.clone(),
             config.server.listen_address_v6.clone(),
             config.server.listen_port,
+            None,
         ));
 
         let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().unwrap();
@@ -131,9 +132,35 @@ impl TestServer {
 // Use a single static port range for tests. Each test uses a unique port.
 // The tests are run serially since they share network resources.
 const BASE_PORT: u16 = 15353;
+static NETWORK_AVAILABLE: OnceLock<bool> = OnceLock::new();
+
+fn network_available() -> bool {
+    *NETWORK_AVAILABLE.get_or_init(|| {
+        let timeout = Duration::from_secs(2);
+        let endpoints = ["1.1.1.1:443", "8.8.8.8:443"];
+        endpoints.iter().any(|endpoint| {
+            endpoint
+                .parse::<SocketAddr>()
+                .ok()
+                .and_then(|addr| std::net::TcpStream::connect_timeout(&addr, timeout).ok())
+                .is_some()
+        })
+    })
+}
+
+fn skip_if_offline() -> bool {
+    if network_available() {
+        return false;
+    }
+    eprintln!("Skipping integration test: outbound network is unavailable");
+    true
+}
 
 #[test]
 fn test_resolve_a_record_udp() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT);
     let query = build_query("one.one.one.one.", RecordType::A);
     let resp = send_udp_query(server.addr, &query, Duration::from_secs(10));
@@ -154,6 +181,9 @@ fn test_resolve_a_record_udp() {
 
 #[test]
 fn test_resolve_a_record_tcp() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT + 1);
     let query = build_query("one.one.one.one.", RecordType::A);
     let resp = send_tcp_query(server.addr, &query, Duration::from_secs(10));
@@ -167,6 +197,9 @@ fn test_resolve_a_record_tcp() {
 
 #[test]
 fn test_resolve_aaaa_record() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT + 2);
     let query = build_query("one.one.one.one.", RecordType::AAAA);
     let resp = send_udp_query(server.addr, &query, Duration::from_secs(10));
@@ -186,6 +219,9 @@ fn test_resolve_aaaa_record() {
 
 #[test]
 fn test_resolve_cname() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT + 3);
     let query = build_query("www.google.com.", RecordType::A);
     let resp = send_udp_query(server.addr, &query, Duration::from_secs(10));
@@ -201,6 +237,9 @@ fn test_resolve_cname() {
 
 #[test]
 fn test_resolve_nxdomain() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT + 4);
     let query = build_query("this-domain-should-not-exist-zebrafish-test.invalid.", RecordType::A);
     let resp = send_udp_query(server.addr, &query, Duration::from_secs(10));
@@ -214,6 +253,9 @@ fn test_resolve_nxdomain() {
 
 #[test]
 fn test_resolve_mx_record() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT + 5);
     let query = build_query("google.com.", RecordType::MX);
     let resp = send_udp_query(server.addr, &query, Duration::from_secs(10));
@@ -229,6 +271,9 @@ fn test_resolve_mx_record() {
 
 #[test]
 fn test_resolve_txt_record() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT + 6);
     let query = build_query("google.com.", RecordType::TXT);
     let resp = send_udp_query(server.addr, &query, Duration::from_secs(10));
@@ -239,6 +284,9 @@ fn test_resolve_txt_record() {
 
 #[test]
 fn test_caching_reduces_latency() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT + 7);
     let query = build_query("cloudflare.com.", RecordType::A);
 
@@ -277,6 +325,9 @@ fn test_caching_reduces_latency() {
 
 #[test]
 fn test_caching_same_response_data() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT + 8);
     let query = build_query("one.one.one.one.", RecordType::A);
 
@@ -310,6 +361,9 @@ fn test_caching_same_response_data() {
 
 #[test]
 fn test_multiple_concurrent_queries() {
+    if skip_if_offline() {
+        return;
+    }
     let server = TestServer::start(BASE_PORT + 9);
     let addr = server.addr;
 
@@ -351,6 +405,9 @@ fn test_multiple_concurrent_queries() {
 
 #[test]
 fn test_google_provider() {
+    if skip_if_offline() {
+        return;
+    }
     // Test with Google DoH provider
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -376,7 +433,7 @@ fn test_google_provider() {
     let result = runtime.block_on(async { client.resolve(&query).await });
 
     assert!(result.is_ok(), "Google DoH query failed: {:?}", result.err());
-    let resp_bytes = result.unwrap();
+    let resp_bytes = result.unwrap().response;
     let resp = Message::from_vec(&resp_bytes).unwrap();
     assert_eq!(resp.response_code(), ResponseCode::NoError);
     assert!(!resp.answers().is_empty());
@@ -386,6 +443,9 @@ fn test_google_provider() {
 
 #[test]
 fn test_doh_client_directly() {
+    if skip_if_offline() {
+        return;
+    }
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -400,7 +460,7 @@ fn test_doh_client_directly() {
     let result = runtime.block_on(async { client.resolve(&query).await });
 
     assert!(result.is_ok(), "DoH resolve failed: {:?}", result.err());
-    let resp_bytes = result.unwrap();
+    let resp_bytes = result.unwrap().response;
     let resp = Message::from_vec(&resp_bytes).unwrap();
     assert_eq!(resp.response_code(), ResponseCode::NoError);
     assert!(!resp.answers().is_empty());
