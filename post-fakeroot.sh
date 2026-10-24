@@ -223,8 +223,10 @@ rmdir "$SCRATCH_DIR"/folders
 # leaving $TARGET_DIR in the Docker variant state, like the stages above.
 CONTAINERLESS_DIR="$SCRATCH_DIR"/containerless
 
-containerless_binaries="containerd containerd-shim containerd-shim-runc-v2 ctr \
-docker dockerd docker-proxy docker-init buildkitd buildctl nerdctl dive"
+# Container runtimes, engines, CLIs and helpers that must not ship.
+containerless_binaries="containerd containerd-shim containerd-shim-runc-v2 \
+crun runc buildkitd buildctl nerdctl ctr dive \
+docker dockerd docker-proxy docker-init docker-credential-zebrafish tini"
 
 containerless_inits="S60containerd S61buildkitd S62dockerd S63coolify S64compose"
 

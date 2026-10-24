@@ -33,10 +33,11 @@ software they ship. Each one is available for `x64` and `aarch64` as
 - **docker** — the full Docker engine (`dockerd`, `docker`, `docker-proxy`)
   plus `containerd`, `buildkitd`, `nerdctl` and the CNI plugins.
 - **containerless** — none of the above: no `containerd`, Docker, BuildKit,
-  `nerdctl`, `ctr`, `dive`, `docker-proxy` or CNI plugins, and no init scripts
-  to start them. Pick this when the machine runs uncontainerised workloads.
-  The variant is recorded in `/usr/lib/os-release` as `ZEBRAFISH_VARIANT`, so
-  `zebrafish-upgrade` keeps you on the same flavour.
+  `nerdctl`, `ctr`, `dive`, `docker-proxy`, OCI runtimes (`crun`, `runc`) or
+  CNI plugins, and no init scripts to start them. Pick this when the machine
+  runs uncontainerised workloads. The variant is recorded in
+  `/usr/lib/os-release` as `ZEBRAFISH_VARIANT`, so `zebrafish-upgrade` keeps
+  you on the same flavour.
 
 ### Flexible
 
