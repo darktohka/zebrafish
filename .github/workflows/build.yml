@@ -139,6 +139,11 @@ jobs:
         with:
           name: zebrafish-${{ matrix.architecture }}-docker
           path: ${{ github.workspace }}/artifacts/upload/zebrafish-${{ matrix.architecture }}-docker.tar
+      - name: Upload containerless artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zebrafish-${{ matrix.architecture }}-containerless
+          path: ${{ github.workspace }}/artifacts/upload/zebrafish-${{ matrix.architecture }}-containerless.tar
       - name: Deploy to CDN
         if: github.ref == 'refs/heads/master'
         run: |

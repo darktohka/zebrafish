@@ -46,6 +46,13 @@ else
   exit 1
 fi
 
+if [[ -f "$IMAGES"/initrd-containerless ]]; then
+  ROOTFS_CONTAINERLESS="$IMAGES"/initrd-containerless
+else
+  echo "No rootfs for containerless found."
+  exit 1
+fi
+
 cp "$IMAGE" "$ARTIFACTS"/zebrafish-kernel
 KERNEL_SHA3=$(sha3sum "$ARTIFACTS"/zebrafish-kernel | cut -d ' ' -f1)
 
@@ -58,3 +65,8 @@ cp "$ROOTFS_CONTAINERD" "$ARTIFACTS"/zebrafish-initrd
 INITRD_CONTAINERD_SHA3=$(sha3sum "$ARTIFACTS"/zebrafish-initrd | cut -d ' ' -f1)
 tar -cf "$UPLOAD"/zebrafish-"$ARCH"-containerd.tar -C "$ARTIFACTS" zebrafish-kernel zebrafish-initrd
 jq --arg kernel "$KERNEL_SHA3" --arg initrd "$INITRD_CONTAINERD_SHA3" -n '{"hashes": {"sha3": {"zebrafish-kernel": $kernel, "zebrafish-initrd": $initrd}}}' > "$UPLOAD"/zebrafish-"$ARCH"-containerd.json
+
+cp "$ROOTFS_CONTAINERLESS" "$ARTIFACTS"/zebrafish-initrd
+INITRD_CONTAINERLESS_SHA3=$(sha3sum "$ARTIFACTS"/zebrafish-initrd | cut -d ' ' -f1)
+tar -cf "$UPLOAD"/zebrafish-"$ARCH"-containerless.tar -C "$ARTIFACTS" zebrafish-kernel zebrafish-initrd
+jq --arg kernel "$KERNEL_SHA3" --arg initrd "$INITRD_CONTAINERLESS_SHA3" -n '{"hashes": {"sha3": {"zebrafish-kernel": $kernel, "zebrafish-initrd": $initrd}}}' > "$UPLOAD"/zebrafish-"$ARCH"-containerless.json

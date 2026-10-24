@@ -216,4 +216,99 @@ mv "$SCRATCH_DIR"/S60containerd "$TARGET_DIR"/etc/init.d/
 mv "$SCRATCH_DIR"/S61buildkitd "$TARGET_DIR"/etc/init.d/
 mv "$SCRATCH_DIR"/folders/cni "$TARGET_DIR"/usr/lib/
 rmdir "$SCRATCH_DIR"/folders
+
+# The containerless variant ships no container runtime, engine or tooling at
+# all, so there is nothing to start at boot either. Everything related to the
+# container stack is moved aside while its image is packed and then restored,
+# leaving $TARGET_DIR in the Docker variant state, like the stages above.
+CONTAINERLESS_DIR="$SCRATCH_DIR"/containerless
+
+containerless_binaries="containerd containerd-shim containerd-shim-runc-v2 ctr \
+docker dockerd docker-proxy docker-init buildkitd buildctl nerdctl dive"
+
+containerless_inits="S60containerd S61buildkitd S62dockerd S63coolify S64compose"
+
+containerless_paths="usr/lib/cni usr/lib/docker usr/libexec/docker \
+etc/docker etc/containerd etc/buildkit etc/nerdctl \
+etc/profile.d/docker.sh \
+var/lib/containerd var/lib/docker root/.docker"
+
+# Move a path, tolerating entries that this build legitimately does not have
+# (a broken symlink counts as present; -e alone would miss it).
+move_if_present() {
+    local source="$1"
+    local destination="$2"
+
+    if [ -e "$source" ] || [ -L "$source" ]; then
+        mkdir -p "$(dirname "$destination")"
+        mv "$source" "$destination"
+    fi
+}
+
+for binary in $containerless_binaries; do
+    move_if_present "$TARGET_DIR"/usr/bin/"$binary" "$CONTAINERLESS_DIR"/usr/bin/"$binary"
+done
+
+for init in $containerless_inits; do
+    move_if_present "$TARGET_DIR"/etc/init.d/"$init" "$CONTAINERLESS_DIR"/etc/init.d/"$init"
+done
+
+for path in $containerless_paths; do
+    move_if_present "$TARGET_DIR"/"$path" "$CONTAINERLESS_DIR"/"$path"
+done
+
+# Create a new os-release.
+cat << EOF > "$TARGET_DIR"/usr/lib/os-release
+NAME=$ZEBRAFISH_NAME
+VERSION=$ZEBRAFISH_VERSION
+PRETTY_NAME="$ZEBRAFISH_NAME $ZEBRAFISH_VERSION"
+ZEBRAFISH_VARIANT=containerless
+ID=zebrafish
+ID_LIKE=buildroot
+EOF
+cp -v "$BINARIES_DIR"/zebrafish-release "$TARGET_DIR"/etc/zebrafish-release
+
+cd "$TARGET_DIR"
+
+# change to -n on prod
+if [[ -n "${CI:-}" ]]; then
+    echo "Running in CI environment, compressing binaries..."
+    find . \
+        | LC_ALL=C sort \
+        | cpio --reproducible --quiet -o -H newc \
+        | zstd -T0 -19 \
+        > "$BINARIES_DIR"/initrd-containerless
+else
+    echo "Not running in CI environment, skipping compression..."
+    find . \
+        | LC_ALL=C sort \
+        | cpio --reproducible --quiet -o -H newc \
+        > "$BINARIES_DIR"/initrd-containerless
+fi
+
+for binary in $containerless_binaries; do
+    move_if_present "$CONTAINERLESS_DIR"/usr/bin/"$binary" "$TARGET_DIR"/usr/bin/"$binary"
+done
+
+for init in $containerless_inits; do
+    move_if_present "$CONTAINERLESS_DIR"/etc/init.d/"$init" "$TARGET_DIR"/etc/init.d/"$init"
+done
+
+for path in $containerless_paths; do
+    move_if_present "$CONTAINERLESS_DIR"/"$path" "$TARGET_DIR"/"$path"
+done
+
+# Put the Docker variant's os-release back so $TARGET_DIR matches the last
+# image that was generated from it.
+cat << EOF > "$TARGET_DIR"/usr/lib/os-release
+NAME=$ZEBRAFISH_NAME
+VERSION=$ZEBRAFISH_VERSION
+PRETTY_NAME="$ZEBRAFISH_NAME $ZEBRAFISH_VERSION"
+ZEBRAFISH_VARIANT=docker
+ID=zebrafish
+ID_LIKE=buildroot
+EOF
+cp -v "$BINARIES_DIR"/zebrafish-release "$TARGET_DIR"/etc/zebrafish-release
+
+rm -rf "$CONTAINERLESS_DIR"
 rmdir "$SCRATCH_DIR"

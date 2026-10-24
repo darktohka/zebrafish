@@ -24,6 +24,20 @@ Zebrafish is designed to be lightweight, shipping only the necessary libraries a
 - **containerd:** Zebrafish uses `containerd` as its container runtime, providing a stable and efficient environment for running OCI-compliant containers.
 - **ocitool**: The OS includes `ocitool`, a tool for managing OCI container images, making it easy to work with images.
 
+Zebrafish is published in three flavours, which differ only in which container
+software they ship. Each one is available for `x64` and `aarch64` as
+`zebrafish-<arch>-<variant>.tar`:
+
+- **containerd** — `containerd`, the shimless runtime, `nerdctl`, `buildkitd`
+  and the CNI plugins. `docker` is a thin wrapper around `nerdctl`.
+- **docker** — the full Docker engine (`dockerd`, `docker`, `docker-proxy`)
+  plus `containerd`, `buildkitd`, `nerdctl` and the CNI plugins.
+- **containerless** — none of the above: no `containerd`, Docker, BuildKit,
+  `nerdctl`, `ctr`, `dive`, `docker-proxy` or CNI plugins, and no init scripts
+  to start them. Pick this when the machine runs uncontainerised workloads.
+  The variant is recorded in `/usr/lib/os-release` as `ZEBRAFISH_VARIANT`, so
+  `zebrafish-upgrade` keeps you on the same flavour.
+
 ### Flexible
 
 - **Remote Disk Support:** Zebrafish can connect to remote disks hosted on other servers using the Linux Network Block Device (NBD) protocol. This makes it possible to integrate with remote storage solutions.
