@@ -2,28 +2,69 @@ From: Buildroot <buildroot@buildroot.org>
 Date: Sun, 5 Jan 2026 00:00:00 +0000
 Subject: [PATCH] Fix missing kernel type includes for size_t and bool
 
-The iomemory-vsl4 driver uses size_t and bool types but doesn't include
-the proper kernel headers. Add linux/types.h includes and define size_t
-and bool types in stdint.h to fix compilation with newer kernels.
+The iomemory-vsl4 driver uses size_t and bool types but doesn't always
+include the proper kernel headers.  Define size_t, bool and uintptr_t in
+the portability stdint.h shim and include <linux/types.h> where the
+driver's own headers rely on those types, fixing compilation with newer
+kernels.
 
 Signed-off-by: Buildroot <buildroot@buildroot.org>
 ---
- root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h | 13 +++++++++++++
- root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h                |  1 +
- root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/six_lock.h            |  1 +
- root/usr/src/iomemory-vsl4-4.3.7/six_lock.c                             |  1 +
- 4 files changed, 16 insertions(+)
+ root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h | 5 +++++
+ root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h                | 1 +
+ root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/six_lock.h            | 1 +
+ root/usr/src/iomemory-vsl4-4.3.7/six_lock.c                             | 1 +
+ 4 files changed, 8 insertions(+)
 
+diff --git a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h
+index 514ca4f..2e11697 100644
 --- a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h
 +++ b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h
-@@ -35,6 +35,11 @@
-  * @{
+@@ -36,6 +36,11 @@
   */
  #ifndef _LINUX_TYPES_H
-+
+ 
 +/* Add size_t and bool definitions */
 +typedef unsigned long size_t;  // size_t is typically unsigned long in the kernel
 +typedef int bool;               // bool is usually an int type in the kernel
 +typedef unsigned long uintptr_t;
-
++
  /* Exact integral types.  */
+ 
+ /* Signed.  */
+diff --git a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h
+index d613371..c850c67 100644
+--- a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h
++++ b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h
+@@ -37,6 +37,7 @@
+ #error Please include <fio/port/ktypes.h> rather than this file directly.
+ #endif
+ #include <fio/port/errno.h>
++#include <linux/types.h>
+ #ifndef __FIO_PORT_KMEM_H__
+ #define __FIO_PORT_KMEM_H__
+ 
+diff --git a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/six_lock.h b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/six_lock.h
+index 0c7deb3..ba52bf2 100644
+--- a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/six_lock.h
++++ b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/six_lock.h
+@@ -39,6 +39,7 @@
+ #define __SIX_LOCK_H__
+ 
+ #include <fio/port/types.h>
++#include <linux/types.h>
+ 
+ // BIG WARNING
+ // Notation and *order* is taken from Gray and Reuter (1993)
+diff --git a/root/usr/src/iomemory-vsl4-4.3.7/six_lock.c b/root/usr/src/iomemory-vsl4-4.3.7/six_lock.c
+index 6add2de..2dcfcb3 100644
+--- a/root/usr/src/iomemory-vsl4-4.3.7/six_lock.c
++++ b/root/usr/src/iomemory-vsl4-4.3.7/six_lock.c
+@@ -42,6 +42,7 @@
+ #include <fio/port/six_lock.h>
+ #include <fio/port/dbgset.h>
+ #include <fio/port/errno.h>
++#include <linux/types.h>
+ 
+ #define FOR_ALL_LOCK_CLASSES(ind)                       \
+     for (ind = 0; ind < NUM_SIX_LOCK_CLASSES; ind++)
