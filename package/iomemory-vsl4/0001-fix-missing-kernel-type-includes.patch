@@ -2,36 +2,43 @@ From: Buildroot <buildroot@buildroot.org>
 Date: Sun, 5 Jan 2026 00:00:00 +0000
 Subject: [PATCH] Fix missing kernel type includes for size_t and bool
 
-The iomemory-vsl4 driver uses size_t and bool types but doesn't always
-include the proper kernel headers.  Define size_t, bool and uintptr_t in
-the portability stdint.h shim and include <linux/types.h> where the
-driver's own headers rely on those types, fixing compilation with newer
-kernels.
+The iomemory-vsl4 driver defines its own versions of the fixed-width
+integer types (int64_t/uint64_t) and uses bool/size_t without always
+including the proper kernel headers.  On 64-bit kernels u64/s64 are
+`unsigned long long`/`long long` while the driver's userspace-style
+typedefs use `unsigned long`/`long`, so including both the driver shim
+and <linux/types.h> in the same translation unit makes GCC complain
+about conflicting types for bool, int64_t and uint64_t.
+
+Include <linux/types.h> from the portability stdint.h shim when building
+against the kernel, so the kernel's own definitions are used and the
+shim's userspace typedefs are skipped.  Also include <linux/types.h>
+where the driver's own headers rely on those types, fixing compilation
+with newer kernels.
 
 Signed-off-by: Buildroot <buildroot@buildroot.org>
 ---
- root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h | 5 +++++
+ root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h | 4 ++++
  root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h                | 1 +
  root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/six_lock.h            | 1 +
  root/usr/src/iomemory-vsl4-4.3.7/six_lock.c                             | 1 +
- 4 files changed, 8 insertions(+)
+ 4 files changed, 7 insertions(+)
 
 diff --git a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h
-index 514ca4f..2e11697 100644
+index 514ca4f..749e92b 100644
 --- a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h
 +++ b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/common-linux/stdint.h
-@@ -36,6 +36,11 @@
+@@ -34,6 +34,10 @@
+  * @ingroup PORT_COMMON_LINUX
+  * @{
   */
++#ifdef __KERNEL__
++#include <linux/types.h>
++#endif
++
  #ifndef _LINUX_TYPES_H
  
-+/* Add size_t and bool definitions */
-+typedef unsigned long size_t;  // size_t is typically unsigned long in the kernel
-+typedef int bool;               // bool is usually an int type in the kernel
-+typedef unsigned long uintptr_t;
-+
  /* Exact integral types.  */
- 
- /* Signed.  */
 diff --git a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h b/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h
 index d613371..c850c67 100644
 --- a/root/usr/src/iomemory-vsl4-4.3.7/include/fio/port/kmem.h
