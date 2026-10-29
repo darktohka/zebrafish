@@ -176,6 +176,19 @@ pub struct NbdClient {
     pub address: String,
     pub port: u16,
     pub device: String,
+
+    /// Name of the export to request (`nbd-client -N`). Required when the
+    /// server is config-file driven, because a named export is the only kind
+    /// that can carry per-export options such as `flush`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub export: Option<String>,
+
+    /// Kernel-side request abort window in seconds (`nbd-client -timeout`).
+    /// Must outlive the longest stall of the exporting device, but stay below
+    /// `zfs_deadman_ziotime_ms` (300s) so a wedged pool suspends rather than
+    /// panicking. When unset, `/etc/init.d/S45nbd` applies its own default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<u16>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -277,6 +290,8 @@ allowed_ips = ["10.0.4.2/32"]
 address = "10.0.3.1"
 port = 4284
 device = "/dev/nbd0"
+export = "export"
+timeout = 180
 
 [[nbd-server]]
 address = "10.0.4.1"
@@ -339,6 +354,8 @@ password = "a94d...7cb"
 
         assert_eq!(cfg.nbd_client.len(), 1);
         assert_eq!(cfg.nbd_client[0].device, "/dev/nbd0");
+        assert_eq!(cfg.nbd_client[0].export.as_deref(), Some("export"));
+        assert_eq!(cfg.nbd_client[0].timeout, Some(180));
 
         assert_eq!(cfg.nbd_server.len(), 1);
         assert_eq!(cfg.nbd_server[0].device, "/dev/nbd1");

@@ -9,12 +9,30 @@ NAME_SERVER=nbd-server
 PIDFILE_SERVER=/var/run/$NAME_SERVER.pid
 LOGFILE_CLIENT=/logs/system/$NAME_CLIENT.log
 LOGFILE_SERVER=/logs/system/$NAME_SERVER.log
+CONFIG_SERVER=/etc/nbd-server/config
 
 # Persistent
 ARGS_CLIENT="-p"
 
 # No fork
 ARGS_SERVER="-n"
+
+# Defaults for clients that do not set these in zebrafish.toml.
+#
+# EXPORT: when /etc/nbd-server/config describes the export, the client has to
+# ask for it by name. The section in that file is called "export".
+# TIMEOUT: kernel-side request abort window. Must outlive the longest stall of
+# the exporting device (otherwise the kernel aborts the connection and the NBD
+# device cannot be re-armed without a reboot) but stay below
+# zfs_deadman_ziotime_ms (300s) so a wedged pool suspends instead of panicking.
+NBD_CLIENT_DEFAULT_EXPORT="${NBD_CLIENT_DEFAULT_EXPORT:-export}"
+NBD_CLIENT_DEFAULT_TIMEOUT="${NBD_CLIENT_DEFAULT_TIMEOUT:-180}"
+
+start_server() {
+  start-stop-daemon --start --quiet --background \
+    --make-pidfile --pidfile $PIDFILE_SERVER \
+    --startas /bin/sh -- -c "exec stdbuf -oL -eL $NAME_SERVER $* >> $LOGFILE_SERVER 2>&1"
+}
 
 do_start() {
   local client_count=0
@@ -35,9 +53,35 @@ do_start() {
       local address="NBD_CLIENT_${i}_ADDRESS"
       local port="NBD_CLIENT_${i}_PORT"
       local disk="NBD_CLIENT_${i}_DEVICE"
+      local export="NBD_CLIENT_${i}_EXPORT"
+      local tmo="NBD_CLIENT_${i}_TIMEOUT"
+      local export_name="${!export}"
+      local timeout_val="${!tmo}"
+      local base_args=()
 
+      [ -z "$export_name" ] && export_name="$NBD_CLIENT_DEFAULT_EXPORT"
+      [ -z "$timeout_val" ] && timeout_val="$NBD_CLIENT_DEFAULT_TIMEOUT"
+
+      # -timeout is the kernel-side abort window. It must be longer than the
+      # longest stall of the exporting device, otherwise the kernel tears the
+      # connection down with EIO and the NBD device cannot be re-armed without
+      # a reboot. Keep it below zfs_deadman_ziotime_ms (300s by default).
+      [ -n "$timeout_val" ] && base_args+=(-timeout "$timeout_val")
+
+      # -N selects a named export. Without it nbd-server serves its default
+      # (anonymous) export, which cannot carry per-export options such as
+      # flush.
       echo -n "Starting $NAME_CLIENT for ${!disk}: "
-      stdbuf -oL -eL $NAME_CLIENT $ARGS_CLIENT "${!address}" "${!port}" "${!disk}" >> $LOGFILE_CLIENT 2>&1
+      if [ -n "$export_name" ] && stdbuf -oL -eL $NAME_CLIENT $ARGS_CLIENT "${base_args[@]}" \
+          -N "$export_name" "${!address}" "${!port}" "${!disk}" >> $LOGFILE_CLIENT 2>&1; then
+        echo "OK"
+      elif stdbuf -oL -eL $NAME_CLIENT $ARGS_CLIENT "${base_args[@]}" \
+          "${!address}" "${!port}" "${!disk}" >> $LOGFILE_CLIENT 2>&1; then
+        # Older servers only serve the anonymous export; keep booting.
+        echo "OK (anonymous export)"
+      else
+        echo "FAIL"
+      fi
     done
 
     # Wait for all disks to appear
@@ -65,10 +109,23 @@ do_start() {
       local address="NBD_SERVER_${i}_ADDRESS"
       local disk="NBD_SERVER_${i}_DEVICE"
 
+      # A config file describes the export (and its flush/fua options), which
+      # a command-line export cannot express. Prefer it, but fall back to the
+      # old positional form if nbd-server refuses to start so the boot path
+      # never depends on the config file being valid.
+      if [[ -f "$CONFIG_SERVER" ]]; then
+        echo -n "Starting $NAME_SERVER from $CONFIG_SERVER: "
+        start_server "$ARGS_SERVER"
+        sleep 1
+        if kill -0 "$(cat $PIDFILE_SERVER 2>/dev/null)" 2>/dev/null; then
+          echo "OK"
+          continue
+        fi
+        echo "FAIL (falling back to command line)"
+      fi
+
       echo -n "Starting $NAME_SERVER on ${!disk}: "
-      start-stop-daemon --start --quiet --background \
-        --make-pidfile --pidfile $PIDFILE_SERVER \
-        --startas /bin/sh -- -c "exec stdbuf -oL -eL $NAME_SERVER $ARGS_SERVER ${!address} ${!disk} >> $LOGFILE_SERVER 2>&1" \
+      start_server "$ARGS_SERVER ${!address} ${!disk}" \
         && echo "OK" || echo "FAIL"
     done
   fi

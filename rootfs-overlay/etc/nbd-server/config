@@ -1,0 +1,23 @@
+# NBD export for the archangel backing disk.
+#
+# This file is the authoritative definition of the export. The init script
+# starts nbd-server without positional arguments when this file is present,
+# so that the per-export options below actually take effect. With the old
+# "nbd-server ip@port /dev/sdb" command line, nbd-server builds an anonymous
+# export with default options and ignores this [export] block.
+#
+# flush = true is required for ZFS on the client: the backing device
+# (/dev/sdb) has a volatile write cache and does not support FUA, so
+# NBD_CMD_FLUSH must be forwarded as an fdatasync(). Without it the client's
+# block queue is reported as "write through" and ZFS cache flushes become
+# no-ops, which risks pool corruption after a host crash.
+[generic]
+	listenaddr = 10.0.3.1
+	port = 4284
+	# user = root        # or: group = disk, if nbd-server drops privs
+
+[export]
+	exportname = /dev/sdb
+	flush = true
+	fua = true
+	# readonly = true    # if this is a backup target

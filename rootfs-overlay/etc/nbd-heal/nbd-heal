@@ -1,0 +1,272 @@
+#!/bin/bash
+#
+# nbd-heal -- keep NBD-backed ZFS pools alive.
+#
+# Why this exists
+# ---------------
+# The Linux NBD client cannot reconnect.  When the exporting server stops
+# answering for longer than the client's -timeout, the kernel aborts every
+# outstanding request with EIO and marks the device dead:
+#
+#   block nbd0: Connection timed out, retrying (0/1 alive)
+#   block nbd0: Dead connection, failed to find a fallback
+#   block nbd0: shutting down sockets
+#
+# From that point the device cannot be re-armed in place: NBD_DISCONNECT only
+# fails with -ECONNRESET, NBD_CLEAR_SOCK is a no-op and NBD_SET_SOCK is
+# refused with "Cannot add socket to a running device".  ZFS then suspends the
+# pool (failmode=wait, which is the data-safe behaviour) and only a reboot
+# clears the wedged nbd device.
+#
+# So the daemon does the three things that are actually possible and safe:
+#   1. Attach the device when it is not attached at all (server was late or
+#      was restarted) -- nothing to lose, the device is already gone.
+#   2. Verify the transport and resume a suspended pool with "zpool clear".
+#   3. Report the unrecoverable state loudly instead of staying silent.
+#
+# It deliberately never detaches a device: on kernels with the workqueue NBD
+# receive path (>= 6.9) no userspace process stays attached to a healthy
+# device, and a probe timeout during a legitimate stall looks exactly like a
+# dead device.  Detaching on either signal would turn a healthy pool into a
+# suspended one.  Detaching is left to a human who knows the export is gone.
+#
+# It never writes to the exported data.
+
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+LOG=/logs/system/nbd-heal.log
+LOCK=/run/nbd-heal.lock
+INTERVAL=10          # seconds between health checks
+FAIL_THRESHOLD=3     # consecutive bad cycles before acting
+REPAIR_BACKOFF=60    # seconds to wait after a repair attempt
+CLEAR_COOLDOWN=300   # do not retry zpool clear more often than this
+PROBE_TIMEOUT=25     # seconds a raw read may take before it counts as failed
+
+say() {
+	local level="$1"; shift
+	local msg
+	msg="$(date -Is) [$level] $*"
+	echo "$msg" >> "$LOG"
+	logger -t nbd-heal "$level: $*" 2>/dev/null
+	if [ "$(stat -c %s "$LOG" 2>/dev/null || echo 0)" -gt 1048576 ]; then
+		tail -n 2000 "$LOG" > "$LOG.tmp" && mv "$LOG.tmp" "$LOG"
+	fi
+}
+
+# ---------------------------------------------------------------- discovery
+
+ADDR=(); PORT=(); DEV=(); NAME=(); TMO=()
+POOLS=()
+
+discover() {
+	local out i
+
+	out="$(zebrafish-config --quiet list nbd-client --format shell 2>/dev/null)"
+	eval "$out"
+	local count="${NBD_CLIENT_COUNT:-0}"
+	ADDR=(); PORT=(); DEV=(); NAME=(); TMO=()
+	for ((i = 0; i < count; i++)); do
+		local a="NBD_CLIENT_${i}_ADDRESS"
+		local p="NBD_CLIENT_${i}_PORT"
+		local d="NBD_CLIENT_${i}_DEVICE"
+		local n="NBD_CLIENT_${i}_EXPORT"
+		local t="NBD_CLIENT_${i}_TIMEOUT"
+		ADDR+=("${!a}"); PORT+=("${!p}"); DEV+=("${!d}")
+		NAME+=("${!n:-export}"); TMO+=("${!t:-180}")
+	done
+
+	out="$(zebrafish-config --quiet list zfs-mount --format shell 2>/dev/null)"
+	eval "$out"
+	count="${ZFS_MOUNT_COUNT:-0}"
+	POOLS=()
+	for ((i = 0; i < count; i++)); do
+		local m="ZFS_MOUNT_${i}_NAME"
+		POOLS+=("${!m}")
+	done
+}
+
+# ------------------------------------------------------------------- probes
+
+dev_size() { cat "/sys/block/$(basename "$1")/size" 2>/dev/null || echo 0; }
+
+# Raw read of a single 4 KiB block at LBA 0: one request round-trip that
+# exercises the whole transport without touching ZFS metadata.  iflag=direct
+# keeps it out of the block device page cache, so a repeated probe cannot be
+# answered from cache and mask a dead transport.  BusyBox dd has no
+# "status=none", so its chatter is discarded instead.
+probe_once() {
+	timeout "$PROBE_TIMEOUT" dd if="$1" of=/dev/null \
+		bs=4096 count=1 iflag=direct >/dev/null 2>&1
+}
+
+# A suspended pool issues no I/O, so a healthy device answers immediately.
+# Give a stalling transport one more chance before calling it dead.
+probe_dev() {
+	probe_once "$1" && return 0
+	sleep 10
+	probe_once "$1"
+}
+
+# MISSING: not attached at all (size 0)
+# ATTACHED: has a size; probe_dev decides whether it actually answers
+dev_state() {
+	local dev="$1" size
+	size="$(dev_size "$dev")"
+	[ "${size:-0}" = "0" ] && { echo MISSING; return; }
+	echo ATTACHED
+}
+
+pool_state() {
+	zpool list -H -o health "$1" 2>/dev/null || echo MISSING
+}
+
+# ------------------------------------------------------------------- repair
+
+attach_dev() {
+	local dev="$1" addr="$2" port="$3" name="$4" tmo="$5" i
+	local args=(-timeout "$tmo")
+
+	[ -n "$name" ] && args+=(-N "$name")
+
+	timeout 90 nbd-client "${args[@]}" "$addr" "$port" "$dev" >/dev/null 2>&1
+	for ((i = 0; i < 30; i++)); do
+		[ "$(dev_size "$dev")" != "0" ] && return 0
+		sleep 1
+	done
+	return 1
+}
+
+# --------------------------------------------------------------------------
+
+last_clear=0
+
+repair() {
+	local i wedged=0 all_attached=1 all_answer=1
+
+	say WARN "repair cycle started"
+
+	# 1. Attach devices that are not attached at all.
+	for ((i = 0; i < ${#DEV[@]}; i++)); do
+		local dev="${DEV[$i]}" state
+		state="$(dev_state "$dev")"
+		[ "$state" = "MISSING" ] || continue
+
+		say WARN "${dev}: not attached; connecting to ${ADDR[$i]}:${PORT[$i]}"
+		if attach_dev "$dev" "${ADDR[$i]}" "${PORT[$i]}" "${NAME[$i]}" "${TMO[$i]}"; then
+			say INFO "${dev}: attached"
+		else
+			say ERROR "${dev}: could not connect to ${ADDR[$i]}:${PORT[$i]}"
+		fi
+	done
+
+	# 2. Check every device: attached, and does it actually answer?
+	for ((i = 0; i < ${#DEV[@]}; i++)); do
+		local dev="${DEV[$i]}"
+		[ "$(dev_state "$dev")" = "ATTACHED" ] || { all_attached=0; continue; }
+		if ! probe_dev "$dev"; then
+			say ERROR "${dev}: attached but not answering reads"
+			all_answer=0
+		fi
+	done
+
+	# 3. Resume suspended pools, but only over a verified transport.
+	for ((i = 0; i < ${#POOLS[@]}; i++)); do
+		local pool="${POOLS[$i]}" pstate after
+		pstate="$(pool_state "$pool")"
+
+		if [ "$pstate" = "MISSING" ]; then
+			say WARN "pool ${pool} is not imported; run '/etc/init.d/S46mounts start' once its device answers"
+			continue
+		fi
+		[ "$pstate" = "SUSPENDED" ] || continue
+
+		if [ "$all_attached" = "0" ] || [ "$all_answer" = "0" ]; then
+			say CRIT "pool ${pool} is suspended and its transport is not answering; " \
+				"the device cannot be re-armed in place -- reboot this host"
+			wedged=1
+			continue
+		fi
+
+		if [ $(( $(date +%s) - last_clear )) -lt "$CLEAR_COOLDOWN" ] && [ "$last_clear" -gt 0 ]; then
+			say CRIT "pool ${pool} suspended again shortly after the last zpool clear; " \
+				"the transport is unstable -- not retrying"
+			wedged=1
+			continue
+		fi
+
+		say WARN "pool ${pool} is suspended; transport verified, resuming with zpool clear"
+		last_clear=$(date +%s)
+		if zpool clear "$pool" >> "$LOG" 2>&1; then
+			sleep 2
+			after="$(pool_state "$pool")"
+			if [ "$after" = "ONLINE" ]; then
+				say INFO "pool ${pool}: resumed, state=ONLINE"
+			else
+				say CRIT "pool ${pool}: zpool clear returned success but state=${after}"
+				wedged=1
+			fi
+		else
+			say CRIT "pool ${pool}: zpool clear failed"
+			wedged=1
+		fi
+	done
+
+	[ "$wedged" = "1" ] && return 2
+	return 0
+}
+
+main() {
+	exec 9>"$LOCK"
+	if ! flock -n 9; then
+		echo "nbd-heal: already running" >&2
+		exit 0
+	fi
+
+	discover
+	if [ "${#DEV[@]}" -eq 0 ]; then
+		say INFO "no nbd-client configured; nothing to supervise"
+		exit 0
+	fi
+
+	say INFO "supervising ${DEV[*]} (interval ${INTERVAL}s, timeout ${TMO[*]})"
+
+	local failures=0 last_wedged=0
+
+	while :; do
+		discover
+
+		local bad=0
+		for ((i = 0; i < ${#DEV[@]}; i++)); do
+			[ "$(dev_state "${DEV[$i]}")" = "MISSING" ] && bad=1
+		done
+		for ((i = 0; i < ${#POOLS[@]}; i++)); do
+			[ "$(pool_state "${POOLS[$i]}")" = "SUSPENDED" ] && bad=1
+		done
+
+		if [ "$bad" = "0" ]; then
+			failures=0
+			sleep "$INTERVAL"
+			continue
+		fi
+
+		failures=$((failures + 1))
+		if [ "$failures" -lt "$FAIL_THRESHOLD" ]; then
+			sleep "$INTERVAL"
+			continue
+		fi
+
+		if [ "$last_wedged" -gt 0 ] &&
+		   [ $(( $(date +%s) - last_wedged )) -lt 600 ]; then
+			sleep "$INTERVAL"
+			continue
+		fi
+
+		repair
+		[ "$?" = "2" ] && last_wedged=$(date +%s) || last_wedged=0
+		failures=0
+		sleep "$REPAIR_BACKOFF"
+	done
+}
+
+main "$@"

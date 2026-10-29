@@ -47,6 +47,7 @@ software they ship. Each one is available for `x64` and `aarch64` as
 
 - **ZFS File System:** Zebrafish is built on top of the ZFS file system, which provides strong data integrity and protection against data corruption.
 - **Disaster Recovery:** The OS includes a built-in mechanism to automatically sync all data with a remote server. This ensures that your data is always backed up and can be easily recovered in case of a disaster.
+- **NBD Self-Healing:** Pools backed by an NBD device are supervised by `nbd-heal`, which reconnects the client and resumes a suspended pool automatically. The NBD kernel client cannot reconnect on its own, so this is required to avoid a reboot whenever the exporting disk stalls. See [NBD.md](NBD.md) for the failure mode, the tuning rules, and the runbook.
 
 ### Security First
 
