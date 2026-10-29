@@ -3,9 +3,112 @@
 NAME=compose
 COMPOSE_DATA_DIR=/compose
 
+# /run is a tmpfs, so this marker disappears on reboot and do_start() knows it
+# is the first start of this boot.
+COMPOSE_BOOT_MARKER=/run/zebrafish-compose-cleaned
+
 . /lib/zebrafish/functions
 
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME $1
+
+# compose derives a project name from the directory: lowercased, with every
+# character outside [a-z0-9_-] removed (/compose/as.naghi.me -> asnaghime).
+project_name() {
+    local name
+    name="$(basename "$1")"
+    name="${name,,}"
+    echo "${name//[^a-z0-9_-]/}"
+}
+
+# Print the networks declared by a compose file.  $2 selects the entries with
+# "external: $2": "false" are the networks the project creates itself, "true"
+# are the ones it joins from another project.
+compose_networks() {
+    awk -v want="$2" '
+        function flush() {
+            if (net != "" && ext == want) print net
+            net = ""
+            ext = "false"
+        }
+        /^networks:[[:space:]]*$/ { innets = 1; next }
+        /^[^[:space:]#]/ { flush(); innets = 0; next }
+        !innets { next }
+        /^[[:space:]]*#/ { next }
+        /^[[:space:]]{2}[^[:space:]][^:]*:[[:space:]]*$/ {
+            flush()
+            net = $1
+            sub(/:.*/, "", net)
+            next
+        }
+        /^[[:space:]]+external:[[:space:]]*true/ { ext = "true"; next }
+        END { flush() }
+    ' "$1"
+}
+
+ALL_PROJECT_NETWORKS=()
+ORDERED_NETWORKS=()
+
+# True when a network a project joins is either provided by a project that is
+# already in the ordered list, or is not declared by any project under
+# $COMPOSE_DATA_DIR at all (in which case it is managed outside of this script
+# and assumed to exist).
+network_satisfied() {
+    local net="$1" known
+    for known in "${ORDERED_NETWORKS[@]}"; do
+        [[ "$known" == "$net" ]] && return 0
+    done
+    for known in "${ALL_PROJECT_NETWORKS[@]}"; do
+        [[ "$known" == "$net" ]] && return 1
+    done
+    return 0
+}
+
+# Sort compose projects so that the projects providing a network come before
+# the projects joining it: /compose/caddy joins archangel_asnextcloud (declared
+# by /compose/archangel) and asnaghime_backend (declared by /compose/as.naghi.me),
+# so caddy has to be created last.
+order_compose_projects() {
+    local -a pending=("$@") ordered=() next=()
+    local file net ready progress=1
+
+    ALL_PROJECT_NETWORKS=()
+    ORDERED_NETWORKS=()
+    for file in "$@"; do
+        while read -r net; do
+            [[ -n "$net" ]] || continue
+            ALL_PROJECT_NETWORKS+=("$(project_name "$(dirname "$file")")_$net")
+        done < <(compose_networks "$file" false)
+    done
+
+    while (( ${#pending[@]} > 0 && progress )); do
+        progress=0
+        next=()
+        for file in "${pending[@]}"; do
+            ready=1
+            while read -r net; do
+                [[ -n "$net" ]] || continue
+                network_satisfied "$net" || { ready=0; break; }
+            done < <(compose_networks "$file" true)
+
+            if (( ready )); then
+                ordered+=("$file")
+                progress=1
+                while read -r net; do
+                    [[ -n "$net" ]] || continue
+                    ORDERED_NETWORKS+=("$(project_name "$(dirname "$file")")_$net")
+                done < <(compose_networks "$file" false)
+            else
+                next+=("$file")
+            fi
+        done
+        pending=("${next[@]}")
+    done
+
+    # Anything still unresolved is attempted last so the failure is visible
+    # instead of silently dropping the project.
+    ordered+=("${pending[@]}")
+    printf '%s\n' "${ordered[@]}"
+}
 
 do_start() {
     wait_for_containerd
@@ -16,14 +119,53 @@ do_start() {
         exit 0
     fi
 
-    COMPOSE_FILES="$(find $COMPOSE_DATA_DIR -maxdepth 2 -type f -name "docker-compose.yml" -o -name "docker-compose.yaml")"
+    # nerdctl keeps per-container files (log config, hosts, name, lifecycle) on
+    # /var/lib/nerdctl, which is a tmpfs (see create_temporary_directories in
+    # /lib/zebrafish/setup-persistence), while containerd keeps the container
+    # records themselves on the persistent /oci/containerd.  After a reboot the
+    # records outlive the nerdctl files they depend on, so "compose up" finds
+    # them, tries to start them and dies with "crun create ... exit status 1",
+    # leaving the container stuck in Created.
+    #
+    # Drop those orphaned records once per boot and let compose recreate the
+    # containers.  Images and their content are untouched, so nothing is pulled.
+    if ! [[ -e "$COMPOSE_BOOT_MARKER" ]]; then
+        ORPHANED_CONTAINERS="$(docker ps -aq)"
+        if [[ -n "$ORPHANED_CONTAINERS" ]]; then
+            echo "Removing containers left over from a previous boot..."
+            docker rm -f $ORPHANED_CONTAINERS >/dev/null
+        fi
+        : > "$COMPOSE_BOOT_MARKER"
+    fi
 
-    for COMPOSE_FILE in $COMPOSE_FILES; do
+    COMPOSE_FILES="$(find $COMPOSE_DATA_DIR -maxdepth 2 -type f -name "docker-compose.yml" -o -name "docker-compose.yaml")"
+    mapfile -t COMPOSE_PROJECTS < <(order_compose_projects $COMPOSE_FILES)
+
+    # Networks first: "compose create" creates the project's networks, and the
+    # containers that use them, without starting anything.  Walking the
+    # projects in dependency order means the networks another project joins
+    # already exist by the time it is created.
+    echo "Creating networks and containers..."
+    for COMPOSE_FILE in "${COMPOSE_PROJECTS[@]}"; do
         COMPOSE_FOLDER="$(dirname "$COMPOSE_FILE")"
-        cd "$COMPOSE_FOLDER"
+        cd "$COMPOSE_FOLDER" || continue
+        echo "Creating $COMPOSE_FOLDER..."
+
+        if docker compose create; then
+            echo "Created."
+        else
+            echo "Failed to create!"
+        fi
+    done
+
+    # Then the containers, now that every network they join exists.
+    echo "Starting containers..."
+    for COMPOSE_FILE in "${COMPOSE_PROJECTS[@]}"; do
+        COMPOSE_FOLDER="$(dirname "$COMPOSE_FILE")"
+        cd "$COMPOSE_FOLDER" || continue
         echo "Starting $COMPOSE_FOLDER..."
 
-        if docker compose up -d; then
+        if docker compose start; then
             echo "Started."
         else
             echo "Failed to start!"
@@ -40,15 +182,47 @@ do_stop() {
     fi
 
     COMPOSE_FILES="$(find $COMPOSE_DATA_DIR -maxdepth 2 -type f -name "docker-compose.yml" -o -name "docker-compose.yaml")"
+    mapfile -t COMPOSE_PROJECTS < <(order_compose_projects $COMPOSE_FILES)
 
-    for COMPOSE_FILE in $COMPOSE_FILES; do
+    # Tear down consumers first, so no network is removed while a container
+    # from another project is still attached to it.
+    local -a COMPOSE_PROJECTS_REVERSED=()
+    local i net
+    for (( i=${#COMPOSE_PROJECTS[@]}-1; i>=0; i-- )); do
+        COMPOSE_PROJECTS_REVERSED+=("${COMPOSE_PROJECTS[i]}")
+    done
+
+    # 1. Stop every container before any network is touched.
+    for COMPOSE_FILE in "${COMPOSE_PROJECTS_REVERSED[@]}"; do
         COMPOSE_FOLDER="$(dirname "$COMPOSE_FILE")"
-        cd "$COMPOSE_FOLDER"
+        cd "$COMPOSE_FOLDER" || continue
         echo "Stopping $COMPOSE_FOLDER..."
 
-        if docker compose down; then
+        if docker compose stop; then
             echo "Stopped."
+        else
+            echo "Failed to stop!"
         fi
+    done
+
+    # 2. Remove the containers, then the networks they declared.
+    for COMPOSE_FILE in "${COMPOSE_PROJECTS_REVERSED[@]}"; do
+        COMPOSE_FOLDER="$(dirname "$COMPOSE_FILE")"
+        cd "$COMPOSE_FOLDER" || continue
+        echo "Removing $COMPOSE_FOLDER..."
+
+        if docker compose down --remove-orphans; then
+            echo "Removed."
+        else
+            echo "Failed to remove!"
+        fi
+
+        # "down" removes the project's own networks; this catches whatever is
+        # left behind, so the next start cannot inherit stale CNI state.
+        while read -r net; do
+            [[ -n "$net" ]] || continue
+            docker network rm "$(project_name "$COMPOSE_FOLDER")_$net" >/dev/null 2>&1
+        done < <(compose_networks "$COMPOSE_FILE" false)
     done
 }
 
