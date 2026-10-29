@@ -1,0 +1,75 @@
+From: Buildroot <buildroot@buildroot.org>
+Date: Thu, 29 Oct 2026 00:00:00 +0000
+Subject: [PATCH] kfio_config.sh: build capability probes with the kernel toolchain
+
+kfio_config.sh builds its kernel capability probes with
+
+    env -i PATH="${PATH}" make -C "$test_dir"
+
+so the probes are always compiled by the *host* compiler, for the host
+architecture, no matter how the kernel itself was built.  The probes are
+compiled with -Werror (since "pull in add_disk kfio_config fix from
+vsl-#164" changed the obsolete EXTRA_CFLAGS assignment to ccflags-y+=
+and thereby made the flag effective), so any diagnostic the host
+compiler emits while parsing the kernel headers turns every probe into a
+failure.
+
+That is exactly what happens on Buildroot: the kernel is configured and
+built with the GCC 16 cross toolchain, so CONFIG_CC_HAS_COUNTED_BY and
+CONFIG_CC_HAS_COUNTED_BY_PTR are enabled and __counted_by() /
+__counted_by_ptr() expand to the real attributes.  The probes, however,
+are compiled with the host compiler (GCC 14 in the CI image), which does
+not implement those attributes:
+
+    include/linux/fs.h:1302:9: error: 'counted_by' attribute directive
+    ignored [-Werror=attributes]
+
+All KFIOC_X_* probes therefore return 0, the driver selects the legacy
+(pre-5.6) kernel APIs, and the module build then fails on the first API
+that really is mandatory, e.g.:
+
+    kfile.c:226:47: error: passing argument 4 of 'proc_create_data' from
+    incompatible pointer type [-Wincompatible-pointer-types]
+    note: expected 'const struct proc_ops *' but argument is of type
+    'struct file_operations *'
+
+Pass ARCH and CROSS_COMPILE through to the probe builds when the caller
+provides them, so the probes are built the same way as the kernel and
+the driver itself: for the target architecture with the cross compiler.
+Standalone invocations without ARCH/CROSS_COMPILE keep the old
+behaviour.
+
+Signed-off-by: Buildroot <buildroot@buildroot.org>
+---
+ root/usr/src/iomemory-vsl4-4.3.7/kfio_config.sh | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/root/usr/src/iomemory-vsl4-4.3.7/kfio_config.sh b/root/usr/src/iomemory-vsl4-4.3.7/kfio_config.sh
+--- a/root/usr/src/iomemory-vsl4-4.3.7/kfio_config.sh
++++ b/root/usr/src/iomemory-vsl4-4.3.7/kfio_config.sh
+@@ -888,10 +888,21 @@ MODULE_LICENSE(\"GPL\");
+     fi
+     echo "$license" >> "$test_dir/kfioc_test.c"
+ 
++    # Build the probes with the same architecture and cross compiler that
++    # the kernel was built with, when the caller provides them.  Otherwise
++    # the probes silently use the host compiler, which may not support
++    # attributes the kernel was configured for (e.g. __counted_by(), which
++    # is enabled based on the compiler that configured the kernel).  The
++    # probes are built with -Werror, so such a mismatch makes every test
++    # fail and the driver then falls back to ancient kernel APIs.
++    local probe_env="PATH=${PATH}"
++    [ -n "$ARCH" ] && probe_env="$probe_env ARCH=$ARCH"
++    [ -n "$CROSS_COMPILE" ] && probe_env="$probe_env CROSS_COMPILE=$CROSS_COMPILE"
++
+     if [ 1 -eq "$VERBOSE" ]; then
+-        env -i PATH="${PATH}" make -C "$test_dir" V=1 2>&1 | tee "$test_dir/kfioc_test.log" || result=$?
++        env -i $probe_env make -C "$test_dir" V=1 2>&1 | tee "$test_dir/kfioc_test.log" || result=$?
+     else
+-        env -i PATH="${PATH}" make -C "$test_dir" V=1 >"$test_dir/kfioc_test.log" 2>&1 || result=$?
++        env -i $probe_env make -C "$test_dir" V=1 >"$test_dir/kfioc_test.log" 2>&1 || result=$?
+     fi
+ 
+     # Save the exit status
+-- 
+2.55.0

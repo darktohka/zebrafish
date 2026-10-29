@@ -48,8 +48,15 @@ IOMEMORY_VSL4_CFLAGS = \
 IOMEMORY_VSL4_KFIO_LIB = kfio/x86_64_latest_libkfio.o_shipped
 
 # Generate kfio_config.h required for kernel module build
+#
+# The capability probes must be built with the same toolchain as the kernel:
+# kfio_config.sh otherwise compiles them with the host compiler, which does
+# not understand attributes the kernel was configured for (e.g. __counted_by
+# with a GCC 16 kernel and a GCC 14 host) and every probe fails because of
+# -Werror, leaving the driver on legacy kernel APIs.
 define IOMEMORY_VSL4_GENERATE_KFIO_CONFIG
 	cd $(@D)/$(IOMEMORY_VSL4_SRC_SUBDIR) && \
+	ARCH=$(KERNEL_ARCH) CROSS_COMPILE="$(TARGET_CROSS)" \
 	./kfio_config.sh \
 		-a x86_64 \
 		-o include/fio/port/linux/kfio_config.h \
@@ -91,6 +98,7 @@ IOMEMORY_VSL4_PRE_BUILD_HOOKS += IOMEMORY_VSL4_SETUP_KFIO_LIB
 define IOMEMORY_VSL4_BUILD_CMDS
 	# Generate kfio_config.h
 	cd $(@D)/$(IOMEMORY_VSL4_SRC_SUBDIR) && \
+	ARCH=$(KERNEL_ARCH) CROSS_COMPILE="$(TARGET_CROSS)" \
 	./kfio_config.sh \
 		-a x86_64 \
 		-o include/fio/port/linux/kfio_config.h \
